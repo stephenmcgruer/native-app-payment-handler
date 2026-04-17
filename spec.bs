@@ -20,6 +20,152 @@ Markup Shorthands: markdown yes
 
 *This section is non-normative.*
 
-This specification defines [...]
+This specification defines functionality allowing a native application to
+handle payment requests that originate on the web on behalf of users. Such
+applications are referred to as [=native-app payment handlers=]. [=Native-app
+payment handlers=] are accessed via an abstract "provider", the [=native
+payment app provider model=], to avoid having to specify details of specific
+operating systems or proprietary payment apps. That model has abstract
+operations which can be supported by concrete providers.
+
+</div>
+
+# Native-app Payment Handlers # {#sctn-native-app-payment-handler}
+
+A <dfn>native-app payment handler</dfn> is a [=payment handler=], as defined in
+[[payment-request]], that is backed by some underlying [=native payment app=]
+that can be accessed via a [=native payment app provider=].
+
+This section describes the steps the user agent must take when intermediating
+between a {{PaymentRequest}} object and one or more [=native payment app=] from
+a single [=native payment app provider=].
+
+## Can make payment algorithm
+
+When performing step 8.2. of the [=can make payment algorithm=] from
+[[payment-request]], the user agent MUST query each available [=native payment
+app provider=] for the list of registered and available native payment apps for
+the given [=payment method identifier=]. If the returned list is non-empty,
+there is a [=payment handler=] for the identifier.
+
+## The show() method
+
+When performing step 17.5. of the {{PaymentRequest/show|PaymentRequest.show()}}
+method, the user agent MUST query each available [=native payment app
+provider=] for the list of registered and available native payment apps for the
+given [=payment method identifier=]. If the returned list is non-empty, the
+user agent MUST create and return a [=native-app payment handler=] for each
+[=native payment app=] in the list, and append them to the list of registered
+payment handlers.
+
+TODO - the above should link to some method from the model.
+
+When a [=native-app payment handler=] is selected by the user (steps 19-24 of
+the show() algorithm), TODO - invoke the underlying payment app, etc.
+
+## Steps to check if a payment can be made ##
+
+TODO - this needs to take in a data object per the PR spec
+
+The [=steps to check if a payment can be made=] for a [=native-app payment
+handler=] are:
+
+1. TODO - are there any steps?
+
+## Steps to respond to a payment request ##
+
+The [=steps to respond to a payment request=] for a [=native-app payment
+handler=] are:
+
+1. Basically, get the result of invoking the payment app, which has to be
+    converted to an object or dictionary.
+
+## TODO
+
+Ok we need:
+
+1. A way to be notified that the payment method has changed
+2. A way to be notified that the shipping address or option has changed (both run the PaymentRequest updated algorithm)
+3. A way to be notified that the payer details has changed (runs the PaymentRequest updated algorithm)
+4. A moment where we call the "user accepts the payment request algorithm"
+5. A moment where we call the "user aborts the payment request algorithm"
+6. A moment where we call the "payment handler indicates an internal error algorithm"
+
+TODO - define "If the user agent has a payment handler that supports handling payment requests for identifier" from Payment Request?
+
+# Native payment app provider model # {#sctn-native-payment-app-model}
+
+The [=native-app payment handler=] API implies a specific abstract functional
+model through which the user agent can interact with [=native payment apps=].
+This section describes that model.
+
+The <dfn>native payment app provider model</dfn>is an abstract functional model
+which describes the behavior of some provider (e.g., the operating system, a
+proprietary part of the user agent itself, etc) that provides access to
+underlying <dfn>native payment apps</dfn>.
+
+Providers MAY implement and expose this abstract model in any way desired, as
+long as the normative requirements of the model are met. Non-normative
+concrete examples are given below in **TODO SECTION**.
+
+- A method to detect if the [=native payment app=] exists and is
+    registered for a given [=payment method identifier=].
+- A method to determine if the [=native payment app=] is able to
+    respond to a specific {{PaymentRequest}}.
+
+    NOTE: This functionality is used to answer the `hasEnrolledInstrument`
+    method on {{PaymentRequest}}, which at the current time has been removed
+    from the [payment-request] specification. See TODO ISSUE.
+
+- A method to invoke the [=native payment app=] to handle a specific
+    {{PaymentRequest}}, and to return the result to the user agent.
+
+- One or more methods to communicate between the user agent and the
+    [=native payment app=] during the period in which the payment handler
+    is invoked.
+
+    NOTE: This allows for dynamic updates of selected shipping address, payment
+    method, etc, and for the merchant to update the invoked payment handler with
+    any changes to price/etc as a result.
+
+## Detecting if a [=native payment app=] exists ## {#sctn-detection}
+
+## Determining if a [=native payment app=] can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
+
+## Invoking a [=native payment app=] ## {#sctn-invoking}
+
+## Communicating with an invoked [=native payment app=] ## {#sctn-dynamic-updates}
+
+<div class="non-normative">
+
+# Example implementations of the [=native payment app provider model=] # {#sctn-examples}
+
+*This section is non-normative.*
+
+This section contains descriptions of known implementations of the [=native
+payment app provider model=]. This is not a specification, and descriptions may
+diverge and be out of date with actual implementations.
+
+NOTE: TODO - It would be preferable to just link out to known implementations,
+but these are not actually defined anywhere today.
+
+## Intent-based native Android apps ## {#sctn-android-apps}
+
+The Android operating provider ... TODO
+
+See:
+
+- https://web.dev/articles/android-payment-apps-developers-guide
+- https://web.dev/articles/android-payment-apps-delegation
+
+TODO turn the above into non-normative references in the biblio
+
+### Detecting if an intent-based native Android app exists and is registered ### {#sctn-android-apps-detection}
+
+### Determining if an intent-based native Android app can respond ### {#sctn-android-apps-isreadytopay}
+
+### Invoking an intent-based native Android app ### {#sctn-android-apps-invoke}
+
+### Communicating with an invoked intent-based native Android app ### {#sctn-android-apps-dynamic-updates}
 
 </div>
