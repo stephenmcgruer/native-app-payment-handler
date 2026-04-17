@@ -1,0 +1,25 @@
+<pre class="metadata">
+Title: Native-app Payment Handler
+Shortname: native-app-payment-handler
+Repository: stephenmcgruer/native-app-payment-handler
+Status: DREAM
+Editor: Stephen McGruer, w3cid 96463, Google https://www.google.com/, smcgruer@chromium.org
+Abstract: This specification defines capabilities that enable native applications to handle requests for payment originating from the web.
+Markup Shorthands: markdown yes
+</pre>
+
+<pre class="anchors">
+</pre>
+
+<pre class="link-defaults">
+</pre>
+
+<div class="non-normative">
+
+# Introduction # {#sctn-intro}
+
+*This section is non-normative.*
+
+This specification defines [...]
+
+</div>
