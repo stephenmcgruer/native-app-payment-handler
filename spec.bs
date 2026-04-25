@@ -25,8 +25,8 @@ handle payment requests that originate on the web on behalf of users. Such
 applications are referred to as [=native-app payment handlers=]. [=Native-app
 payment handlers=] are accessed via an abstract "provider", the [=native
 payment app provider model=], to avoid having to specify details of specific
-operating systems or proprietary payment apps. That model has abstract
-operations which can be supported by concrete providers.
+operating systems. That model has abstract operations which can be supported by
+concrete providers.
 
 </div>
 
@@ -40,13 +40,73 @@ This section describes the steps the user agent must take when intermediating
 between a {{PaymentRequest}} object and one or more [=native payment app=] from
 a single [=native payment app provider=].
 
+## Filtering of Native-app Payment Handlers
+
+Given a [=payment method identifier=], |identifier|, and a [=native payment
+app=], |app|, the following steps determine if |app| <dfn>is
+allowed to handle the payment method identifier</dfn> |identifier|:
+
+1. If |identifier| is not a [=URL-based payment method identifier=], return
+     `false`.
+
+1. Let |paymentMethodManifest| be the [=ingest payment method
+     manifests|ingested=] and [=parsed payment method manifest|parsed=]
+     [=payment method manifest=] for |identifier|.
+
+1. Let |claimedOrigin| be the [=origin=] [=claimed by the native payment
+    app|claimed by=] |app|.
+
+    NOTE: TODO - I think they can claim multiple origins, check
+
+1. If |claimedOrigin| is not equal to |identifier|'s [=origin=], and
+    |paymentMethodManifest|'s [=supported origins=] is not the string `"*"`,
+    and |claimedOrigin| is not one of the set of [=origins=] in
+    |paymentMethodManifest|'s [=supported origins=]:
+
+        1. Return `false`.
+
+        TODO: Move this into a sub-algorithm?
+
+1. Let |webAppManifest| be the web app manifest for |paymentMethodManifest|'s
+     [=default applications=].
+
+     TODO: There is an algorithm declared for this for the **default** payment
+     app in [[payment-method-manifest]], but none for a separate
+     supported_origin?
+
+     TODO: How does this work when its one of the supported origins?
+
+     TODO: default_applications is a list
+
+1. If |webAppManifest|'s related_applications list is empty, return `false`.
+
+1. For each |relatedApplication| in related_applications:
+
+     1. TODO - use the payment app provider to check the fingerprints and other
+        information
+
+1. Return `false`.
+
 ## Can make payment algorithm
 
 When performing step 8.2. of the [=can make payment algorithm=] from
-[[payment-request]], the user agent MUST query each available [=native payment
-app provider=] for the list of registered and available native payment apps for
-the given [=payment method identifier=]. If the returned list is non-empty,
-there is a [=payment handler=] for the identifier.
+[[payment-request]] with the [=payment method identifier=] |identifier|, the
+user agent MUST perform the following steps:
+
+1. For each available [=native payment app provider=], |provider|:
+
+    1. Let |paymentApps| be the list of [=native payment apps=]
+        registered with that [=native payment app provider=].
+
+        TODO: Define that operation.
+
+    1. For each |paymentApp| in |paymentApps|:
+
+	1. If |paymentApp| is [=is allowed to handle the payment method
+         identifier=] |identifier|, return `true` and terminate the remaining
+         steps here.
+
+         NOTE: This results in the `hasHandlerPromise` being resolved with `true`.
 
 ## The show() method
 
@@ -61,7 +121,8 @@ payment handlers.
 TODO - the above should link to some method from the model.
 
 When a [=native-app payment handler=] is selected by the user (steps 19-24 of
-the show() algorithm), TODO - invoke the underlying payment app, etc.
+the show() algorithm), the user agent MUST invoke the relevant [=native payment
+app=] corresponding to the selected [=native-app payment handler=].
 
 ## Steps to check if a payment can be made ##
 
@@ -91,18 +152,20 @@ Ok we need:
 5. A moment where we call the "user aborts the payment request algorithm"
 6. A moment where we call the "payment handler indicates an internal error algorithm"
 
-TODO - define "If the user agent has a payment handler that supports handling payment requests for identifier" from Payment Request?
-
 # Native payment app provider model # {#sctn-native-payment-app-model}
 
 The [=native-app payment handler=] API implies a specific abstract functional
 model through which the user agent can interact with [=native payment apps=].
 This section describes that model.
 
-The <dfn>native payment app provider model</dfn>is an abstract functional model
-which describes the behavior of some provider (e.g., the operating system, a
-proprietary part of the user agent itself, etc) that provides access to
-underlying <dfn>native payment apps</dfn>.
+The <dfn>native payment app provider model</dfn> is an abstract functional model
+which describes the behavior of some <dfn>native payment app provider</dfn>
+(e.g., the operating system) that provides access to underlying [=native
+payment apps=]. <dfn>Native payment apps</dfn> are deliberately loosely defined,
+simply as some form of application TODO
+
+NOTE: For payment applications that are web-based within the scope of this user
+agent, see [[!web-based-payment-handler]].
 
 Providers MAY implement and expose this abstract model in any way desired, as
 long as the normative requirements of the model are met. Non-normative
@@ -145,6 +208,8 @@ concrete examples are given below in **TODO SECTION**.
 This section contains descriptions of known implementations of the [=native
 payment app provider model=]. This is not a specification, and descriptions may
 diverge and be out of date with actual implementations.
+
+TODO - move this out to a separate technical document and link to it. Same repo, just different doc.
 
 NOTE: TODO - It would be preferable to just link out to known implementations,
 but these are not actually defined anywhere today.
