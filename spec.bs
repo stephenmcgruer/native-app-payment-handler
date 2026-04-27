@@ -48,7 +48,7 @@ A <dfn>native-app payment handler</dfn> is a [=payment handler=], as defined in
 [[payment-request]], that is backed by some underlying [=native payment app=]
 that can be accessed via a [=native payment app provider=].
 
-This section describes the steps the user agent must take when intermediating
+This section describes the steps the user agent MUST take when intermediating
 between a {{PaymentRequest}} object and one or more [=native payment apps=] from
 a single [=native payment app provider=].
 
@@ -150,16 +150,7 @@ handler=] are:
 1. Basically, get the result of invoking the payment app, which has to be
     converted to an object or dictionary.
 
-## IN PROGRESS WORK
-
-Ok we need:
-
-1. A way to be notified that the payment method has changed
-2. A way to be notified that the shipping address or option has changed (both run the PaymentRequest updated algorithm)
-3. A way to be notified that the payer details has changed (runs the PaymentRequest updated algorithm)
-4. A moment where we call the "user accepts the payment request algorithm"
-5. A moment where we call the "user aborts the payment request algorithm"
-6. A moment where we call the "payment handler indicates an internal error algorithm"
+ISSUE: This needs rewritten into formal language.
 
 ## Match origins allowed for a payment method identifier ## {#sctn-match-origins}
 
@@ -203,88 +194,89 @@ which describes the behavior of some <dfn>native payment app provider</dfn>
 payment apps=]. <dfn>Native payment apps</dfn> are deliberately loosely defined,
 simply as some form of application TODO
 
+ISSUE: Fix the above TODO
+
 NOTE: For payment applications that are web-based within the scope of this user
 agent, see [[!web-based-payment-handler]].
 
 Providers MAY implement and expose this abstract model in any way desired, as
-long as the normative requirements of the model are met. Non-normative
-concrete examples are given below in **TODO SECTION**.
-
-- A method to obtain the list of [=native payment apps=] registered with the
-    [=native payment app provider=].
-
-- A method to check if the [=native payment app=] is a [=related application=]
-    for the [=web app manifest=] for a [=payment method identifier=].
-
-- A method to determine if the [=native payment app=] is able to
-    respond to a specific {{PaymentRequest}}.
-
-    NOTE: This functionality is used to answer the `hasEnrolledInstrument`
-    method on {{PaymentRequest}}, which at the current time has been removed
-    from the [payment-request] specification. See TODO ISSUE.
-
-- A method to invoke the [=native payment app=] to handle a specific
-    {{PaymentRequest}}, and to return the result to the user agent.
-
-- One or more methods to communicate between the user agent and the
-    [=native payment app=] during the period in which the payment handler
-    is invoked.
-
-    NOTE: This allows for dynamic updates of selected shipping address, payment
-    method, etc, and for the merchant to update the invoked payment handler with
-    any changes to price/etc as a result.
+long as the normative requirements of the model are met. See
+[[#sctn-examples]].
 
 ## Returning a list of [=native payment apps=] ## {#sctn-returning-list}
 
-A [=native payment app provider=] must provide a method by which the user agent
+A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn>get the list of native payment apps</dfn> known to the provider.
 
 ## Checking if a [=native payment app=] is a related application for a web app manifest ## {#sctn-related-application}
 
-A [=native payment app provider=] must provide a method by which the user agent
+A [=native payment app provider=] MUST provide a method by which the user agent
 can check if a [=native payment app=] <dfn>is a related application</dfn> for a
-[=web app manifest=]. This may utilize the information contained in the
+[=web app manifest=]. This method MAY utilize the information contained in the
 [=related applications=], such as the [=id=], [=platform=], or [=fingerprints=]
 of each specified [=external application resource=].
 
 ## Determining if a [=native payment app=] can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
 
+A [=native payment app provider=] MUST provide a method by which the user agent
+can check if a [=native payment app=] is <dfn>able to handle a payment
+request</dfn>. In order to support this functionality, the user agent MAY pass
+information about the specific {{PaymentRequest}} to the [=native payment
+app=], but considerations SHOULD be made regarding user privacy.
+
+ISSUE: This functionality is used to answer the `hasEnrolledInstrument` method
+on {{PaymentRequest}}, which at the current time has been removed from the
+[payment-request] specification.
+
+ISSUE: The [[payment-request]] spec is quite vague about what data is or should
+be passed to an invoked payment handler. We should try to be more specific.
+
+ISSUE: We should speak to the privacy issues in a privacy section.
+
 ## Invoking a [=native payment app=] ## {#sctn-invoking}
 
-A [=native payment app provider=] must provide a method by which the user agent
+A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn>invoke the native payment app</dfn> for a given [=native payment
-app=]. When run, this method must pass control of the current experience over
+app=]. When run, this method MUST pass control of the current experience over
 to the invoked [=native payment app=], until such times as the native payment
 app [=indicates success=], [=indicates user cancellation=], or [=indicates internal
 error=].
 
 Depending on the capabilities of the [=native payment app provider=], the
-invoked app may be displayed over the user agent window (to improve user
+invoked app MAY be displayed over the user agent window (to improve user
 context and understanding of the flow).
 
 ## Communicating with an invoked [=native payment app=] ## {#sctn-dynamic-updates}
+
+A [=native payment app provider=] MUST provide a method by which the user agent
+can <dfn>communicate with an invoked payment app</dfn>.
+
+ISSUE: This needs fleshed out, to include; notifying that the payment method
+has changed, notifying that the shipping address or options have changed,
+notifying that payer details have changed. Also, what capabilty needs to be
+defined at the payment handler level rather than in the model.
 
 <div class="non-normative">
 
 ## Indicating success of an invoked [=native payment app=] ## {#sctn-indicating-success}
 
-A [=native payment app provider=] must provide a way for an invoked [=native
+A [=native payment app provider=] MUST provide a way for an invoked [=native
 payment app=] to <dfn>indicate success</dfn> back to the user agent. When this
-occurs, the user agent must run the [=user accepts the payment request
+occurs, the user agent MUST run the [=user accepts the payment request
 algorithm=] from [[payment-request]].
 
 ## Indicating user cancel from an invoked [=native payment app=] ## {#sctn-indicating-user-cancel}
 
-A [=native payment app provider=] must provide a way for an invoked [=native
+A [=native payment app provider=] MUST provide a way for an invoked [=native
 payment app=] to <dfn>indicate user cancellation</dfn> back to the user agent.
-When this occurs, the user agent must run the [=user aborts the payment request
+When this occurs, the user agent MUST run the [=user aborts the payment request
 algorithm=] from [[payment-request]].
 
 ## Indicating internal error from an invoked [=native payment app=] ## {#sctn-indicating-internal-error}
 
-A [=native payment app provider=] must provide a way for an invoked [=native
+A [=native payment app provider=] MUST provide a way for an invoked [=native
 payment app=] to <dfn>indicate internal error</dfn> back to the user agent.
-When this occurs, the user agent must run the [=payment handler indicates an
+When this occurs, the user agent MUST run the [=payment handler indicates an
 internal error algorithm=] from [[payment-request]].
 
 # Example implementations of the [=native payment app provider model=] # {#sctn-examples}
