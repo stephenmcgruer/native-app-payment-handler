@@ -1,0 +1,67 @@
+<pre class="metadata">
+Title: Android Payment App Provider
+Shortname: android-payment-app-provider
+Repository: stephenmcgruer/native-app-payment-handler
+Status: DREAM
+Editor: Stephen McGruer, w3cid 96463, Google https://www.google.com/, smcgruer@chromium.org
+Abstract: This technical report describes how Android apps can be exposed as payment apps for the web, via Payment Handler.
+Markup Shorthands: markdown yes
+</pre>
+
+<pre class="anchors">
+</pre>
+
+<pre class="link-defaults">
+</pre>
+
+<pre class="biblio">
+{
+    "native-app-payment-handler": {
+        "title": "Native-app Payment Handler",
+        "href": "https://todo.example"
+    }
+}
+</pre>
+
+<div class="non-normative">
+
+*This technical report is non-normative.*
+
+# Introduction # {#sctn-intro}
+
+The [[native-app-payment-handler]] API defines an abstract functional model,
+the [=native payment app provider model=], through which user agents can
+interact with [=native payment apps=] in order to treat them as [=native-app
+payment handlers=] that are accessible via the [[payment-request]] API.
+
+This document describes one concrete implementation of that model, the
+[=Android payment app provider=], which supports a user agent running on the
+Android Operating System to interact with other applications on the same device
+that want to act as payment apps.
+
+# Android Payment App Provider # {#sctn-android-payment-app-provider}
+
+The <dfn>Android Payment App Provider</dfn> is a [=native payment app provider=]
+that provides access to Android [=native payment apps=]. It operates using
+standard Android concepts:
+
+- AndroidManifest.xml
+- Intents
+- Services
+
+TODO: Add a little detail to the above.
+
+See also:
+
+- https://web.dev/articles/android-payment-apps-developers-guide
+- https://web.dev/articles/android-payment-apps-delegation
+
+## Detecting if an Android native payment app exists ## {#sctn-detection}
+
+## Determining if an Android native payment app can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
+
+## Invoking an Android native payment app ## {#sctn-invoking}
+
+## Communicating with an invoked Android native payment app ## {#sctn-dynamic-updates}
+
+</div>
