@@ -103,9 +103,9 @@ user agent MUST perform the following steps:
 
     1. For each |paymentApp| in |paymentApps|:
 
-        1. If |paymentApp| [=is allowed to handle the payment method
-         identifier=] |identifier|, resolve `hasHandlerPromise` with `true` and
-         terminate the remaining steps.
+         1. If |paymentApp| [=is allowed to handle the payment method
+              identifier=] |identifier|, resolve `hasHandlerPromise` with `true`
+              and terminate the remaining steps.
 
 ## The show() method
 
@@ -120,10 +120,10 @@ method, the user agent MUST perform the following steps:
 
     1. For each |paymentApp| in |paymentApps|:
 
-        1. If |paymentApp| [=is allowed to handle the payment method
-         identifier=] |identifier|, create a [=native-app payment handler=]
-	 for |paymentApp| and append it to the list of registered payment
-         handlers.
+         1. If |paymentApp| [=is allowed to handle the payment method
+              identifier=] |identifier|, create a [=native-app payment handler=]
+              for |paymentApp| and append it to the list of registered payment
+              handlers.
 
 When a [=native-app payment handler=] is selected by the user (steps 19-24 of
 the show() algorithm), the user agent MUST [=invoke the native payment app=]
@@ -169,7 +169,7 @@ following steps:
 
     1. If |claimedOrigin| is equal to |identifier|'s [=origin=], return `true`.
 
-	     ISSUE: Is this right? The |identifier| can cause a redirect, so
+             ISSUE: Is this right? The |identifier| can cause a redirect, so
              what should we be checking against?
 
     1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
