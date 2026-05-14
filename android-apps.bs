@@ -9,6 +9,20 @@ Markup Shorthands: markdown yes
 </pre>
 
 <pre class="anchors">
+spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/native-app-payment-handler/spec.html
+    type: dfn
+        text:native payment app provider model; url: native-payment-app-provider-model
+        text:native payment app provider; url: native-payment-app-provider
+        text:native payment apps; url: native-payment-apps
+        text:native-app payment handler; url: native-app-payment-handler
+        text:get the list of native payment apps; url: get-the-list-of-native-payment-apps
+        text:is a related application; url: is-a-related-application
+        text:able to handle a payment request; url:able-to-handle-a-payment-request
+        text:invoke the native payment app; url:invoke-the-native-payment-app
+        text:communicate with an invoked payment app; url:communicate-with-an-invoked-payment-app
+        text:indicate success; url:indicate-success
+        text:indicate user cancellation; url:indicate-user-cancellation
+        text:indicate internal error; url:indicate-internal-error
 </pre>
 
 <pre class="link-defaults">
@@ -35,33 +49,218 @@ interact with [=native payment apps=] in order to treat them as [=native-app
 payment handlers=] that are accessible via the [[payment-request]] API.
 
 This document describes one concrete implementation of that model, the
-[=Android payment app provider=], which supports a user agent running on the
-Android Operating System to interact with other applications on the same device
-that want to act as payment apps.
+[=Android payment app provider=], which defines how a user agent running on the
+Android Operating System can interact with other applications on the same
+device that want to act as payment apps.
 
 # Android Payment App Provider # {#sctn-android-payment-app-provider}
 
-The <dfn>Android Payment App Provider</dfn> is a [=native payment app provider=]
-that provides access to Android [=native payment apps=]. It operates using
-standard Android concepts:
+The <dfn>Android Payment App Provider</dfn> is a [=native payment app
+provider=] that defines how a user agent can access Android [=native payment
+apps=]. The necessary functionality is built on top of standard Android OS
+concepts for cross-application communication and collaboration:
 
-- AndroidManifest.xml
-- Intents
-- Services
+- <a href="https://developer.android.com/guide/topics/manifest/manifest-intro">AndroidManifest.xml</a>
+- <a href="https://developer.android.com/guide/topics/intents/intents-filters">Intents</a>
+- <a href="https://developer.android.com/develop/background-work/services">Services</a>
 
-TODO: Add a little detail to the above.
+## Payment app AndroidManifest.xml ## {#sctn-payment-app-android-manifest}
 
-See also:
+In order to be visible to the user agent, the Android payment app defines the
+following concepts in their `AndroidManifest.xml` file:
 
-- https://web.dev/articles/android-payment-apps-developers-guide
-- https://web.dev/articles/android-payment-apps-delegation
+1. An **optional** "is ready to pay" Android service, which the user agent will
+     bind to and call when [[#sctn-hasenrolled-instrument|determining if the
+     app can handle a PaymentRequest]].
 
-## Detecting if an Android native payment app exists ## {#sctn-detection}
+1. A **mandatory** "pay" Android activity, which will receive an intent when
+     the user agent [[#sctn-invoking|invokes the app]].
+
+Issue: TODO the update service
+
+### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
+
+The `IS_READY_TO_PAY` service receives calls from the user agent to
+[[#sctn-hasenrolled-instrument|determine if the app can handle a
+PaymentRequest]]. It must be exported and have an intent filter with an
+`org.chromium.intent.action.IS_READY_TO_PAY` action:
+
+<xmp>
+  <service
+      ...
+      android:exported="true">
+    <intent-filter>
+      <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
+    </intent-filter>
+  </service>
+</xmp>
+
+### The `PAY` activity ### {#sctn-pay-activity}
+
+The `PAY` activity will receive an intent from the user agent when the user
+agent [[#sctn-invoking|invokes the app]] to handle a PaymentRequest. It must be
+exported and have:
+
+- An intent filter with an `org.chromium.intent.action.PAY` action
+- One or both of an `org.chromium.default_payment_method_name` and
+    `org.chromium.payment_method_names` `<meta-data>` tags
+
+<xmp>
+  <activity
+      ...
+       android:exported="true">
+    <intent-filter>
+      <action android:name="org.chromium.intent.action.PAY" />
+    </intent-filter>
+
+    <meta-data
+        android:name="org.chromium.default_payment_method_name"
+        android:value="https://sampleapp.example/pay" />
+    <meta-data
+        android:name="org.chromium.payment_method_names"
+        android:resource="@array/chromium_payment_method_names" />
+  </activity>
+</xmp>
+
+## User agent app AndroidManifest.xml ## {#sctn-user-agent-android-manifest}
+
+In order to be able to interact with Android [=native payment apps=], the user
+agent application <a
+href="https://developer.android.com/training/package-visibility/declaring">declares
+its package visibility needs</a> for the relevant intent filters in its own
+AndroidManifest.xml file:
+
+<xmp>
+  <queries>
+    <intent>
+      <action android:name="org.chromium.intent.action.PAY"/>
+    </intent>
+    <intent>
+      <action android:name="org.chromium.intent.action.IS_READY_TO_PAY"/>
+    </intent>
+  </queries>
+</xmp>
+
+Issue: TODO - UPDATE_PAYMENT_DETAILS
+
+## Returning a list of native payment apps ## {#sctn-list-native-payment-apps}
+
+In order to [=get the list of native payment apps=], the user agent performs
+the following steps:
+
+1. Create a new Intent object, |intent|, targeting the
+     `org.chromium.intent.action.PAY` action.
+
+1. Query the Android OS for the list of activities that can be performed for
+     |intent|, for example via <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentActivities(android.content.Intent,%20int)">PackageManager.queryIntentActivities</a>.
+
+1. TODO - do we need to spec how to turn the resultant info into a list of
+     apps? TBD.
+
+## Checking if a native payment app is a related application for a web app manifest ## {#sctn-checking-related-application}
+
+In order to check if a given Android application, |app|, [=is a related
+application=] for a [=web app manifest=], |manifest|, the user agent performs
+the following steps:
+
+1. TODO
 
 ## Determining if an Android native payment app can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
 
+In order to check if an Android application, |app|, is [=able to handle a
+payment request=], |request|, the user agent performs the following steps:
+
+1. TODO
+
+ISSUE: Document the privacy concerns.
+
 ## Invoking an Android native payment app ## {#sctn-invoking}
 
+In order to [=invoke the native payment app=], |app|, for a {{PaymentRequest}}
+|request|, the user agent performs the following steps:
+
+1. Let |packageName| be the Android package name for |app|.
+1. Let |activityName| be the Activity name for |app|.
+
+     ISSUE: TODO - these name to be part of some sort of app concept
+
+1. Let |extras| be the result of [=creating an Android bundle=] for |request|.
+
+1. Create an Intent object, |intent|, whose:
+
+    1. Class name is set to the combination of |packageName| and
+         |activityName|, e.g. via <a href="https://developer.android.com/reference/android/content/Intent#setClassName(java.lang.String,%20java.lang.String)">Intent.setClassName</a>.
+
+    1. Action is set to `org.chromium.intent.action.IS_READY_TO_PAY`.
+
+    1. Extras are set to |extras|, e.g. via
+         <a href="https://developer.android.com/reference/android/content/Intent#putExtras(android.os.Bundle)">Intent.putExtras</a>.
+
+1. Send |intent| to the Android OS in such a way that the user agent will be
+     notified on result, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#startActivityForResult(android.content.Intent,%20int)">Activity.startActivityForResult</a>.
+
 ## Communicating with an invoked Android native payment app ## {#sctn-dynamic-updates}
+
+In order to [=communicate with an invoked payment app=], |app|, the user agent
+performs the following steps:
+
+1. TODO, use the service
+
+## Indicating success of an invoked Android native payment app ## {#sctn-indicate-success}
+
+In order for an invoked Android application, |app|, to [=indicate success=]
+back to the user agent, |app| performs the following steps:
+
+1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a>.
+
+1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+
+## Indicating user cancel from an invoked Android native payment app ## {#sctn-indicate-user-cancel}
+
+In order for an invoked Android application, |app|, to [=indicate user cancellation=]
+back to the user agent, |app| performs the following steps:
+
+1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_CANCEL">Activity.RESULT_CANCEL</a>.
+
+1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+
+## Indicating internal error from an invoked Android native payment app ## {#sctn-indicate-app-error}
+
+In order for an invoked Android application, |app|, to [=indicate internal
+error=] back to the user agent, |app| performs the following steps:
+
+1. Let |RESULT_INTERNAL_ERROR| be equal to <a href="https://developer.android.com/reference/android/app/Activity#RESULT_FIRST_USER">Activity.RESULT_FIRST_USER</a>.
+
+1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with |RESULT_INTERNAL_ERROR|.
+
+1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+
+## Creating an Android bundle ## {#sctn-creating-bundle}
+
+To <dfn>create an Android bundle</dfn> from a {{PaymentRequest}}, |request|,
+perform the following steps:
+
+1. Let |bundle| be a new Bundle object.
+
+1. Insert |request|.{{PaymentRequest/id}} into |bundle| with the key
+     "`paymentRequestId`".
+
+1. Insert the {{Document/title}} of |request|'s [=relevant global object=]'s
+     [=associated Document=] into |bundle| with the key "`merchantName`".
+
+1. Insert |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsInit/total}}.{{PaymentItem/amount}}
+     into |bundle| with the key "`total`".
+
+     ISSUE: This needs to be serialized to JSON.
+
+1. ISSUE: TODO - handle modifiers
+
+1. ISSUE: TODO - handle shipping options
+
+1. ISSUE: TODO - handle payment options
+
+1. ISSUE: TODO - handle common extras
+
+1. ISSUE: TODO - handle deprecated fields
 
 </div>
