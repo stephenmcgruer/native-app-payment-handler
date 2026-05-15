@@ -11,10 +11,28 @@ Markup Shorthands: markdown yes
 <pre class="anchors">
 spec: manifest-incubations; urlPrefix: https://wicg.github.io/manifest-incubations/
     type: dfn
-        text:related applications ; url: related_applications-member
+        text:external application resource; url:dfn-external-application-resource
+        text:fingerprints; url:dfn-fingerprints
+        text:id; url:dfn-id
+        text:platform; url:dfn-platform
+        text:related applications; url:related_applications-member
+
+spec: payment-requestl urlPrefix: https://w3c.github.io/payment-request/
+    type: dfn
+        text:can make payment algorithm; url:dfn-can-make-payment-algorithm
+        text:steps to check if a payment can be made; url:dfn-steps-to-check-if-a-payment-can-be-made
+        text:steps to respond to a payment request; url:dfn-steps-to-respond-to-a-payment-request
+</pre>
+
+<!-- Manual fix for 'origin' due to HTML spec ambiguity -->
+<pre class="anchors">
+spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/browsers.html#
+    type: dfn
+        text: origin; url: concept-origin
 </pre>
 
 <pre class="link-defaults">
+spec:infra; type:dfn; for:/; text:set
 </pre>
 
 <pre class="biblio">
@@ -37,8 +55,8 @@ handle payment requests that originate on the web on behalf of users. Such
 applications are referred to as [=native-app payment handlers=]. [=Native-app
 payment handlers=] are accessed via an abstract "provider", the [=native
 payment app provider model=], to avoid having to specify details of specific
-operating systems. That model has abstract operations which can be supported by
-concrete providers.
+operating systems or other integrations. The [=native payment app provider
+model=] has abstract operations which can be supported by concrete providers.
 
 </div>
 
@@ -55,7 +73,7 @@ a single [=native payment app provider=].
 ## Filtering native-app payment handlers ## {#sctn-filtering-apps}
 
 Given a [=payment method identifier=], |identifier|, and a [=native payment
-app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
+app=], |app|, the following steps determine if |app| is <dfn>allowed to handle
 the payment method identifier</dfn> |identifier|:
 
 1. If |identifier| is not a [=URL-based payment method identifier=], return
@@ -68,14 +86,16 @@ the payment method identifier</dfn> |identifier|:
 1. Let |claimedOrigins| be the [=set=] of [=origins=] that are [=claimed by the
     native payment app|claimed by=] |app|.
 
+    ISSUE: Define 'claimed by the native payment app'
+
     ISSUE: Determine whether we need to special case the 'default claimed app'.
 
 1. If none of the |claimedOrigins| [=match the origins allowed for a payment
     method identifier|match the origins allowed for=] |identifier|, return
     `false`.
 
-1. Let |webAppManifest| be the web app manifest for |paymentMethodManifest|'s
-     [=default applications=].
+1. Let |webAppManifest| be the [=application manifest|web app manifest=] for
+     |paymentMethodManifest|'s [=default applications=].
 
      ISSUE: There is an algorithm declared for this for the **default** payment
      app in [[payment-method-manifest]], but none for a separate supported_origin?
@@ -89,38 +109,36 @@ the payment method identifier</dfn> |identifier|:
 1. If |app| [=is a related application=] for |webAppManifest|, return `true`,
     else return `false`.
 
-## Can make payment algorithm
+## Can make payment algorithm ## {#sctn-can-make-payment-algorithm}
 
 When performing step 8.2. of the [=can make payment algorithm=] from
-[[payment-request]] with the [=payment method identifier=] |identifier|, the
+[[payment-request]] for a [=payment method identifier=] |identifier|, the
 user agent MUST perform the following steps:
 
 1. For each available [=native payment app provider=], |provider|:
 
-    1. Let |paymentApps| be the list of [=native payment apps=]
-        [=get the list of native payment apps|known to=]
-        |provider|.
+    1. [=Get the list of native payment apps=] known to |provider|. Let the
+         result be |paymentApps|.
 
     1. For each |paymentApp| in |paymentApps|:
 
-         1. If |paymentApp| [=is allowed to handle the payment method
+         1. If |paymentApp| is [=allowed to handle the payment method
               identifier=] |identifier|, resolve `hasHandlerPromise` with `true`
-              and terminate the remaining steps.
+              and terminate any remaining steps.
 
-## The show() method
+## The show() method ## {#sctn-show-method}
 
 When performing step 17.5. of the {{PaymentRequest/show|PaymentRequest.show()}}
 method, the user agent MUST perform the following steps:
 
 1. For each available [=native payment app provider=], |provider|:
 
-    1. Let |paymentApps| be the list of [=native payment apps=]
-        [=get the list of native payment apps|known to=]
-        |provider|.
+    1. [=Get the list of native payment apps=] known to |provider|. Let the
+         result be |paymentApps|.
 
     1. For each |paymentApp| in |paymentApps|:
 
-         1. If |paymentApp| [=is allowed to handle the payment method
+         1. If |paymentApp| is [=allowed to handle the payment method
               identifier=] |identifier|, create a [=native-app payment handler=]
               for |paymentApp| and append it to the list of registered payment
               handlers.
@@ -133,7 +151,7 @@ NOTE: The invoked payment app will ultimately communicate a result back to the
 user agent, either by [=indicating success=], [=indicating user cancellation=],
 or [=indicating internal error=].
 
-## Steps to check if a payment can be made ##
+## Steps to check if a payment can be made ## {#sctn-steps-to-check-if-a-payment-can-be-made}
 
 ISSUE: This needs to take in some form of data object per the PR spec
 
@@ -142,7 +160,7 @@ handler=] are:
 
 ISSUE: Are there any steps?
 
-## Steps to respond to a payment request ##
+## Steps to respond to a payment request ## {#sctn-steps-to-respond-to-a-payment-request}
 
 The [=steps to respond to a payment request=] for a [=native-app payment
 handler=] are:
@@ -188,11 +206,11 @@ The [=native-app payment handler=] API implies a specific abstract functional
 model through which the user agent can interact with [=native payment apps=].
 This section describes that model.
 
-The <dfn>native payment app provider model</dfn> is an abstract functional model
-which describes the behavior of some <dfn>native payment app provider</dfn>
-(e.g., the operating system) that provides access to underlying [=native
-payment apps=]. <dfn>Native payment apps</dfn> are deliberately loosely defined,
-simply as some form of application TODO
+The <dfn>native payment app provider model</dfn> is an abstract functional
+model which describes the behavior of some <dfn>native payment app
+provider</dfn> (e.g., the operating system) that facilitates access to
+underlying [=native payment apps=]. <dfn>Native payment apps</dfn> are
+deliberately loosely defined, simply as some form of application TODO
 
 ISSUE: Fix the above TODO
 
@@ -212,21 +230,22 @@ can <dfn>get the list of native payment apps</dfn> known to the provider.
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can check if a [=native payment app=] <dfn>is a related application</dfn> for a
-[=web app manifest=]. This method MAY utilize the information contained in the
-[=related applications=], such as the [=id=], [=platform=], or [=fingerprints=]
-of each specified [=external application resource=].
+[=application manifest|web app manifest=]. This method MAY utilize the
+information contained in the [=related applications=], such as the [=id=],
+[=platform=], or [=fingerprints=] of each specified [=external application
+resource=].
 
 ## Determining if a [=native payment app=] can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
-can check if a [=native payment app=] is <dfn>able to handle a payment
+can check if a [=native payment app=] is <dfn export>able to handle a payment
 request</dfn>. In order to support this functionality, the user agent MAY pass
 information about the specific {{PaymentRequest}} to the [=native payment
 app=], but considerations SHOULD be made regarding user privacy.
 
-ISSUE: This functionality is used to answer the `hasEnrolledInstrument` method
-on {{PaymentRequest}}, which at the current time has been removed from the
-[payment-request] specification.
+NOTE: This functionality is used to answer the `hasEnrolledInstrument` method
+on {{PaymentRequest}}, which was removed from the [[payment-request]]
+specification but is still shipping in multiple browser engines.
 
 ISSUE: The [[payment-request]] spec is quite vague about what data is or should
 be passed to an invoked payment handler. We should try to be more specific.
@@ -243,13 +262,13 @@ app [=indicates success=], [=indicates user cancellation=], or [=indicates inter
 error=].
 
 Depending on the capabilities of the [=native payment app provider=], the
-invoked app MAY be displayed over the user agent window (to improve user
-context and understanding of the flow).
+invoked app MAY be displayed partially over the user agent window (to improve
+user context and understanding of the flow).
 
 ## Communicating with an invoked [=native payment app=] ## {#sctn-dynamic-updates}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
-can <dfn>communicate with an invoked payment app</dfn>.
+can <dfn export>communicate with an invoked payment app</dfn>.
 
 ISSUE: This needs fleshed out, to include; notifying that the payment method
 has changed, notifying that the shipping address or options have changed,
