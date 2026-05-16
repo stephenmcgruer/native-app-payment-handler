@@ -1488,8 +1488,8 @@ Possible extra rowspan handling
 		}
 	}
 </style>
-  <meta content="Bikeshed version ffb4274fd, updated Thu Apr 16 23:47:54 2026 +0000" name="generator">
-  <meta content="33d3c273abaef088862cb0417c2d0a9710b82273" name="revision">
+  <meta content="Bikeshed version 0a3d88311, updated Mon May 4 18:07:03 2026 +0000" name="generator">
+  <meta content="bc51a203695ef75d7dcfd4649be19b7b9fc8eeb1" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2058,7 +2058,7 @@ dfn > a.self-link::before      { content: "#"; }
    <p data-fill-with="logo"></p>
    <h1 class="no-ref p-name" id="title">Android Payment App Provider</h1>
    <h2 class="heading no-num no-ref no-toc settled" id="profile-and-date"><span class="content">A Collection of Interesting Ideas,
-    <time class="dt-updated" datetime="2026-05-14">14 May 2026</time></span></h2>
+    <time class="dt-updated" datetime="2026-05-16">16 May 2026</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>Issue Tracking:
@@ -2072,7 +2072,7 @@ dfn > a.self-link::before      { content: "#"; }
    <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" height="15" src="https://licensebuttons.net/p/zero/1.0/80x15.png" width="80"></a>
 To the extent possible under law, the editors have waived all copyright
 and related or neighboring rights to this work.
-In addition, as of 14 May 2026,
+In addition, as of 16 May 2026,
 the editors have made this specification available under the
 <a href="https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
 which is available at https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0.
@@ -2230,8 +2230,8 @@ the following steps:</p>
  apps? TBD.</p>
     </ol>
     <h3 class="heading settled" data-level="2.4" id="sctn-checking-related-application"><span class="secno">2.4. </span><span class="content">Checking if a native payment app is a related application for a web app manifest</span><a class="self-link" href="#sctn-checking-related-application"></a></h3>
-    <p>In order to check if a given Android application, <var>app</var>, <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#is-a-related-application" id="ref-for-is-a-related-application">is a related application</a> for a <u class="link-error" data-lt="web app manifest" title="LINK ERROR: No &apos;dfn&apos; refs found for &apos;web app manifest&apos;.">web app manifest</u>, <var>manifest</var>, the user agent performs
-the following steps:</p>
+    <p>In order to check if a given Android application, <var>app</var>, <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#is-a-related-application" id="ref-for-is-a-related-application">is a related application</a> for a <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest">web app manifest</a>, <var>manifest</var>, the
+user agent performs the following steps:</p>
     <ol>
      <li data-md>
       <p>TODO</p>
@@ -2505,6 +2505,11 @@ perform the following steps:</p>
   <h3 class="heading no-num no-ref settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
   <ul class="index">
    <li>
+    <a data-link-type="biblio">[APPMANIFEST]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="c2345655">application manifest</span>
+    </ul>
+   <li>
     <a data-link-type="biblio">[HTML]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="3349d69f">associated Document</span>
@@ -2545,6 +2550,8 @@ perform the following steps:</p>
   </dl>
   <h3 class="heading no-num no-ref settled" id="informative"><span class="content">Non-Normative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
+   <dt id="biblio-appmanifest">[APPMANIFEST]
+   <dd>Marcos Caceres; Daniel Murphy; Christian Liebel. <a href="https://w3c.github.io/manifest/"><cite>Web Application Manifest</cite></a>. URL: <a href="https://w3c.github.io/manifest/">https://w3c.github.io/manifest/</a>
    <dt id="biblio-html">[HTML]
    <dd>Anne van Kesteren; et al. <a href="https://html.spec.whatwg.org/multipage/"><cite>HTML Standard</cite></a>. Living Standard. URL: <a href="https://html.spec.whatwg.org/multipage/">https://html.spec.whatwg.org/multipage/</a>
    <dt id="biblio-native-app-payment-handler">[NATIVE-APP-PAYMENT-HANDLER]
@@ -2780,6 +2787,7 @@ let dfnPanelData = {
 "a0c639bf": {"dfnID":"a0c639bf","dfnText":"indicate internal error","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-internal-error"}],"title":"2.10. Indicating internal error from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error"},
 "android-payment-app-provider": {"dfnID":"android-payment-app-provider","dfnText":"Android Payment App Provider","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-provider"}],"title":"1. Introduction"}],"url":"#android-payment-app-provider"},
 "b3012bcb": {"dfnID":"b3012bcb","dfnText":"native-app payment handler","external":true,"refSections":[{"refs":[{"id":"ref-for-native-app-payment-handler"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-app-payment-handler"},
+"c2345655": {"dfnID":"c2345655","dfnText":"application manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-manifest"}],"title":"2.4. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://w3c.github.io/manifest/#dfn-manifest"},
 "create-an-android-bundle": {"dfnID":"create-an-android-bundle","dfnText":"create an Android bundle","external":false,"refSections":[{"refs":[{"id":"ref-for-create-an-android-bundle"}],"title":"2.6. Invoking an Android native payment app"}],"url":"#create-an-android-bundle"},
 "db503fa2": {"dfnID":"db503fa2","dfnText":"native payment app provider model","external":true,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider-model"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model"},
 "ddf5eb3a": {"dfnID":"ddf5eb3a","dfnText":"title","external":true,"refSections":[{"refs":[{"id":"ref-for-document.title"}],"title":"2.11. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/dom.html#document.title"},
@@ -3192,6 +3200,7 @@ let refsData = {
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider": {"displayText":"native payment app provider","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment app provider","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model": {"displayText":"native payment app provider model","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment app provider model","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps": {"displayText":"native payment apps","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment apps","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps"},
+"https://w3c.github.io/manifest/#dfn-manifest": {"displayText":"application manifest","export":true,"for_":[],"level":"1","normative":true,"shortname":"appmanifest","spec":"appmanifest","status":"current","text":"application manifest","type":"dfn","url":"https://w3c.github.io/manifest/#dfn-manifest"},
 "https://w3c.github.io/payment-request/#dfn-details": {"displayText":"[[details]]","export":true,"for_":["PaymentRequest"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"[[details]]","type":"attribute","url":"https://w3c.github.io/payment-request/#dfn-details"},
 "https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total": {"displayText":"total","export":true,"for_":["PaymentDetailsInit"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"total","type":"dict-member","url":"https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total"},
 "https://w3c.github.io/payment-request/#dom-paymentitem-amount": {"displayText":"amount","export":true,"for_":["PaymentItem"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"amount","type":"dict-member","url":"https://w3c.github.io/payment-request/#dom-paymentitem-amount"},
