@@ -160,8 +160,8 @@ the following steps:
 ## Checking if a native payment app is a related application for a web app manifest ## {#sctn-checking-related-application}
 
 In order to check if a given Android application, |app|, [=is a related
-application=] for a [=web app manifest=], |manifest|, the user agent performs
-the following steps:
+application=] for a [=application manifest|web app manifest=], |manifest|, the
+user agent performs the following steps:
 
 1. TODO
 
