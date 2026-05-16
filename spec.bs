@@ -73,7 +73,7 @@ a single [=native payment app provider=].
 ## Filtering native-app payment handlers ## {#sctn-filtering-apps}
 
 Given a [=payment method identifier=], |identifier|, and a [=native payment
-app=], |app|, the following steps determine if |app| is <dfn>allowed to handle
+app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
 the payment method identifier</dfn> |identifier|:
 
 1. If |identifier| is not a [=URL-based payment method identifier=], return
@@ -85,8 +85,6 @@ the payment method identifier</dfn> |identifier|:
 
 1. Let |claimedOrigins| be the [=set=] of [=origins=] that are [=claimed by the
     native payment app|claimed by=] |app|.
-
-    ISSUE: Define 'claimed by the native payment app'
 
     ISSUE: Determine whether we need to special case the 'default claimed app'.
 
@@ -122,7 +120,7 @@ user agent MUST perform the following steps:
 
     1. For each |paymentApp| in |paymentApps|:
 
-         1. If |paymentApp| is [=allowed to handle the payment method
+         1. If |paymentApp| [=is allowed to handle the payment method
               identifier=] |identifier|, resolve `hasHandlerPromise` with `true`
               and terminate any remaining steps.
 
@@ -138,7 +136,7 @@ method, the user agent MUST perform the following steps:
 
     1. For each |paymentApp| in |paymentApps|:
 
-         1. If |paymentApp| is [=allowed to handle the payment method
+         1. If |paymentApp| [=is allowed to handle the payment method
               identifier=] |identifier|, create a [=native-app payment handler=]
               for |paymentApp| and append it to the list of registered payment
               handlers.
@@ -225,6 +223,15 @@ long as the normative requirements of the model are met. See
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn>get the list of native payment apps</dfn> known to the provider.
+
+## Claiming a set of origins ## {#sctn-claiming-origins}
+
+Given a [=native payment app=], |app|, a [=native payment app provider=] MUST
+provide a method by which the user agent can get the [=set=] of [=origins=]
+that are <dfn>claimed by the native payment app</dfn>. These are the origins
+that the [=native payment app=] claims that it has the right to act on behalf
+of, though user agents MUST verify that against the origin (see
+[[#sctn-filtering-apps]]).
 
 ## Checking if a [=native payment app=] is a related application for a web app manifest ## {#sctn-related-application}
 
