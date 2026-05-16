@@ -39,7 +39,7 @@ spec:infra; type:dfn; for:/; text:set
 {
     "android-payment-app-provider": {
         "title": "Android Payment App Provider",
-        "href": "https://todo.example"
+        "href": "https://www.stephenmcgruer.com/native-app-payment-handler/android-apps.html"
     }
 }
 </pre>
