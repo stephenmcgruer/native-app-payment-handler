@@ -70,7 +70,16 @@ This section describes the steps the user agent MUST take when intermediating
 between a {{PaymentRequest}} object and one or more [=native payment apps=] from
 a single [=native payment app provider=].
 
+
 ## Filtering native-app payment handlers ## {#sctn-filtering-apps}
+
+[=Native-app payment handlers=] are allowed to "[=claimed by the native payment
+app|claim=]" the right to handle [=payment method identifiers=]. Verification
+of these claims relies upon the payment and application manifests specified in
+[[payment-method-manifest]].
+
+ISSUE: Should we allow for alternate methods to verify the claims, to support
+cases like payment apps built into the browser?
 
 Given a [=payment method identifier=], |identifier|, and a [=native payment
 app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
