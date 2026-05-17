@@ -9,6 +9,15 @@ Markup Shorthands: markdown yes
 </pre>
 
 <pre class="anchors">
+spec: manifest-incubations; urlPrefix: https://wicg.github.io/manifest-incubations/
+    type: dfn
+        text:external application resource; url:dfn-external-application-resource
+        text:fingerprints; url:dfn-fingerprints
+        text:id; url:dfn-id
+        text:minimum version; url:dfn-minimum-version
+        text:platform; url:dfn-platform
+        text:related applications; url:related_applications-member
+
 spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/native-app-payment-handler/spec.html
     type: dfn
         text:native payment app provider model; url: native-payment-app-provider-model
@@ -16,6 +25,8 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:native payment apps; url: native-payment-apps
         text:native-app payment handler; url: native-app-payment-handler
         text:get the list of native payment apps; url: get-the-list-of-native-payment-apps
+        text:claimed payment method identifier; url: claimed-payment-method-identifier
+        text:claimed third-party origins; url: claimed-third-party-origins
         text:is a related application; url: is-a-related-application
         text:able to handle a payment request; url:able-to-handle-a-payment-request
         text:invoke the native payment app; url:invoke-the-native-payment-app
@@ -23,9 +34,18 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:indicate success; url:indicate-success
         text:indicate user cancellation; url:indicate-user-cancellation
         text:indicate internal error; url:indicate-internal-error
+        text:retrieve the converted result details; url:retrieve-the-converted-result-details
+</pre>
+
+<!-- Manual fix for 'origin' due to HTML spec ambiguity -->
+<pre class="anchors">
+spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/browsers.html#
+    type: dfn
+        text: origin; url: concept-origin
 </pre>
 
 <pre class="link-defaults">
+spec:infra; type:dfn; for:/; text:set
 </pre>
 
 <pre class="biblio">
@@ -76,14 +96,17 @@ following concepts in their `AndroidManifest.xml` file:
 1. A **mandatory** "pay" Android activity, which will receive an intent when
      the user agent [[#sctn-invoking|invokes the app]].
 
-Issue: TODO the update service
+Issue: TODO add the update service
+
+If an Android payment app specifies more than one activity or service that
+matches one of the above, the user agent behavior is undefined.
 
 ### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
 
 The `IS_READY_TO_PAY` service receives calls from the user agent to
 [[#sctn-hasenrolled-instrument|determine if the app can handle a
-PaymentRequest]]. It must be exported and have an intent filter with an
-`org.chromium.intent.action.IS_READY_TO_PAY` action:
+PaymentRequest]]. If present, it must be exported and have an intent filter
+with an `org.chromium.intent.action.IS_READY_TO_PAY` action:
 
 <xmp>
   <service
@@ -102,8 +125,12 @@ agent [[#sctn-invoking|invokes the app]] to handle a PaymentRequest. It must be
 exported and have:
 
 - An intent filter with an `org.chromium.intent.action.PAY` action
-- One or both of an `org.chromium.default_payment_method_name` and
-    `org.chromium.payment_method_names` `<meta-data>` tags
+- An `org.chromium.default_payment_method_name` `<meta-data>` tag.
+- Optionally, an `org.chromium.payment_method_names` `<meta-data>` tag.
+
+The `org.chromium.default_payment_method_name` tag must be a string
+representing a valid [=url-based payment method identifier=] and is used for
+[[#sctn-claiming-method-url]].
 
 <xmp>
   <activity
@@ -157,20 +184,92 @@ the following steps:
 1. TODO - do we need to spec how to turn the resultant info into a list of
      apps? TBD.
 
+## Claiming a method URL ## {#sctn-claiming-method-url}
+
+The [=claimed payment method identifier=] for an Android application, |app|, is
+the value of the `org.chromium.default_payment_method_name` `<meta-data>` tag
+in |app|'s AndroidManifest.xml file.
+
+## Claiming a set of origins ## {#sctn-claiming-origins}
+
+The [=set=] of [=claimed third-party origins=] for an Android application,
+|app|, is created from the value of the `org.chromium.payment_method_names`
+`<meta-data>` tag in |app|'s AndroidManifest.xml file, as follows:
+
+1. Let |paymentMethodIdentifiers| be the value  of the `org.chromium.payment_method_names`
+    `<meta-data>` tag.
+
+1. If |paymentMethodIdentifiers| is not a string array, return an empty [=set=].
+
+1. Let |origins| be an empty [=set=].
+
+1. For each string |identifier| in |paymentMethodIdentifiers|:
+
+    1. If |identifier| is not a valid [=url-based payment method identifier=],
+        go to the next iteration of the loop.
+
+    1. Let |origin| be the [=origin=] of |identifier|.
+
+    1. Add |origin| to |origins|.
+
+1. Return |origins|.
+
+ISSUE: We need to document why this is an array of method URLs, rather than
+just an array of origins.
+
 ## Checking if a native payment app is a related application for a web app manifest ## {#sctn-checking-related-application}
 
 In order to check if a given Android application, |app|, [=is a related
 application=] for a [=application manifest|web app manifest=], |manifest|, the
 user agent performs the following steps:
 
-1. TODO
+1. Let |packageName| be the package name of |app|.
+
+1. Let |version| be the version of |app|.
+
+1. Let |fingerprint| be ...
+
+    ISSUE: TODO - need to specify how to convert it to a string
+
+1. For each [=related application=], |relatedApplication|, in the [=related
+     applications=] of |manifest|:
+
+    1. If |packageName| is not equal to |relatedApplication|'s [=id=], go to
+        the next iteration of this loop.
+
+    1. If |version| is less than |relatedApplication|'s [=minimum version=],
+        go to the next iteration of this loop.
+
+        ISSUE: Need to define how the comparison is done.
+
+    1. If |fingerprint| does not match |relatedApplication|'s [=fingerprint=],
+        go to the next iteration of this loop.
+
+    1. Return `true`.
+
+1. Return `false`.
 
 ## Determining if an Android native payment app can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
 
 In order to check if an Android application, |app|, is [=able to handle a
 payment request=], |request|, the user agent performs the following steps:
 
-1. TODO
+1. If |app| does not have a service listed in its AndroidManifest.xml with an
+    intent-filter for `org.chromium.intent.action.IS_READY_TO_PAY` (see
+    [[#sctn-is-ready-to-pay-service]]), return `false` / `true` TODO
+
+1. If the user agent is in private browsing mode, return `false` / `true` TODO
+
+    ISSUE: Properly link this
+
+1. Call the IS_READY_TO_PAY service (TODO how), passing the following
+     information, and wait on the result.
+
+    1. TODO what information to pass
+
+    ISSUE: Properly document this
+
+1. TODO - convert the result to true/false and return that.
 
 ISSUE: Document the privacy concerns.
 
@@ -211,9 +310,21 @@ performs the following steps:
 In order for an invoked Android application, |app|, to [=indicate success=]
 back to the user agent, |app| performs the following steps:
 
-1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a>.
+1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a> and with an Intent containing:
+
+    1. A "`methodName`" Intent extra, set to the string name of the method being used.
+
+    1. A "`details`" Intent extra, set to a JSON string containing any
+        payment-app specific result information.
 
 1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+
+To [=retrieve the converted result details=], the user agent performs the
+following steps:
+
+1. Obtain the Intent bundle from the result via HOW
+
+1. TODO - conversion steps
 
 ## Indicating user cancel from an invoked Android native payment app ## {#sctn-indicate-user-cancel}
 
