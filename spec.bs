@@ -58,6 +58,8 @@ payment app provider model=], to avoid having to specify details of specific
 operating systems or other integrations. The [=native payment app provider
 model=] has abstract operations which can be supported by concrete providers.
 
+For examples of concrete providers, see [[#sctn-examples]].
+
 </div>
 
 # Native-app payment handlers # {#sctn-native-app-payment-handler}
@@ -76,7 +78,7 @@ When performing step 8.2. of the [=can make payment algorithm=] from
 [[payment-request]] for a [=payment method identifier=] |identifier|, the
 user agent MUST perform the following steps:
 
-1. For each available [=native payment app provider=], |provider|:
+1. For each available [=native payment app provider=] |provider|:
 
     1. [=Get the list of native payment apps=] known to |provider|. Let the
          result be |paymentApps|.
@@ -90,9 +92,10 @@ user agent MUST perform the following steps:
 ## The show() method ## {#sctn-show-method}
 
 When performing step 17.5. of the {{PaymentRequest/show|PaymentRequest.show()}}
-method, the user agent MUST perform the following steps:
+method for a {{PaymentRequest}} |request|, the user agent MUST perform the
+following steps:
 
-1. For each available [=native payment app provider=], |provider|:
+1. For each available [=native payment app provider=] |provider|:
 
     1. [=Get the list of native payment apps=] known to |provider|. Let the
          result be |paymentApps|.
@@ -161,9 +164,9 @@ the payment method identifier</dfn> |identifier|:
 1. Let |claimedIdentifier| be the [=claimed payment method identifier=]
     for |app|.
 
-1. If |claimedIdentifier| is equal to |identifier|, then,
+1. If |claimedIdentifier| is equal to |identifier|, then:
 
-    1. For each [=default application=], |defaultApp|, in |paymentMethodManifest|,
+    1. For each [=default application=] |defaultApp| in |paymentMethodManifest|:
 
         1. Let |appManifest| be the [=application manifest=] for |defaultApp|.
 
@@ -173,7 +176,7 @@ the payment method identifier</dfn> |identifier|:
 
     1. Return `false`.
 
-1. Otherwise,
+1. Otherwise:
 
     1. Let |claimedOrigins| be the [=claimed third-party origins=] for |app|.
 
@@ -185,8 +188,8 @@ the payment method identifier</dfn> |identifier|:
         manifests|ingested=] and [=parsed payment method manifest|parsed=]
         [=payment method manifest=] for |claimedIdentifier|.
 
-    1. For each [=default application=], |defaultApp|, in
-        |claimedPaymentMethodManifest|,
+    1. For each [=default application=] |defaultApp| in
+        |claimedPaymentMethodManifest|:
 
         1. Let |appManifest| be the [=application manifest=] for |defaultApp|.
 
@@ -298,11 +301,12 @@ ISSUE: We should speak to the privacy issues in a privacy section.
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn>invoke the native payment app</dfn> for a given [=native payment
-app=]. When run, this method MUST pass control of the current experience over
-to the invoked [=native payment app=], until such times as the native payment
-app [=indicates success=], [=indicates user cancellation=], or [=indicates internal
-error=].
+app=], including converting the input data (see [[#sctn-show-method]]) to a
+form that the [=native payment app=] understands.
 
+When run, this method MUST pass control of the current experience over to the
+invoked [=native payment app=], until the native payment app [=indicates
+success=], [=indicates user cancellation=], or [=indicates internal error=].
 Depending on the capabilities of the [=native payment app provider=], the
 invoked app MAY be displayed partially over the user agent window (to improve
 user context and understanding of the flow).

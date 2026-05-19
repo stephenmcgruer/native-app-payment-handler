@@ -89,34 +89,17 @@ concepts for cross-application communication and collaboration:
 In order to be visible to the user agent, the Android payment app defines the
 following concepts in their `AndroidManifest.xml` file:
 
-1. An **optional** "is ready to pay" Android service, which the user agent will
-     bind to and call when [[#sctn-hasenrolled-instrument|determining if the
-     app can handle a PaymentRequest]].
+- A **mandatory** "pay" Android activity, which will receive an intent when
+    the user agent [[#sctn-invoking|invokes the app]].
 
-1. A **mandatory** "pay" Android activity, which will receive an intent when
-     the user agent [[#sctn-invoking|invokes the app]].
+- An **optional** "is ready to pay" Android service, which the user agent will
+    bind to and call when [[#sctn-hasenrolled-instrument|determining if the
+    app can handle a PaymentRequest]].
 
 Issue: TODO add the update service
 
 If an Android payment app specifies more than one activity or service that
 matches one of the above, the user agent behavior is undefined.
-
-### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
-
-The `IS_READY_TO_PAY` service receives calls from the user agent to
-[[#sctn-hasenrolled-instrument|determine if the app can handle a
-PaymentRequest]]. If present, it must be exported and have an intent filter
-with an `org.chromium.intent.action.IS_READY_TO_PAY` action:
-
-<xmp>
-  <service
-      ...
-      android:exported="true">
-    <intent-filter>
-      <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
-    </intent-filter>
-  </service>
-</xmp>
 
 ### The `PAY` activity ### {#sctn-pay-activity}
 
@@ -125,16 +108,22 @@ agent [[#sctn-invoking|invokes the app]] to handle a PaymentRequest. It must be
 exported and have:
 
 - An intent filter with an `org.chromium.intent.action.PAY` action
-- An `org.chromium.default_payment_method_name` `<meta-data>` tag.
-- Optionally, an `org.chromium.payment_method_names` `<meta-data>` tag.
+- An "`org.chromium.default_payment_method_name`" `<meta-data>` tag.
+- Optionally, an "`org.chromium.payment_method_names`" `<meta-data>` tag.
 
-The `org.chromium.default_payment_method_name` tag must be a string
-representing a valid [=url-based payment method identifier=] and is used for
-[[#sctn-claiming-method-url]].
+The "`org.chromium.default_payment_method_name`" tag must have an
+`android:value` attribute containing a valid [=url-based payment method
+identifier=]. This will be used for [[#sctn-claiming-method-url]].
 
+The "`org.chromium.payment_method_names`" tag, if present, must have an
+`android:resource` attribute pointing at a `<string-array>` resource each of
+which must be a valid [=url-based payment method identifier=]. This will be
+used for [[#sctn-claiming-origins]].
+
+<div class="example">
 <xmp>
   <activity
-      ...
+       android:name=".PaymentActivity"
        android:exported="true">
     <intent-filter>
       <action android:name="org.chromium.intent.action.PAY" />
@@ -148,6 +137,26 @@ representing a valid [=url-based payment method identifier=] and is used for
         android:resource="@array/chromium_payment_method_names" />
   </activity>
 </xmp>
+</div>
+
+### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
+
+The `IS_READY_TO_PAY` service receives calls from the user agent to
+[[#sctn-hasenrolled-instrument|determine if the app can handle a
+PaymentRequest]]. If present, it must be exported and have an intent filter
+with an `org.chromium.intent.action.IS_READY_TO_PAY` action.
+
+<div class="example">
+<xmp>
+  <service
+      ...
+      android:exported="true">
+    <intent-filter>
+      <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
+    </intent-filter>
+  </service>
+</xmp>
+</div>
 
 ## User agent app AndroidManifest.xml ## {#sctn-user-agent-android-manifest}
 
@@ -155,8 +164,15 @@ In order to be able to interact with Android [=native payment apps=], the user
 agent application <a
 href="https://developer.android.com/training/package-visibility/declaring">declares
 its package visibility needs</a> for the relevant intent filters in its own
-AndroidManifest.xml file:
+AndroidManifest.xml file, by defining a `<queries>` block that lists the
+following actions:
 
+- `"org.chromium.intent.action.PAY"`
+- `"org.chromium.intent.action.IS_READY_TO_PAY"`
+
+Issue: TODO - UPDATE_PAYMENT_DETAILS
+
+<div class="example">
 <xmp>
   <queries>
     <intent>
@@ -167,8 +183,7 @@ AndroidManifest.xml file:
     </intent>
   </queries>
 </xmp>
-
-Issue: TODO - UPDATE_PAYMENT_DETAILS
+</div>
 
 ## Returning a list of native payment apps ## {#sctn-list-native-payment-apps}
 
@@ -181,20 +196,20 @@ the following steps:
 1. Query the Android OS for the list of activities that can be performed for
      |intent|, for example via <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentActivities(android.content.Intent,%20int)">PackageManager.queryIntentActivities</a>.
 
-1. TODO - do we need to spec how to turn the resultant info into a list of
+ISSUE: do we need to spec how to turn the resultant info into a list of
      apps? TBD.
 
 ## Claiming a method URL ## {#sctn-claiming-method-url}
 
 The [=claimed payment method identifier=] for an Android application, |app|, is
-the value of the `org.chromium.default_payment_method_name` `<meta-data>` tag
-in |app|'s AndroidManifest.xml file.
+the `android:value` attribute of the `org.chromium.default_payment_method_name`
+`<meta-data>` tag in |app|'s AndroidManifest.xml file.
 
 ## Claiming a set of origins ## {#sctn-claiming-origins}
 
 The [=set=] of [=claimed third-party origins=] for an Android application,
-|app|, is created from the value of the `org.chromium.payment_method_names`
-`<meta-data>` tag in |app|'s AndroidManifest.xml file, as follows:
+|app|, is created from the `org.chromium.payment_method_names` `<meta-data>`
+tag in |app|'s AndroidManifest.xml file, as follows:
 
 1. Let |paymentMethodIdentifiers| be the value  of the `org.chromium.payment_method_names`
     `<meta-data>` tag.
