@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version 0a3d88311, updated Mon May 4 18:07:03 2026 +0000" name="generator">
-  <meta content="a4a472747f35e7ed30486af85f5e28883a96f057" name="revision">
+  <meta content="0dfed79311ea9e70d4ada69b5969d9d32573b18b" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2095,8 +2095,8 @@ Parts of this work may be from another specification document.  If so, those par
       <li>
        <a href="#sctn-payment-app-android-manifest"><span class="secno">2.1</span> <span class="content">Payment app AndroidManifest.xml</span></a>
        <ol class="toc">
-        <li><a href="#sctn-is-ready-to-pay-service"><span class="secno">2.1.1</span> <span class="content">The <code>IS_READY_TO_PAY</code> service</span></a>
-        <li><a href="#sctn-pay-activity"><span class="secno">2.1.2</span> <span class="content">The <code>PAY</code> activity</span></a>
+        <li><a href="#sctn-pay-activity"><span class="secno">2.1.1</span> <span class="content">The <code>PAY</code> activity</span></a>
+        <li><a href="#sctn-is-ready-to-pay-service"><span class="secno">2.1.2</span> <span class="content">The <code>IS_READY_TO_PAY</code> service</span></a>
        </ol>
       <li><a href="#sctn-user-agent-android-manifest"><span class="secno">2.2</span> <span class="content">User agent app AndroidManifest.xml</span></a>
       <li><a href="#sctn-list-native-payment-apps"><span class="secno">2.3</span> <span class="content">Returning a list of native payment apps</span></a>
@@ -2153,32 +2153,19 @@ concepts for cross-application communication and collaboration:</p>
     <h3 class="heading settled" data-level="2.1" id="sctn-payment-app-android-manifest"><span class="secno">2.1. </span><span class="content">Payment app AndroidManifest.xml</span><a class="self-link" href="#sctn-payment-app-android-manifest"></a></h3>
     <p>In order to be visible to the user agent, the Android payment app defines the
 following concepts in their <code>AndroidManifest.xml</code> file:</p>
-    <ol>
-     <li data-md>
-      <p>An <strong>optional</strong> "is ready to pay" Android service, which the user agent will
- bind to and call when <a href="#sctn-hasenrolled-instrument">determining if the
- app can handle a PaymentRequest</a>.</p>
+    <ul>
      <li data-md>
       <p>A <strong>mandatory</strong> "pay" Android activity, which will receive an intent when
- the user agent <a href="#sctn-invoking">invokes the app</a>.</p>
-    </ol>
+the user agent <a href="#sctn-invoking">invokes the app</a>.</p>
+     <li data-md>
+      <p>An <strong>optional</strong> "is ready to pay" Android service, which the user agent will
+bind to and call when <a href="#sctn-hasenrolled-instrument">determining if the
+app can handle a PaymentRequest</a>.</p>
+    </ul>
     <p class="issue" id="issue-60cc0e37"><a class="self-link" href="#issue-60cc0e37"></a> TODO add the update service</p>
     <p>If an Android payment app specifies more than one activity or service that
 matches one of the above, the user agent behavior is undefined.</p>
-    <h4 class="heading settled" data-level="2.1.1" id="sctn-is-ready-to-pay-service"><span class="secno">2.1.1. </span><span class="content">The <code>IS_READY_TO_PAY</code> service</span><a class="self-link" href="#sctn-is-ready-to-pay-service"></a></h4>
-    <p>The <code>IS_READY_TO_PAY</code> service receives calls from the user agent to
-<a href="#sctn-hasenrolled-instrument">determine if the app can handle a
-PaymentRequest</a>. If present, it must be exported and have an intent filter
-with an <code>org.chromium.intent.action.IS_READY_TO_PAY</code> action:</p>
-<pre>&lt;service
-    ...
-    android:exported="true">
-  &lt;intent-filter>
-    &lt;action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
-  &lt;/intent-filter>
-&lt;/service>
-</pre>
-    <h4 class="heading settled" data-level="2.1.2" id="sctn-pay-activity"><span class="secno">2.1.2. </span><span class="content">The <code>PAY</code> activity</span><a class="self-link" href="#sctn-pay-activity"></a></h4>
+    <h4 class="heading settled" data-level="2.1.1" id="sctn-pay-activity"><span class="secno">2.1.1. </span><span class="content">The <code>PAY</code> activity</span><a class="self-link" href="#sctn-pay-activity"></a></h4>
     <p>The <code>PAY</code> activity will receive an intent from the user agent when the user
 agent <a href="#sctn-invoking">invokes the app</a> to handle a PaymentRequest. It must be
 exported and have:</p>
@@ -2186,15 +2173,21 @@ exported and have:</p>
      <li data-md>
       <p>An intent filter with an <code>org.chromium.intent.action.PAY</code> action</p>
      <li data-md>
-      <p>An <code>org.chromium.default_payment_method_name</code> <code>&lt;meta-data></code> tag.</p>
+      <p>An "<code>org.chromium.default_payment_method_name</code>" <code>&lt;meta-data></code> tag.</p>
      <li data-md>
-      <p>Optionally, an <code>org.chromium.payment_method_names</code> <code>&lt;meta-data></code> tag.</p>
+      <p>Optionally, an "<code>org.chromium.payment_method_names</code>" <code>&lt;meta-data></code> tag.</p>
     </ul>
-    <p>The <code>org.chromium.default_payment_method_name</code> tag must be a string
-representing a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier">url-based payment method identifier</a> and is used for
-<a href="#sctn-claiming-method-url">§ 2.4 Claiming a method URL</a>.</p>
+    <p>The "<code>org.chromium.default_payment_method_name</code>" tag must have an
+<code>android:value</code> attribute containing a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier">url-based payment method identifier</a>. This will be used for <a href="#sctn-claiming-method-url">§ 2.4 Claiming a method URL</a>.</p>
+    <p>The "<code>org.chromium.payment_method_names</code>" tag, if present, must have an
+<code>android:resource</code> attribute pointing at a <code>&lt;string-array></code> resource each of
+which must be a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">url-based payment method identifier</a>. This will be
+used for <a href="#sctn-claiming-origins">§ 2.5 Claiming a set of origins</a>.</p>
+    <div class="example" id="example-3c532e89">
+     <a class="self-link" href="#example-3c532e89"></a>
+
 <pre>&lt;activity
-    ...
+     android:name=".PaymentActivity"
      android:exported="true">
   &lt;intent-filter>
     &lt;action android:name="org.chromium.intent.action.PAY" />
@@ -2208,11 +2201,40 @@ representing a valid <a data-link-type="dfn" href="https://w3c.github.io/payment
       android:resource="@array/chromium_payment_method_names" />
 &lt;/activity>
 </pre>
+    </div>
+    <h4 class="heading settled" data-level="2.1.2" id="sctn-is-ready-to-pay-service"><span class="secno">2.1.2. </span><span class="content">The <code>IS_READY_TO_PAY</code> service</span><a class="self-link" href="#sctn-is-ready-to-pay-service"></a></h4>
+    <p>The <code>IS_READY_TO_PAY</code> service receives calls from the user agent to
+<a href="#sctn-hasenrolled-instrument">determine if the app can handle a
+PaymentRequest</a>. If present, it must be exported and have an intent filter
+with an <code>org.chromium.intent.action.IS_READY_TO_PAY</code> action.</p>
+    <div class="example" id="example-2dbdfbea">
+     <a class="self-link" href="#example-2dbdfbea"></a>
+
+<pre>&lt;service
+    ...
+    android:exported="true">
+  &lt;intent-filter>
+    &lt;action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
+  &lt;/intent-filter>
+&lt;/service>
+</pre>
+    </div>
     <h3 class="heading settled" data-level="2.2" id="sctn-user-agent-android-manifest"><span class="secno">2.2. </span><span class="content">User agent app AndroidManifest.xml</span><a class="self-link" href="#sctn-user-agent-android-manifest"></a></h3>
     <p>In order to be able to interact with Android <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps" id="ref-for-native-payment-apps②">native payment apps</a>, the user
 agent application <a href="https://developer.android.com/training/package-visibility/declaring">declares
 its package visibility needs</a> for the relevant intent filters in its own
-AndroidManifest.xml file:</p>
+AndroidManifest.xml file, by defining a <code>&lt;queries></code> block that lists the
+following actions:</p>
+    <ul>
+     <li data-md>
+      <p><code>"org.chromium.intent.action.PAY"</code></p>
+     <li data-md>
+      <p><code>"org.chromium.intent.action.IS_READY_TO_PAY"</code></p>
+    </ul>
+    <p class="issue" id="issue-c72887f3"><a class="self-link" href="#issue-c72887f3"></a> TODO - UPDATE_PAYMENT_DETAILS</p>
+    <div class="example" id="example-07d5f88f">
+     <a class="self-link" href="#example-07d5f88f"></a>
+
 <pre>&lt;queries>
   &lt;intent>
     &lt;action android:name="org.chromium.intent.action.PAY"/>
@@ -2222,7 +2244,7 @@ AndroidManifest.xml file:</p>
   &lt;/intent>
 &lt;/queries>
 </pre>
-    <p class="issue" id="issue-c72887f3"><a class="self-link" href="#issue-c72887f3"></a> TODO - UPDATE_PAYMENT_DETAILS</p>
+    </div>
     <h3 class="heading settled" data-level="2.3" id="sctn-list-native-payment-apps"><span class="secno">2.3. </span><span class="content">Returning a list of native payment apps</span><a class="self-link" href="#sctn-list-native-payment-apps"></a></h3>
     <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#get-the-list-of-native-payment-apps" id="ref-for-get-the-list-of-native-payment-apps">get the list of native payment apps</a>, the user agent performs
 the following steps:</p>
@@ -2233,18 +2255,17 @@ the following steps:</p>
      <li data-md>
       <p>Query the Android OS for the list of activities that can be performed for
  <var>intent</var>, for example via <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentActivities(android.content.Intent,%20int)">PackageManager.queryIntentActivities</a>.</p>
-     <li data-md>
-      <p>TODO - do we need to spec how to turn the resultant info into a list of
- apps? TBD.</p>
     </ol>
+    <p class="issue" id="issue-729f9bb9"><a class="self-link" href="#issue-729f9bb9"></a> do we need to spec how to turn the resultant info into a list of
+     apps? TBD.</p>
     <h3 class="heading settled" data-level="2.4" id="sctn-claiming-method-url"><span class="secno">2.4. </span><span class="content">Claiming a method URL</span><a class="self-link" href="#sctn-claiming-method-url"></a></h3>
     <p>The <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier">claimed payment method identifier</a> for an Android application, <var>app</var>, is
-the value of the <code>org.chromium.default_payment_method_name</code> <code>&lt;meta-data></code> tag
-in <var>app</var>’s AndroidManifest.xml file.</p>
+the <code>android:value</code> attribute of the <code>org.chromium.default_payment_method_name</code>
+<code>&lt;meta-data></code> tag in <var>app</var>’s AndroidManifest.xml file.</p>
     <h3 class="heading settled" data-level="2.5" id="sctn-claiming-origins"><span class="secno">2.5. </span><span class="content">Claiming a set of origins</span><a class="self-link" href="#sctn-claiming-origins"></a></h3>
     <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set">set</a> of <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-third-party-origins" id="ref-for-claimed-third-party-origins">claimed third-party origins</a> for an Android application,
-<var>app</var>, is created from the value of the <code>org.chromium.payment_method_names</code>
-<code>&lt;meta-data></code> tag in <var>app</var>’s AndroidManifest.xml file, as follows:</p>
+<var>app</var>, is created from the <code>org.chromium.payment_method_names</code> <code>&lt;meta-data></code>
+tag in <var>app</var>’s AndroidManifest.xml file, as follows:</p>
     <ol>
      <li data-md>
       <p>Let <var>paymentMethodIdentifiers</var> be the value  of the <code>org.chromium.payment_method_names</code>
@@ -2257,7 +2278,7 @@ in <var>app</var>’s AndroidManifest.xml file.</p>
       <p>For each string <var>identifier</var> in <var>paymentMethodIdentifiers</var>:</p>
       <ol>
        <li data-md>
-        <p>If <var>identifier</var> is not a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">url-based payment method identifier</a>,
+        <p>If <var>identifier</var> is not a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier②">url-based payment method identifier</a>,
 go to the next iteration of the loop.</p>
        <li data-md>
         <p>Let <var>origin</var> be the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin">origin</a> of <var>identifier</var>.</p>
@@ -2305,7 +2326,7 @@ go to the next iteration of this loop.</p>
      <li data-md>
       <p>If <var>app</var> does not have a service listed in its AndroidManifest.xml with an
 intent-filter for <code>org.chromium.intent.action.IS_READY_TO_PAY</code> (see
-<a href="#sctn-is-ready-to-pay-service">§ 2.1.1 The IS_READY_TO_PAY service</a>), return <code>false</code> / <code>true</code> TODO</p>
+<a href="#sctn-is-ready-to-pay-service">§ 2.1.2 The IS_READY_TO_PAY service</a>), return <code>false</code> / <code>true</code> TODO</p>
      <li data-md>
       <p>If the user agent is in private browsing mode, return <code>false</code> / <code>true</code> TODO</p>
       <p class="issue" id="issue-1df7dacb"><a class="self-link" href="#issue-1df7dacb"></a> Properly link this</p>
@@ -2684,6 +2705,8 @@ perform the following steps:</p>
   <div style="counter-reset:issue">
    <div class="issue"> TODO add the update service <a class="issue-return" href="#issue-60cc0e37" title="Jump to section">↵</a></div>
    <div class="issue"> TODO - UPDATE_PAYMENT_DETAILS <a class="issue-return" href="#issue-c72887f3" title="Jump to section">↵</a></div>
+   <div class="issue"> do we need to spec how to turn the resultant info into a list of
+     apps? TBD. <a class="issue-return" href="#issue-729f9bb9" title="Jump to section">↵</a></div>
    <div class="issue"> We need to document why this is an array of method URLs, rather than
 just an array of origins. <a class="issue-return" href="#issue-0d933124" title="Jump to section">↵</a></div>
    <div class="issue"> TODO - need to specify how to convert it to a string <a class="issue-return" href="#issue-ef41dee1" title="Jump to section">↵</a></div>
@@ -2922,7 +2945,7 @@ let dfnPanelData = {
 "android-payment-app-provider": {"dfnID":"android-payment-app-provider","dfnText":"Android Payment App Provider","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-provider"}],"title":"1. Introduction"}],"url":"#android-payment-app-provider"},
 "b3012bcb": {"dfnID":"b3012bcb","dfnText":"native-app payment handler","external":true,"refSections":[{"refs":[{"id":"ref-for-native-app-payment-handler"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-app-payment-handler"},
 "c2345655": {"dfnID":"c2345655","dfnText":"application manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-manifest"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://w3c.github.io/manifest/#dfn-manifest"},
-"cdf6e3c2": {"dfnID":"cdf6e3c2","dfnText":"URL-based payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier"}],"title":"2.1.2. The PAY activity"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2460"}],"title":"2.5. Claiming a set of origins"}],"url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
+"cdf6e3c2": {"dfnID":"cdf6e3c2","dfnText":"URL-based payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier"},{"id":"ref-for-dfn-url-based-payment-method-identifier\u2460"}],"title":"2.1.1. The PAY activity"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2461"}],"title":"2.5. Claiming a set of origins"}],"url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
 "create-an-android-bundle": {"dfnID":"create-an-android-bundle","dfnText":"create an Android bundle","external":false,"refSections":[{"refs":[{"id":"ref-for-create-an-android-bundle"}],"title":"2.8. Invoking an Android native payment app"}],"url":"#create-an-android-bundle"},
 "db503fa2": {"dfnID":"db503fa2","dfnText":"native payment app provider model","external":true,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider-model"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model"},
 "ddf5eb3a": {"dfnID":"ddf5eb3a","dfnText":"title","external":true,"refSections":[{"refs":[{"id":"ref-for-document.title"}],"title":"2.13. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/dom.html#document.title"},
