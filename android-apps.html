@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version 0a3d88311, updated Mon May 4 18:07:03 2026 +0000" name="generator">
-  <meta content="0e4b36b5a9c2e2a69d6f336139ae224b3c462ef6" name="revision">
+  <meta content="a4a472747f35e7ed30486af85f5e28883a96f057" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2058,7 +2058,7 @@ dfn > a.self-link::before      { content: "#"; }
    <p data-fill-with="logo"></p>
    <h1 class="no-ref p-name" id="title">Android Payment App Provider</h1>
    <h2 class="heading no-num no-ref no-toc settled" id="profile-and-date"><span class="content">A Collection of Interesting Ideas,
-    <time class="dt-updated" datetime="2026-05-16">16 May 2026</time></span></h2>
+    <time class="dt-updated" datetime="2026-05-19">19 May 2026</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>Issue Tracking:
@@ -2072,7 +2072,7 @@ dfn > a.self-link::before      { content: "#"; }
    <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" height="15" src="https://licensebuttons.net/p/zero/1.0/80x15.png" width="80"></a>
 To the extent possible under law, the editors have waived all copyright
 and related or neighboring rights to this work.
-In addition, as of 16 May 2026,
+In addition, as of 19 May 2026,
 the editors have made this specification available under the
 <a href="https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
 which is available at https://www.openwebfoundation.org/the-agreements/the-owf-1-0-agreements-granted-claims/owfa-1-0.
@@ -2100,14 +2100,16 @@ Parts of this work may be from another specification document.  If so, those par
        </ol>
       <li><a href="#sctn-user-agent-android-manifest"><span class="secno">2.2</span> <span class="content">User agent app AndroidManifest.xml</span></a>
       <li><a href="#sctn-list-native-payment-apps"><span class="secno">2.3</span> <span class="content">Returning a list of native payment apps</span></a>
-      <li><a href="#sctn-checking-related-application"><span class="secno">2.4</span> <span class="content">Checking if a native payment app is a related application for a web app manifest</span></a>
-      <li><a href="#sctn-hasenrolled-instrument"><span class="secno">2.5</span> <span class="content">Determining if an Android native payment app can handle a <code class="idl"><span>PaymentRequest</span></code></span></a>
-      <li><a href="#sctn-invoking"><span class="secno">2.6</span> <span class="content">Invoking an Android native payment app</span></a>
-      <li><a href="#sctn-dynamic-updates"><span class="secno">2.7</span> <span class="content">Communicating with an invoked Android native payment app</span></a>
-      <li><a href="#sctn-indicate-success"><span class="secno">2.8</span> <span class="content">Indicating success of an invoked Android native payment app</span></a>
-      <li><a href="#sctn-indicate-user-cancel"><span class="secno">2.9</span> <span class="content">Indicating user cancel from an invoked Android native payment app</span></a>
-      <li><a href="#sctn-indicate-app-error"><span class="secno">2.10</span> <span class="content">Indicating internal error from an invoked Android native payment app</span></a>
-      <li><a href="#sctn-creating-bundle"><span class="secno">2.11</span> <span class="content">Creating an Android bundle</span></a>
+      <li><a href="#sctn-claiming-method-url"><span class="secno">2.4</span> <span class="content">Claiming a method URL</span></a>
+      <li><a href="#sctn-claiming-origins"><span class="secno">2.5</span> <span class="content">Claiming a set of origins</span></a>
+      <li><a href="#sctn-checking-related-application"><span class="secno">2.6</span> <span class="content">Checking if a native payment app is a related application for a web app manifest</span></a>
+      <li><a href="#sctn-hasenrolled-instrument"><span class="secno">2.7</span> <span class="content">Determining if an Android native payment app can handle a <code class="idl"><span>PaymentRequest</span></code></span></a>
+      <li><a href="#sctn-invoking"><span class="secno">2.8</span> <span class="content">Invoking an Android native payment app</span></a>
+      <li><a href="#sctn-dynamic-updates"><span class="secno">2.9</span> <span class="content">Communicating with an invoked Android native payment app</span></a>
+      <li><a href="#sctn-indicate-success"><span class="secno">2.10</span> <span class="content">Indicating success of an invoked Android native payment app</span></a>
+      <li><a href="#sctn-indicate-user-cancel"><span class="secno">2.11</span> <span class="content">Indicating user cancel from an invoked Android native payment app</span></a>
+      <li><a href="#sctn-indicate-app-error"><span class="secno">2.12</span> <span class="content">Indicating internal error from an invoked Android native payment app</span></a>
+      <li><a href="#sctn-creating-bundle"><span class="secno">2.13</span> <span class="content">Creating an Android bundle</span></a>
      </ol>
     <li><a href="#conformance"><span class="secno"></span> <span class="content">
     Conformance</span></a>
@@ -2160,12 +2162,14 @@ following concepts in their <code>AndroidManifest.xml</code> file:</p>
       <p>A <strong>mandatory</strong> "pay" Android activity, which will receive an intent when
  the user agent <a href="#sctn-invoking">invokes the app</a>.</p>
     </ol>
-    <p class="issue" id="issue-f20e8ece"><a class="self-link" href="#issue-f20e8ece"></a> TODO the update service</p>
+    <p class="issue" id="issue-60cc0e37"><a class="self-link" href="#issue-60cc0e37"></a> TODO add the update service</p>
+    <p>If an Android payment app specifies more than one activity or service that
+matches one of the above, the user agent behavior is undefined.</p>
     <h4 class="heading settled" data-level="2.1.1" id="sctn-is-ready-to-pay-service"><span class="secno">2.1.1. </span><span class="content">The <code>IS_READY_TO_PAY</code> service</span><a class="self-link" href="#sctn-is-ready-to-pay-service"></a></h4>
     <p>The <code>IS_READY_TO_PAY</code> service receives calls from the user agent to
 <a href="#sctn-hasenrolled-instrument">determine if the app can handle a
-PaymentRequest</a>. It must be exported and have an intent filter with an
-<code>org.chromium.intent.action.IS_READY_TO_PAY</code> action:</p>
+PaymentRequest</a>. If present, it must be exported and have an intent filter
+with an <code>org.chromium.intent.action.IS_READY_TO_PAY</code> action:</p>
 <pre>&lt;service
     ...
     android:exported="true">
@@ -2182,9 +2186,13 @@ exported and have:</p>
      <li data-md>
       <p>An intent filter with an <code>org.chromium.intent.action.PAY</code> action</p>
      <li data-md>
-      <p>One or both of an <code>org.chromium.default_payment_method_name</code> and
-<code>org.chromium.payment_method_names</code> <code>&lt;meta-data></code> tags</p>
+      <p>An <code>org.chromium.default_payment_method_name</code> <code>&lt;meta-data></code> tag.</p>
+     <li data-md>
+      <p>Optionally, an <code>org.chromium.payment_method_names</code> <code>&lt;meta-data></code> tag.</p>
     </ul>
+    <p>The <code>org.chromium.default_payment_method_name</code> tag must be a string
+representing a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier">url-based payment method identifier</a> and is used for
+<a href="#sctn-claiming-method-url">§ 2.4 Claiming a method URL</a>.</p>
 <pre>&lt;activity
     ...
      android:exported="true">
@@ -2229,21 +2237,91 @@ the following steps:</p>
       <p>TODO - do we need to spec how to turn the resultant info into a list of
  apps? TBD.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.4" id="sctn-checking-related-application"><span class="secno">2.4. </span><span class="content">Checking if a native payment app is a related application for a web app manifest</span><a class="self-link" href="#sctn-checking-related-application"></a></h3>
+    <h3 class="heading settled" data-level="2.4" id="sctn-claiming-method-url"><span class="secno">2.4. </span><span class="content">Claiming a method URL</span><a class="self-link" href="#sctn-claiming-method-url"></a></h3>
+    <p>The <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier">claimed payment method identifier</a> for an Android application, <var>app</var>, is
+the value of the <code>org.chromium.default_payment_method_name</code> <code>&lt;meta-data></code> tag
+in <var>app</var>’s AndroidManifest.xml file.</p>
+    <h3 class="heading settled" data-level="2.5" id="sctn-claiming-origins"><span class="secno">2.5. </span><span class="content">Claiming a set of origins</span><a class="self-link" href="#sctn-claiming-origins"></a></h3>
+    <p>The <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set">set</a> of <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-third-party-origins" id="ref-for-claimed-third-party-origins">claimed third-party origins</a> for an Android application,
+<var>app</var>, is created from the value of the <code>org.chromium.payment_method_names</code>
+<code>&lt;meta-data></code> tag in <var>app</var>’s AndroidManifest.xml file, as follows:</p>
+    <ol>
+     <li data-md>
+      <p>Let <var>paymentMethodIdentifiers</var> be the value  of the <code>org.chromium.payment_method_names</code>
+<code>&lt;meta-data></code> tag.</p>
+     <li data-md>
+      <p>If <var>paymentMethodIdentifiers</var> is not a string array, return an empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①">set</a>.</p>
+     <li data-md>
+      <p>Let <var>origins</var> be an empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②">set</a>.</p>
+     <li data-md>
+      <p>For each string <var>identifier</var> in <var>paymentMethodIdentifiers</var>:</p>
+      <ol>
+       <li data-md>
+        <p>If <var>identifier</var> is not a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">url-based payment method identifier</a>,
+go to the next iteration of the loop.</p>
+       <li data-md>
+        <p>Let <var>origin</var> be the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin">origin</a> of <var>identifier</var>.</p>
+       <li data-md>
+        <p>Add <var>origin</var> to <var>origins</var>.</p>
+      </ol>
+     <li data-md>
+      <p>Return <var>origins</var>.</p>
+    </ol>
+    <p class="issue" id="issue-0d933124"><a class="self-link" href="#issue-0d933124"></a> We need to document why this is an array of method URLs, rather than
+just an array of origins.</p>
+    <h3 class="heading settled" data-level="2.6" id="sctn-checking-related-application"><span class="secno">2.6. </span><span class="content">Checking if a native payment app is a related application for a web app manifest</span><a class="self-link" href="#sctn-checking-related-application"></a></h3>
     <p>In order to check if a given Android application, <var>app</var>, <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#is-a-related-application" id="ref-for-is-a-related-application">is a related application</a> for a <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest">web app manifest</a>, <var>manifest</var>, the
 user agent performs the following steps:</p>
     <ol>
      <li data-md>
-      <p>TODO</p>
+      <p>Let <var>packageName</var> be the package name of <var>app</var>.</p>
+     <li data-md>
+      <p>Let <var>version</var> be the version of <var>app</var>.</p>
+     <li data-md>
+      <p>Let <var>fingerprint</var> be ...</p>
+      <p class="issue" id="issue-ef41dee1"><a class="self-link" href="#issue-ef41dee1"></a> TODO - need to specify how to convert it to a string</p>
+     <li data-md>
+      <p>For each <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#related_applications-member" id="ref-for-related_applications-member">related application</a>, <var>relatedApplication</var>, in the <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#related_applications-member" id="ref-for-related_applications-member①">related applications</a> of <var>manifest</var>:</p>
+      <ol>
+       <li data-md>
+        <p>If <var>packageName</var> is not equal to <var>relatedApplication</var>’s <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-id" id="ref-for-dfn-id">id</a>, go to
+the next iteration of this loop.</p>
+       <li data-md>
+        <p>If <var>version</var> is less than <var>relatedApplication</var>’s <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-minimum-version" id="ref-for-dfn-minimum-version">minimum version</a>,
+go to the next iteration of this loop.</p>
+        <p class="issue" id="issue-e9b6ae42"><a class="self-link" href="#issue-e9b6ae42"></a> Need to define how the comparison is done.</p>
+       <li data-md>
+        <p>If <var>fingerprint</var> does not match <var>relatedApplication</var>’s <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-fingerprints" id="ref-for-dfn-fingerprints">fingerprint</a>,
+go to the next iteration of this loop.</p>
+       <li data-md>
+        <p>Return <code>true</code>.</p>
+      </ol>
+     <li data-md>
+      <p>Return <code>false</code>.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.5" id="sctn-hasenrolled-instrument"><span class="secno">2.5. </span><span class="content">Determining if an Android native payment app can handle a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest">PaymentRequest</a></code></span><a class="self-link" href="#sctn-hasenrolled-instrument"></a></h3>
+    <h3 class="heading settled" data-level="2.7" id="sctn-hasenrolled-instrument"><span class="secno">2.7. </span><span class="content">Determining if an Android native payment app can handle a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest">PaymentRequest</a></code></span><a class="self-link" href="#sctn-hasenrolled-instrument"></a></h3>
     <p>In order to check if an Android application, <var>app</var>, is <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request" id="ref-for-able-to-handle-a-payment-request">able to handle a payment request</a>, <var>request</var>, the user agent performs the following steps:</p>
     <ol>
      <li data-md>
-      <p>TODO</p>
+      <p>If <var>app</var> does not have a service listed in its AndroidManifest.xml with an
+intent-filter for <code>org.chromium.intent.action.IS_READY_TO_PAY</code> (see
+<a href="#sctn-is-ready-to-pay-service">§ 2.1.1 The IS_READY_TO_PAY service</a>), return <code>false</code> / <code>true</code> TODO</p>
+     <li data-md>
+      <p>If the user agent is in private browsing mode, return <code>false</code> / <code>true</code> TODO</p>
+      <p class="issue" id="issue-1df7dacb"><a class="self-link" href="#issue-1df7dacb"></a> Properly link this</p>
+     <li data-md>
+      <p>Call the IS_READY_TO_PAY service (TODO how), passing the following
+ information, and wait on the result.</p>
+      <ol>
+       <li data-md>
+        <p>TODO what information to pass</p>
+      </ol>
+      <p class="issue" id="issue-07e1b4d8"><a class="self-link" href="#issue-07e1b4d8"></a> Properly document this</p>
+     <li data-md>
+      <p>TODO - convert the result to true/false and return that.</p>
     </ol>
     <p class="issue" id="issue-9ec72642"><a class="self-link" href="#issue-9ec72642"></a> Document the privacy concerns.</p>
-    <h3 class="heading settled" data-level="2.6" id="sctn-invoking"><span class="secno">2.6. </span><span class="content">Invoking an Android native payment app</span><a class="self-link" href="#sctn-invoking"></a></h3>
+    <h3 class="heading settled" data-level="2.8" id="sctn-invoking"><span class="secno">2.8. </span><span class="content">Invoking an Android native payment app</span><a class="self-link" href="#sctn-invoking"></a></h3>
     <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app" id="ref-for-invoke-the-native-payment-app">invoke the native payment app</a>, <var>app</var>, for a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①">PaymentRequest</a></code>
 <var>request</var>, the user agent performs the following steps:</p>
     <ol>
@@ -2270,23 +2348,38 @@ user agent performs the following steps:</p>
       <p>Send <var>intent</var> to the Android OS in such a way that the user agent will be
  notified on result, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#startActivityForResult(android.content.Intent,%20int)">Activity.startActivityForResult</a>.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.7" id="sctn-dynamic-updates"><span class="secno">2.7. </span><span class="content">Communicating with an invoked Android native payment app</span><a class="self-link" href="#sctn-dynamic-updates"></a></h3>
+    <h3 class="heading settled" data-level="2.9" id="sctn-dynamic-updates"><span class="secno">2.9. </span><span class="content">Communicating with an invoked Android native payment app</span><a class="self-link" href="#sctn-dynamic-updates"></a></h3>
     <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#communicate-with-an-invoked-payment-app" id="ref-for-communicate-with-an-invoked-payment-app">communicate with an invoked payment app</a>, <var>app</var>, the user agent
 performs the following steps:</p>
     <ol>
      <li data-md>
       <p>TODO, use the service</p>
     </ol>
-    <h3 class="heading settled" data-level="2.8" id="sctn-indicate-success"><span class="secno">2.8. </span><span class="content">Indicating success of an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-success"></a></h3>
+    <h3 class="heading settled" data-level="2.10" id="sctn-indicate-success"><span class="secno">2.10. </span><span class="content">Indicating success of an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-success"></a></h3>
     <p>In order for an invoked Android application, <var>app</var>, to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success" id="ref-for-indicate-success">indicate success</a>
 back to the user agent, <var>app</var> performs the following steps:</p>
     <ol>
      <li data-md>
-      <p>Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a>.</p>
+      <p>Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a> and with an Intent containing:</p>
+      <ol>
+       <li data-md>
+        <p>A "<code>methodName</code>" Intent extra, set to the string name of the method being used.</p>
+       <li data-md>
+        <p>A "<code>details</code>" Intent extra, set to a JSON string containing any
+payment-app specific result information.</p>
+      </ol>
      <li data-md>
       <p>Terminate the <var>app</var>’s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.9" id="sctn-indicate-user-cancel"><span class="secno">2.9. </span><span class="content">Indicating user cancel from an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-user-cancel"></a></h3>
+    <p>To <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details" id="ref-for-retrieve-the-converted-result-details">retrieve the converted result details</a>, the user agent performs the
+following steps:</p>
+    <ol>
+     <li data-md>
+      <p>Obtain the Intent bundle from the result via HOW</p>
+     <li data-md>
+      <p>TODO - conversion steps</p>
+    </ol>
+    <h3 class="heading settled" data-level="2.11" id="sctn-indicate-user-cancel"><span class="secno">2.11. </span><span class="content">Indicating user cancel from an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-user-cancel"></a></h3>
     <p>In order for an invoked Android application, <var>app</var>, to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-user-cancellation" id="ref-for-indicate-user-cancellation">indicate user cancellation</a>
 back to the user agent, <var>app</var> performs the following steps:</p>
     <ol>
@@ -2295,7 +2388,7 @@ back to the user agent, <var>app</var> performs the following steps:</p>
      <li data-md>
       <p>Terminate the <var>app</var>’s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.10" id="sctn-indicate-app-error"><span class="secno">2.10. </span><span class="content">Indicating internal error from an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-app-error"></a></h3>
+    <h3 class="heading settled" data-level="2.12" id="sctn-indicate-app-error"><span class="secno">2.12. </span><span class="content">Indicating internal error from an invoked Android native payment app</span><a class="self-link" href="#sctn-indicate-app-error"></a></h3>
     <p>In order for an invoked Android application, <var>app</var>, to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error" id="ref-for-indicate-internal-error">indicate internal error</a> back to the user agent, <var>app</var> performs the following steps:</p>
     <ol>
      <li data-md>
@@ -2305,7 +2398,7 @@ back to the user agent, <var>app</var> performs the following steps:</p>
      <li data-md>
       <p>Terminate the <var>app</var>’s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.</p>
     </ol>
-    <h3 class="heading settled" data-level="2.11" id="sctn-creating-bundle"><span class="secno">2.11. </span><span class="content">Creating an Android bundle</span><a class="self-link" href="#sctn-creating-bundle"></a></h3>
+    <h3 class="heading settled" data-level="2.13" id="sctn-creating-bundle"><span class="secno">2.13. </span><span class="content">Creating an Android bundle</span><a class="self-link" href="#sctn-creating-bundle"></a></h3>
     <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-an-android-bundle">create an Android bundle</dfn> from a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest②">PaymentRequest</a></code>, <var>request</var>,
 perform the following steps:</p>
     <ol>
@@ -2500,7 +2593,7 @@ perform the following steps:</p>
   <h3 class="heading no-num no-ref settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
    <li><a href="#android-payment-app-provider">Android Payment App Provider</a><span>, in § 2</span>
-   <li><a href="#create-an-android-bundle">create an Android bundle</a><span>, in § 2.11</span>
+   <li><a href="#create-an-android-bundle">create an Android bundle</a><span>, in § 2.13</span>
   </ul>
   <h3 class="heading no-num no-ref settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
   <ul class="index">
@@ -2513,13 +2606,29 @@ perform the following steps:</p>
     <a data-link-type="biblio">[HTML]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="3349d69f">associated Document</span>
+     <li><span class="dfn-paneled" id="086e3aff">origin</span>
      <li><span class="dfn-paneled" id="e99bd18e">relevant global object</span>
      <li><span class="dfn-paneled" id="ddf5eb3a">title</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[INFRA]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="15e48c39">set</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[MANIFEST-INCUBATIONS]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="f2bdde67">fingerprints</span>
+     <li><span class="dfn-paneled" id="e8a8058d">id</span>
+     <li><span class="dfn-paneled" id="6cd1a710">minimum version</span>
+     <li><span class="dfn-paneled" id="0dda6c5d">related applications</span>
     </ul>
    <li>
     <a data-link-type="biblio">[NATIVE-APP-PAYMENT-HANDLER]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="28fd742d">able to handle a payment request</span>
+     <li><span class="dfn-paneled" id="1bb14d23">claimed payment method identifier</span>
+     <li><span class="dfn-paneled" id="3ce95212">claimed third-party origins</span>
      <li><span class="dfn-paneled" id="0b17178c">communicate with an invoked payment app</span>
      <li><span class="dfn-paneled" id="8c6fb9e4">get the list of native payment apps</span>
      <li><span class="dfn-paneled" id="a0c639bf">indicate internal error</span>
@@ -2531,6 +2640,12 @@ perform the following steps:</p>
      <li><span class="dfn-paneled" id="db503fa2">native payment app provider model</span>
      <li><span class="dfn-paneled" id="05888957">native payment apps</span>
      <li><span class="dfn-paneled" id="b3012bcb">native-app payment handler</span>
+     <li><span class="dfn-paneled" id="1e745811">retrieve the converted result details</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[PAYMENT-METHOD-ID]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="cdf6e3c2">URL-based payment method identifier</span>
     </ul>
    <li>
     <a data-link-type="biblio">[PAYMENT-REQUEST]</a> defines the following terms:
@@ -2554,15 +2669,27 @@ perform the following steps:</p>
    <dd>Marcos Caceres; Daniel Murphy; Christian Liebel. <a href="https://w3c.github.io/manifest/"><cite>Web Application Manifest</cite></a>. URL: <a href="https://w3c.github.io/manifest/">https://w3c.github.io/manifest/</a>
    <dt id="biblio-html">[HTML]
    <dd>Anne van Kesteren; et al. <a href="https://html.spec.whatwg.org/multipage/"><cite>HTML Standard</cite></a>. Living Standard. URL: <a href="https://html.spec.whatwg.org/multipage/">https://html.spec.whatwg.org/multipage/</a>
+   <dt id="biblio-infra">[INFRA]
+   <dd>Anne van Kesteren; Domenic Denicola. <a href="https://infra.spec.whatwg.org/"><cite>Infra Standard</cite></a>. Living Standard. URL: <a href="https://infra.spec.whatwg.org/">https://infra.spec.whatwg.org/</a>
+   <dt id="biblio-manifest-incubations">[MANIFEST-INCUBATIONS]
+   <dd><a href="https://wicg.github.io/manifest-incubations/"><cite>Manifest Incubations</cite></a>. Draft Community Group Report. URL: <a href="https://wicg.github.io/manifest-incubations/">https://wicg.github.io/manifest-incubations/</a>
    <dt id="biblio-native-app-payment-handler">[NATIVE-APP-PAYMENT-HANDLER]
    <dd><a href="https://todo.example"><cite>Native-app Payment Handler</cite></a>. URL: <a href="https://todo.example">https://todo.example</a>
+   <dt id="biblio-payment-method-id">[PAYMENT-METHOD-ID]
+   <dd>Marcos Caceres. <a href="https://w3c.github.io/payment-method-id/"><cite>Payment Method Identifiers</cite></a>. URL: <a href="https://w3c.github.io/payment-method-id/">https://w3c.github.io/payment-method-id/</a>
    <dt id="biblio-payment-request">[PAYMENT-REQUEST]
    <dd>Marcos Caceres; Ian Jacobs; Stephen McGruer. <a href="https://w3c.github.io/payment-request/"><cite>Payment Request API</cite></a>. URL: <a href="https://w3c.github.io/payment-request/">https://w3c.github.io/payment-request/</a>
   </dl>
   <h2 class="heading no-num no-ref settled" id="issues-index"><span class="content">Issues Index</span><a class="self-link" href="#issues-index"></a></h2>
   <div style="counter-reset:issue">
-   <div class="issue"> TODO the update service <a class="issue-return" href="#issue-f20e8ece" title="Jump to section">↵</a></div>
+   <div class="issue"> TODO add the update service <a class="issue-return" href="#issue-60cc0e37" title="Jump to section">↵</a></div>
    <div class="issue"> TODO - UPDATE_PAYMENT_DETAILS <a class="issue-return" href="#issue-c72887f3" title="Jump to section">↵</a></div>
+   <div class="issue"> We need to document why this is an array of method URLs, rather than
+just an array of origins. <a class="issue-return" href="#issue-0d933124" title="Jump to section">↵</a></div>
+   <div class="issue"> TODO - need to specify how to convert it to a string <a class="issue-return" href="#issue-ef41dee1" title="Jump to section">↵</a></div>
+   <div class="issue"> Need to define how the comparison is done. <a class="issue-return" href="#issue-e9b6ae42" title="Jump to section">↵</a></div>
+   <div class="issue"> Properly link this <a class="issue-return" href="#issue-1df7dacb" title="Jump to section">↵</a></div>
+   <div class="issue"> Properly document this <a class="issue-return" href="#issue-07e1b4d8" title="Jump to section">↵</a></div>
    <div class="issue"> Document the privacy concerns. <a class="issue-return" href="#issue-9ec72642" title="Jump to section">↵</a></div>
    <div class="issue"> TODO - these name to be part of some sort of app concept <a class="issue-return" href="#issue-7b04df93" title="Jump to section">↵</a></div>
    <div class="issue"> This needs to be serialized to JSON. <a class="issue-return" href="#issue-2c56e69e" title="Jump to section">↵</a></div>
@@ -2773,28 +2900,38 @@ function parseHTML(markup) {
 {
 let dfnPanelData = {
 "05888957": {"dfnID":"05888957","dfnText":"native payment apps","external":true,"refSections":[{"refs":[{"id":"ref-for-native-payment-apps"}],"title":"1. Introduction"},{"refs":[{"id":"ref-for-native-payment-apps\u2460"}],"title":"2. Android Payment App Provider"},{"refs":[{"id":"ref-for-native-payment-apps\u2461"}],"title":"2.2. User agent app AndroidManifest.xml"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps"},
-"0b17178c": {"dfnID":"0b17178c","dfnText":"communicate with an invoked payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-communicate-with-an-invoked-payment-app"}],"title":"2.7. Communicating with an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#communicate-with-an-invoked-payment-app"},
-"149c1adf": {"dfnID":"149c1adf","dfnText":"indicate user cancellation","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-user-cancellation"}],"title":"2.9. Indicating user cancel from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-user-cancellation"},
-"25c8db95": {"dfnID":"25c8db95","dfnText":"indicate success","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-success"}],"title":"2.8. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success"},
-"28fd742d": {"dfnID":"28fd742d","dfnText":"able to handle a payment request","external":true,"refSections":[{"refs":[{"id":"ref-for-able-to-handle-a-payment-request"}],"title":"2.5. Determining if an Android native payment app can handle a PaymentRequest"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request"},
-"3230704c": {"dfnID":"3230704c","dfnText":"total","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsinit-total"}],"title":"2.11. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total"},
-"3349d69f": {"dfnID":"3349d69f","dfnText":"associated Document","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-window"}],"title":"2.11. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window"},
-"33ad1578": {"dfnID":"33ad1578","dfnText":"[[details]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-details"}],"title":"2.11. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dfn-details"},
-"46474798": {"dfnID":"46474798","dfnText":"amount","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentitem-amount"}],"title":"2.11. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentitem-amount"},
+"086e3aff": {"dfnID":"086e3aff","dfnText":"origin","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-origin"}],"title":"2.5. Claiming a set of origins"}],"url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin"},
+"0b17178c": {"dfnID":"0b17178c","dfnText":"communicate with an invoked payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-communicate-with-an-invoked-payment-app"}],"title":"2.9. Communicating with an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#communicate-with-an-invoked-payment-app"},
+"0dda6c5d": {"dfnID":"0dda6c5d","dfnText":"related applications","external":true,"refSections":[{"refs":[{"id":"ref-for-related_applications-member"},{"id":"ref-for-related_applications-member\u2460"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#related_applications-member"},
+"149c1adf": {"dfnID":"149c1adf","dfnText":"indicate user cancellation","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-user-cancellation"}],"title":"2.11. Indicating user cancel from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-user-cancellation"},
+"15e48c39": {"dfnID":"15e48c39","dfnText":"set","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-set"},{"id":"ref-for-ordered-set\u2460"},{"id":"ref-for-ordered-set\u2461"}],"title":"2.5. Claiming a set of origins"}],"url":"https://infra.spec.whatwg.org/#ordered-set"},
+"1bb14d23": {"dfnID":"1bb14d23","dfnText":"claimed payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-claimed-payment-method-identifier"}],"title":"2.4. Claiming a method URL"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-payment-method-identifier"},
+"1e745811": {"dfnID":"1e745811","dfnText":"retrieve the converted result details","external":true,"refSections":[{"refs":[{"id":"ref-for-retrieve-the-converted-result-details"}],"title":"2.10. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details"},
+"25c8db95": {"dfnID":"25c8db95","dfnText":"indicate success","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-success"}],"title":"2.10. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success"},
+"28fd742d": {"dfnID":"28fd742d","dfnText":"able to handle a payment request","external":true,"refSections":[{"refs":[{"id":"ref-for-able-to-handle-a-payment-request"}],"title":"2.7. Determining if an Android native payment app can handle a PaymentRequest"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request"},
+"3230704c": {"dfnID":"3230704c","dfnText":"total","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsinit-total"}],"title":"2.13. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total"},
+"3349d69f": {"dfnID":"3349d69f","dfnText":"associated Document","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-document-window"}],"title":"2.13. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window"},
+"33ad1578": {"dfnID":"33ad1578","dfnText":"[[details]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-details"}],"title":"2.13. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dfn-details"},
+"3ce95212": {"dfnID":"3ce95212","dfnText":"claimed third-party origins","external":true,"refSections":[{"refs":[{"id":"ref-for-claimed-third-party-origins"}],"title":"2.5. Claiming a set of origins"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-third-party-origins"},
+"46474798": {"dfnID":"46474798","dfnText":"amount","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentitem-amount"}],"title":"2.13. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentitem-amount"},
+"6cd1a710": {"dfnID":"6cd1a710","dfnText":"minimum version","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-minimum-version"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#dfn-minimum-version"},
 "7ba956b7": {"dfnID":"7ba956b7","dfnText":"native payment app provider","external":true,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider"}],"title":"2. Android Payment App Provider"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider"},
 "8c6fb9e4": {"dfnID":"8c6fb9e4","dfnText":"get the list of native payment apps","external":true,"refSections":[{"refs":[{"id":"ref-for-get-the-list-of-native-payment-apps"}],"title":"2.3. Returning a list of native payment apps"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#get-the-list-of-native-payment-apps"},
-"9a5b353f": {"dfnID":"9a5b353f","dfnText":"invoke the native payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-invoke-the-native-payment-app"}],"title":"2.6. Invoking an Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app"},
-"a0c639bf": {"dfnID":"a0c639bf","dfnText":"indicate internal error","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-internal-error"}],"title":"2.10. Indicating internal error from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error"},
+"9a5b353f": {"dfnID":"9a5b353f","dfnText":"invoke the native payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-invoke-the-native-payment-app"}],"title":"2.8. Invoking an Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app"},
+"a0c639bf": {"dfnID":"a0c639bf","dfnText":"indicate internal error","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-internal-error"}],"title":"2.12. Indicating internal error from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error"},
 "android-payment-app-provider": {"dfnID":"android-payment-app-provider","dfnText":"Android Payment App Provider","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-provider"}],"title":"1. Introduction"}],"url":"#android-payment-app-provider"},
 "b3012bcb": {"dfnID":"b3012bcb","dfnText":"native-app payment handler","external":true,"refSections":[{"refs":[{"id":"ref-for-native-app-payment-handler"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-app-payment-handler"},
-"c2345655": {"dfnID":"c2345655","dfnText":"application manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-manifest"}],"title":"2.4. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://w3c.github.io/manifest/#dfn-manifest"},
-"create-an-android-bundle": {"dfnID":"create-an-android-bundle","dfnText":"create an Android bundle","external":false,"refSections":[{"refs":[{"id":"ref-for-create-an-android-bundle"}],"title":"2.6. Invoking an Android native payment app"}],"url":"#create-an-android-bundle"},
+"c2345655": {"dfnID":"c2345655","dfnText":"application manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-manifest"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://w3c.github.io/manifest/#dfn-manifest"},
+"cdf6e3c2": {"dfnID":"cdf6e3c2","dfnText":"URL-based payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier"}],"title":"2.1.2. The PAY activity"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2460"}],"title":"2.5. Claiming a set of origins"}],"url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
+"create-an-android-bundle": {"dfnID":"create-an-android-bundle","dfnText":"create an Android bundle","external":false,"refSections":[{"refs":[{"id":"ref-for-create-an-android-bundle"}],"title":"2.8. Invoking an Android native payment app"}],"url":"#create-an-android-bundle"},
 "db503fa2": {"dfnID":"db503fa2","dfnText":"native payment app provider model","external":true,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider-model"}],"title":"1. Introduction"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model"},
-"ddf5eb3a": {"dfnID":"ddf5eb3a","dfnText":"title","external":true,"refSections":[{"refs":[{"id":"ref-for-document.title"}],"title":"2.11. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/dom.html#document.title"},
-"e254b31e": {"dfnID":"e254b31e","dfnText":"id","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest-id"}],"title":"2.11. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest-id"},
-"e99bd18e": {"dfnID":"e99bd18e","dfnText":"relevant global object","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-relevant-global"}],"title":"2.11. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global"},
-"ec0e0636": {"dfnID":"ec0e0636","dfnText":"is a related application","external":true,"refSections":[{"refs":[{"id":"ref-for-is-a-related-application"}],"title":"2.4. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#is-a-related-application"},
-"f679a0bc": {"dfnID":"f679a0bc","dfnText":"PaymentRequest","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest"}],"title":"2.5. Determining if an Android native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460"}],"title":"2.6. Invoking an Android native payment app"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2461"}],"title":"2.11. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest"},
+"ddf5eb3a": {"dfnID":"ddf5eb3a","dfnText":"title","external":true,"refSections":[{"refs":[{"id":"ref-for-document.title"}],"title":"2.13. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/dom.html#document.title"},
+"e254b31e": {"dfnID":"e254b31e","dfnText":"id","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest-id"}],"title":"2.13. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest-id"},
+"e8a8058d": {"dfnID":"e8a8058d","dfnText":"id","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-id"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#dfn-id"},
+"e99bd18e": {"dfnID":"e99bd18e","dfnText":"relevant global object","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-relevant-global"}],"title":"2.13. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global"},
+"ec0e0636": {"dfnID":"ec0e0636","dfnText":"is a related application","external":true,"refSections":[{"refs":[{"id":"ref-for-is-a-related-application"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#is-a-related-application"},
+"f2bdde67": {"dfnID":"f2bdde67","dfnText":"fingerprints","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-fingerprints"}],"title":"2.6. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#dfn-fingerprints"},
+"f679a0bc": {"dfnID":"f679a0bc","dfnText":"PaymentRequest","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest"}],"title":"2.7. Determining if an Android native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460"}],"title":"2.8. Invoking an Android native payment app"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2461"}],"title":"2.13. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest"},
 };
 
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -3185,10 +3322,14 @@ function genLinkingSyntaxes(dfn) {
 let refsData = {
 "#android-payment-app-provider": {"displayText":"android payment app provider","export":true,"for_":[],"level":"","normative":true,"shortname":"android-payment-app-provider","spec":"android-payment-app-provider","status":"local","text":"android payment app provider","type":"dfn","url":"#android-payment-app-provider"},
 "#create-an-android-bundle": {"displayText":"create an android bundle","export":true,"for_":[],"level":"","normative":true,"shortname":"android-payment-app-provider","spec":"android-payment-app-provider","status":"local","text":"create an android bundle","type":"dfn","url":"#create-an-android-bundle"},
+"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin": {"displayText":"origin","export":true,"for_":[],"level":"","normative":true,"shortname":"html","spec":"html","status":"anchor-block","text":"origin","type":"dfn","url":"https://html.spec.whatwg.org/multipage/browsers.html#concept-origin"},
 "https://html.spec.whatwg.org/multipage/dom.html#document.title": {"displayText":"title","export":true,"for_":["Document"],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"title","type":"attribute","url":"https://html.spec.whatwg.org/multipage/dom.html#document.title"},
 "https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window": {"displayText":"associated Document","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"associated document","type":"dfn","url":"https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-document-window"},
 "https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global": {"displayText":"relevant global object","export":true,"for_":[],"level":"1","normative":true,"shortname":"html","spec":"html","status":"current","text":"relevant global object","type":"dfn","url":"https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global"},
+"https://infra.spec.whatwg.org/#ordered-set": {"displayText":"set","export":true,"for_":[],"level":"1","normative":true,"shortname":"infra","spec":"infra","status":"current","text":"set","type":"dfn","url":"https://infra.spec.whatwg.org/#ordered-set"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request": {"displayText":"able to handle a payment request","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"able to handle a payment request","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request"},
+"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-payment-method-identifier": {"displayText":"claimed payment method identifier","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"claimed payment method identifier","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-payment-method-identifier"},
+"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-third-party-origins": {"displayText":"claimed third-party origins","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"claimed third-party origins","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#claimed-third-party-origins"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#communicate-with-an-invoked-payment-app": {"displayText":"communicate with an invoked payment app","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"communicate with an invoked payment app","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#communicate-with-an-invoked-payment-app"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#get-the-list-of-native-payment-apps": {"displayText":"get the list of native payment apps","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"get the list of native payment apps","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#get-the-list-of-native-payment-apps"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error": {"displayText":"indicate internal error","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"indicate internal error","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error"},
@@ -3200,12 +3341,18 @@ let refsData = {
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider": {"displayText":"native payment app provider","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment app provider","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model": {"displayText":"native payment app provider model","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment app provider model","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-app-provider-model"},
 "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps": {"displayText":"native payment apps","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"native payment apps","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#native-payment-apps"},
+"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details": {"displayText":"retrieve the converted result details","export":true,"for_":[],"level":"","normative":true,"shortname":"native-app-payment-handler","spec":"native-app-payment-handler","status":"anchor-block","text":"retrieve the converted result details","type":"dfn","url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details"},
 "https://w3c.github.io/manifest/#dfn-manifest": {"displayText":"application manifest","export":true,"for_":[],"level":"1","normative":true,"shortname":"appmanifest","spec":"appmanifest","status":"current","text":"application manifest","type":"dfn","url":"https://w3c.github.io/manifest/#dfn-manifest"},
+"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier": {"displayText":"URL-based payment method identifier","export":true,"for_":[],"level":"1","normative":true,"shortname":"payment-method-id","spec":"payment-method-id","status":"current","text":"url-based payment method identifier","type":"dfn","url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
 "https://w3c.github.io/payment-request/#dfn-details": {"displayText":"[[details]]","export":true,"for_":["PaymentRequest"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"[[details]]","type":"attribute","url":"https://w3c.github.io/payment-request/#dfn-details"},
 "https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total": {"displayText":"total","export":true,"for_":["PaymentDetailsInit"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"total","type":"dict-member","url":"https://w3c.github.io/payment-request/#dom-paymentdetailsinit-total"},
 "https://w3c.github.io/payment-request/#dom-paymentitem-amount": {"displayText":"amount","export":true,"for_":["PaymentItem"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"amount","type":"dict-member","url":"https://w3c.github.io/payment-request/#dom-paymentitem-amount"},
 "https://w3c.github.io/payment-request/#dom-paymentrequest": {"displayText":"PaymentRequest","export":true,"for_":[],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"PaymentRequest","type":"interface","url":"https://w3c.github.io/payment-request/#dom-paymentrequest"},
 "https://w3c.github.io/payment-request/#dom-paymentrequest-id": {"displayText":"id","export":true,"for_":["PaymentRequest"],"level":"1","normative":true,"shortname":"payment-request","spec":"payment-request","status":"current","text":"id","type":"attribute","url":"https://w3c.github.io/payment-request/#dom-paymentrequest-id"},
+"https://wicg.github.io/manifest-incubations/#dfn-fingerprints": {"displayText":"fingerprints","export":true,"for_":[],"level":"","normative":true,"shortname":"manifest-incubations","spec":"manifest-incubations","status":"anchor-block","text":"fingerprints","type":"dfn","url":"https://wicg.github.io/manifest-incubations/#dfn-fingerprints"},
+"https://wicg.github.io/manifest-incubations/#dfn-id": {"displayText":"id","export":true,"for_":[],"level":"","normative":true,"shortname":"manifest-incubations","spec":"manifest-incubations","status":"anchor-block","text":"id","type":"dfn","url":"https://wicg.github.io/manifest-incubations/#dfn-id"},
+"https://wicg.github.io/manifest-incubations/#dfn-minimum-version": {"displayText":"minimum version","export":true,"for_":[],"level":"","normative":true,"shortname":"manifest-incubations","spec":"manifest-incubations","status":"anchor-block","text":"minimum version","type":"dfn","url":"https://wicg.github.io/manifest-incubations/#dfn-minimum-version"},
+"https://wicg.github.io/manifest-incubations/#related_applications-member": {"displayText":"related applications","export":true,"for_":[],"level":"","normative":true,"shortname":"manifest-incubations","spec":"manifest-incubations","status":"anchor-block","text":"related applications","type":"dfn","url":"https://wicg.github.io/manifest-incubations/#related_applications-member"},
 };
 
 function mkRefHint(link, ref) {
