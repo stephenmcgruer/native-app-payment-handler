@@ -111,8 +111,8 @@ When a [=native-app payment handler=] is selected by the user (steps 19-24 of
 the show() algorithm), the user agent MUST [=invoke the native payment app=]
 corresponding to the selected [=native-app payment handler=].
 
-ISSUE: The [[payment-request]] spec is quite vague about what data is or should
-be passed to an invoked payment handler. We should try to be more specific.
+ISSUE(1): The [[payment-request]] spec is quite vague about what data is or
+should be passed to an invoked payment handler. We should be more specific.
 
 NOTE: The invoked payment app will ultimately communicate a result back to the
 user agent, either by [=indicating success=], [=indicating user cancellation=],
@@ -147,8 +147,8 @@ set of [=claimed third-party origins=].  Verification of these claims relies
 upon the payment and application manifests specified in
 [[payment-method-manifest]].
 
-ISSUE: Should we allow for alternate methods to verify the claims, to support
-cases like payment apps built into the browser?
+ISSUE(2): Should we allow for alternate methods to verify the claims, to
+support cases like payment apps built into the browser?
 
 Given a [=payment method identifier=], |identifier|, and a [=native payment
 app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
@@ -202,8 +202,8 @@ the payment method identifier</dfn> |identifier|:
 
 ## Match origins allowed for a payment method identifier ## {#sctn-match-origins}
 
-ISSUE: This algorithm should probably exist in [[payment-method-manifest]]
-       rather than here.
+ISSUE(3): This algorithm should probably exist in [[payment-method-manifest]]
+          rather than here.
 
 To determine if a [=set=] of [=origins=], |claimedOrigins|, <dfn>match the
 origins allowed for a payment method identifier</dfn>, |identifier|, run the
@@ -295,7 +295,7 @@ NOTE: This functionality is used to answer the `hasEnrolledInstrument` method
 on {{PaymentRequest}}, which was removed from the [[payment-request]]
 specification but is still shipping in multiple browser engines.
 
-ISSUE: We should speak to the privacy issues in a privacy section.
+ISSUE(4): We should speak to the privacy issues in a privacy section.
 
 ## Invoking a [=native payment app=] ## {#sctn-invoking}
 
@@ -311,14 +311,14 @@ Depending on the capabilities of the [=native payment app provider=], the
 invoked app MAY be displayed partially over the user agent window (to improve
 user context and understanding of the flow).
 
-ISSUE: We should speak to the privacy issues in a privacy section.
+ISSUE(4): We should speak to the privacy issues in a privacy section.
 
 ## Communicating with an invoked [=native payment app=] ## {#sctn-dynamic-updates}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn export>communicate with an invoked payment app</dfn>.
 
-ISSUE: This needs fleshed out, to include; notifying that the payment method
+ISSUE(5): This needs fleshed out, to include; notifying that the payment method
 has changed, notifying that the shipping address or options have changed,
 notifying that payer details have changed. Also, what capabilty needs to be
 defined at the payment handler level rather than in the model.
