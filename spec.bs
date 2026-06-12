@@ -92,8 +92,8 @@ user agent MUST perform the following steps:
 ## The show() method ## {#sctn-show-method}
 
 When performing step 17.5. of the {{PaymentRequest/show|PaymentRequest.show()}}
-method for a {{PaymentRequest}} |request|, the user agent MUST perform the
-following steps:
+method for a {{PaymentRequest}}, the user agent MUST perform the following
+steps:
 
 1. For each available [=native payment app provider=] |provider|:
 
