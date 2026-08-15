@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="9640406520df2b8778fbabf4ff1ab09001d364d0" name="revision">
+  <meta content="a77f923388753df64f1c2d5507aae7b067f831d6" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2082,7 +2082,7 @@ Parts of this work may be from another specification document.  If so, those par
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="heading no-num no-ref no-toc settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>This technical report describes how Android apps can be exposed as payment apps for the web, via Payment Handler.</p>
+   <p>This technical report describes how Android apps can be exposed by a user agent as payment apps for the web, via the Native App Payment Handler specification.</p>
   </div>
   <div data-fill-with="at-risk"></div>
   <nav data-fill-with="table-of-contents" id="toc">
@@ -2155,10 +2155,10 @@ concepts for cross-application communication and collaboration:</p>
 following concepts in their <code>AndroidManifest.xml</code> file:</p>
     <ul>
      <li data-md>
-      <p>A <strong>mandatory</strong> "pay" Android activity, which will receive an intent when
+      <p>A <strong>mandatory</strong> <code>PAY</code> Android activity, which will receive an intent when
 the user agent <a href="#sctn-invoking">invokes the app</a>.</p>
      <li data-md>
-      <p>An <strong>optional</strong> "is ready to pay" Android service, which the user agent will
+      <p>An <strong>optional</strong> <code>IS_READY_TO_PAY</code> Android service, which the user agent will
 bind to and call when <a href="#sctn-hasenrolled-instrument">determining if the
 app can handle a PaymentRequest</a>.</p>
     </ul>
@@ -2168,7 +2168,8 @@ matches one of the above, the user agent behavior is undefined.</p>
     <h4 class="heading settled" data-level="2.1.1" id="sctn-pay-activity"><span class="secno">2.1.1. </span><span class="content">The <code>PAY</code> activity</span><a class="self-link" href="#sctn-pay-activity"></a></h4>
     <p>The <code>PAY</code> activity will receive an intent from the user agent when the user
 agent <a href="#sctn-invoking">invokes the app</a> to handle a PaymentRequest. It must be
-exported and have:</p>
+<a href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
+and have:</p>
     <ul>
      <li data-md>
       <p>An intent filter with an <code>org.chromium.intent.action.PAY</code> action</p>
@@ -2183,8 +2184,8 @@ exported and have:</p>
 <code>android:resource</code> attribute pointing at a <code>&lt;string-array></code> resource each of
 which must be a valid <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">url-based payment method identifier</a>. This will be
 used for <a href="#sctn-claiming-origins">§ 2.5 Claiming a set of origins</a>.</p>
-    <div class="example" id="example-3c532e89">
-     <a class="self-link" href="#example-3c532e89"></a>
+    <div class="example" id="example-56da870f">
+     <a class="self-link" href="#example-56da870f"></a>
 
 <pre>&lt;activity
      android:name=".PaymentActivity"
@@ -2198,20 +2199,24 @@ used for <a href="#sctn-claiming-origins">§ 2.5 Claiming a set of origins</a>
       android:value="https://sampleapp.example/pay" />
   &lt;meta-data
       android:name="org.chromium.payment_method_names"
-      android:resource="@array/chromium_payment_method_names" />
+      android:resource="@array/other_payment_method_names" />
 &lt;/activity>
 </pre>
     </div>
+    <p class="issue" id="issue-a18ce6ad"><a class="self-link" href="#issue-a18ce6ad"></a> The chromium.org namespace used here should be replaced by a w3.org one,
+       but Chromium currently ships with chromium.org so it would need to be
+       updated and a deprecation process followed, etc.</p>
     <h4 class="heading settled" data-level="2.1.2" id="sctn-is-ready-to-pay-service"><span class="secno">2.1.2. </span><span class="content">The <code>IS_READY_TO_PAY</code> service</span><a class="self-link" href="#sctn-is-ready-to-pay-service"></a></h4>
     <p>The <code>IS_READY_TO_PAY</code> service receives calls from the user agent to
 <a href="#sctn-hasenrolled-instrument">determine if the app can handle a
-PaymentRequest</a>. If present, it must be exported and have an intent filter
-with an <code>org.chromium.intent.action.IS_READY_TO_PAY</code> action.</p>
-    <div class="example" id="example-2dbdfbea">
-     <a class="self-link" href="#example-2dbdfbea"></a>
+PaymentRequest</a>. If present, it must be <a href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
+and have an intent filter with an <code>org.chromium.intent.action.IS_READY_TO_PAY</code>
+action.</p>
+    <div class="example" id="example-4b0a9178">
+     <a class="self-link" href="#example-4b0a9178"></a>
 
 <pre>&lt;service
-    ...
+    android:name=".IsReadyToPayService"
     android:exported="true">
   &lt;intent-filter>
     &lt;action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
@@ -2704,6 +2709,9 @@ perform the following steps:</p>
   <h2 class="heading no-num no-ref settled" id="issues-index"><span class="content">Issues Index</span><a class="self-link" href="#issues-index"></a></h2>
   <div style="counter-reset:issue">
    <div class="issue"> TODO add the update service <a class="issue-return" href="#issue-60cc0e37" title="Jump to section">↵</a></div>
+   <div class="issue"> The chromium.org namespace used here should be replaced by a w3.org one,
+       but Chromium currently ships with chromium.org so it would need to be
+       updated and a deprecation process followed, etc. <a class="issue-return" href="#issue-a18ce6ad" title="Jump to section">↵</a></div>
    <div class="issue"> TODO - UPDATE_PAYMENT_DETAILS <a class="issue-return" href="#issue-c72887f3" title="Jump to section">↵</a></div>
    <div class="issue"> do we need to spec how to turn the resultant info into a list of
      apps? TBD. <a class="issue-return" href="#issue-729f9bb9" title="Jump to section">↵</a></div>
