@@ -4,7 +4,7 @@ Shortname: android-payment-app-provider
 Repository: stephenmcgruer/native-app-payment-handler
 Status: DREAM
 Editor: Stephen McGruer, w3cid 96463, Google https://www.google.com/, smcgruer@chromium.org
-Abstract: This technical report describes how Android apps can be exposed as payment apps for the web, via Payment Handler.
+Abstract: This technical report describes how Android apps can be exposed by a user agent as payment apps for the web, via the Native App Payment Handler specification.
 Markup Shorthands: markdown yes
 </pre>
 
@@ -89,10 +89,10 @@ concepts for cross-application communication and collaboration:
 In order to be visible to the user agent, the Android payment app defines the
 following concepts in their `AndroidManifest.xml` file:
 
-- A **mandatory** "pay" Android activity, which will receive an intent when
+- A **mandatory** `PAY` Android activity, which will receive an intent when
     the user agent [[#sctn-invoking|invokes the app]].
 
-- An **optional** "is ready to pay" Android service, which the user agent will
+- An **optional** `IS_READY_TO_PAY` Android service, which the user agent will
     bind to and call when [[#sctn-hasenrolled-instrument|determining if the
     app can handle a PaymentRequest]].
 
@@ -105,7 +105,9 @@ matches one of the above, the user agent behavior is undefined.
 
 The `PAY` activity will receive an intent from the user agent when the user
 agent [[#sctn-invoking|invokes the app]] to handle a PaymentRequest. It must be
-exported and have:
+<a
+href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
+and have:
 
 - An intent filter with an `org.chromium.intent.action.PAY` action
 - An "`org.chromium.default_payment_method_name`" `<meta-data>` tag.
@@ -134,22 +136,28 @@ used for [[#sctn-claiming-origins]].
         android:value="https://sampleapp.example/pay" />
     <meta-data
         android:name="org.chromium.payment_method_names"
-        android:resource="@array/chromium_payment_method_names" />
+        android:resource="@array/other_payment_method_names" />
   </activity>
 </xmp>
 </div>
+
+ISSUE: The chromium.org namespace used here should be replaced by a w3.org one,
+       but Chromium currently ships with chromium.org so it would need to be
+       updated and a deprecation process followed, etc.
 
 ### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
 
 The `IS_READY_TO_PAY` service receives calls from the user agent to
 [[#sctn-hasenrolled-instrument|determine if the app can handle a
-PaymentRequest]]. If present, it must be exported and have an intent filter
-with an `org.chromium.intent.action.IS_READY_TO_PAY` action.
+PaymentRequest]]. If present, it must be <a
+href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
+and have an intent filter with an `org.chromium.intent.action.IS_READY_TO_PAY`
+action.
 
 <div class="example">
 <xmp>
   <service
-      ...
+      android:name=".IsReadyToPayService"
       android:exported="true">
     <intent-filter>
       <action android:name="org.chromium.intent.action.IS_READY_TO_PAY" />
