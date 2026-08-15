@@ -17,7 +17,7 @@ spec: manifest-incubations; urlPrefix: https://wicg.github.io/manifest-incubatio
         text:platform; url:dfn-platform
         text:related applications; url:related_applications-member
 
-spec: payment-requestl urlPrefix: https://w3c.github.io/payment-request/
+spec: payment-request; urlPrefix: https://w3c.github.io/payment-request/
     type: dfn
         text:can make payment algorithm; url:dfn-can-make-payment-algorithm
         text:steps to check if a payment can be made; url:dfn-steps-to-check-if-a-payment-can-be-made
@@ -54,9 +54,9 @@ This specification defines functionality allowing a native application to
 handle payment requests that originate on the web on behalf of users. Such
 applications are referred to as [=native-app payment handlers=]. [=Native-app
 payment handlers=] are accessed via an abstract "provider", the [=native
-payment app provider model=], to avoid having to specify details of specific
-operating systems or other integrations. The [=native payment app provider
-model=] has abstract operations which can be supported by concrete providers.
+payment app provider model=], to avoid specifying details of specific operating
+systems or other integrations. The [=native payment app provider model=] has
+abstract operations which can be supported by concrete providers.
 
 For examples of concrete providers, see [[#sctn-examples]].
 
@@ -72,11 +72,15 @@ This section describes the steps the user agent MUST take when intermediating
 between a {{PaymentRequest}} object and one or more [=native payment apps=] from
 a single [=native payment app provider=].
 
-## Can make payment algorithm ## {#sctn-can-make-payment-algorithm}
+## Integration with [[payment-request]] ## {#sctn-integration-with-payment-request}
+
+### Can make payment algorithm ### {#sctn-can-make-payment-algorithm}
 
 When performing step 8.2. of the [=can make payment algorithm=] from
-[[payment-request]] for a [=payment method identifier=] |identifier|, the
-user agent MUST perform the following steps:
+[[payment-request]] for a [=payment method identifier=] |identifier|, which
+determines if the user agent has a [=payment handler=] that supports handling
+payment requests for |identifier|, the user agent MUST perform the following
+steps:
 
 1. For each available [=native payment app provider=] |provider|:
 
@@ -89,11 +93,12 @@ user agent MUST perform the following steps:
               identifier=] |identifier|, resolve `hasHandlerPromise` with `true`
               and terminate any remaining steps.
 
-## The show() method ## {#sctn-show-method}
+### The show() method ### {#sctn-show-method}
 
 When performing step 17.5. of the {{PaymentRequest/show|PaymentRequest.show()}}
-method for a {{PaymentRequest}}, the user agent MUST perform the following
-steps:
+method for a {{PaymentRequest}}, which constructs the list of registered
+payment handlers for a [=payment method identifier=] |identifier|, the user
+agent MUST perform the following steps:
 
 1. For each available [=native payment app provider=] |provider|:
 
@@ -118,7 +123,7 @@ NOTE: The invoked payment app will ultimately communicate a result back to the
 user agent, either by [=indicating success=], [=indicating user cancellation=],
 or [=indicating internal error=].
 
-## Steps to check if a payment can be made ## {#sctn-steps-to-check-if-a-payment-can-be-made}
+### Steps to check if a payment can be made ### {#sctn-steps-to-check-if-a-payment-can-be-made}
 
 The [=steps to check if a payment can be made=] for a [=native-app payment
 handler=] and JSON-serialized {{PaymentMethodData/data|PaymentMethodData.data}}
@@ -131,7 +136,7 @@ handler's claims in [[#sctn-show-method]] and made sure that they match the
 identifier. No additional filtering is needed based on the serialized
 {{PaymentMethodData/data}}.
 
-## Steps to respond to a payment request ## {#sctn-steps-to-respond-to-a-payment-request}
+### Steps to respond to a payment request ### {#sctn-steps-to-respond-to-a-payment-request}
 
 The [=steps to respond to a payment request=] for a [=native-app payment
 handler=], |handler|, are:
@@ -226,8 +231,9 @@ following steps:
     1. If |paymentMethodManifest|'s [=supported origins=] contains
         |claimedOrigin|, return `true`.
 
-        NOTE: [=Supported origins=] can either be the string "*", or an [=set=]
-        of [=origins=].
+        NOTE: The [=supported origins=] can either be the string "*",
+              indicating that any [=origin=] is allowed to handle this
+              |identifier|, or an explicit [=set=] of allowed [=origins=].
 
 1. Return `false`.
 
@@ -241,11 +247,10 @@ The <dfn>native payment app provider model</dfn> is an abstract functional
 model which describes the behavior of some <dfn>native payment app
 provider</dfn> (e.g., the operating system) that facilitates access to
 underlying [=native payment apps=]. <dfn>Native payment apps</dfn> are
-deliberately loosely defined, simply as sorm form of application that is not a
-web-based application within the scope of this user agent.
-
-NOTE: For payment applications that are web-based within the scope of this user
-agent, see [[!web-based-payment-handler]].
+deliberately loosely defined, simply as some form of application that is not a
+web-based application as defined in [[web-based-payment-handler]]. This allows
+for user agent flexibility to provide access to, for example, applications that
+use web technologies but which are external to the user agent.
 
 Providers MAY implement and expose this abstract model in any way desired, as
 long as the normative requirements of the model are met. See
@@ -254,16 +259,22 @@ long as the normative requirements of the model are met. See
 ## Returning a list of [=native payment apps=] ## {#sctn-returning-list}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
-can <dfn>get the list of native payment apps</dfn> known to the provider.
+can <dfn>get the list of native payment apps</dfn> known to the provider. This
+method returns a list of [=native payment apps=].
 
-## Claiming a method URL ## {#sctn-claiming-method-url}
+## Claiming a payment method identifier URL ## {#sctn-claiming-method-url}
 
 Given a [=native payment app=], |app|, a [=native payment app provider=] MUST
 provide a method by which the user agent can get the <dfn>claimed payment
-method identifier</dfn> for |app|. This is a [=url-based payment method
-identifier=] that |app| claims it is associated with, and for which the
-[=payment method manifest=] will list some [=default application=] that has
-|app| as a [=related application=]. The user agent MUST verify this claim (see
+method identifier</dfn> for |app|. This method returns a [=url-based payment
+method identifier=] that |app| claims it is associated with, that is a
+[=payment method identifier=] whose [=payment method manifest=] will list some
+[=default application=] that has |app| as a [=related application=].
+
+ISSUE: The payment method manifest doesn't list default applications, we need
+one more layer of indirection here, to talk about web-app manifests.
+
+The user agent MUST verify that the claim is valid (see
 [[#sctn-verifying-app-claims]]).
 
 ## Claiming a set of origins ## {#sctn-claiming-origins}
@@ -271,25 +282,28 @@ identifier=] that |app| claims it is associated with, and for which the
 Given a [=native payment app=], |app|, a [=native payment app provider=] MUST
 provide a method by which the user agent can get the <dfn>claimed third-party
 origins</dfn>. This is a [=set=] of [=origins=] that the [=native payment app=]
-claims that it has the right to act on behalf of, though user agents MUST
-verify that against the origin (see [[#sctn-verifying-app-claims]]).
+claims that it has the right to act on behalf of.
+
+The user agents MUST verify that the claim is valid for each origin (see
+[[#sctn-verifying-app-claims]]).
 
 ## Checking if a [=native payment app=] is a related application for a web app manifest ## {#sctn-related-application}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can check if a [=native payment app=] <dfn>is a related application</dfn> for a
 [=application manifest|web app manifest=]. This method MAY utilize the
-information contained in the [=related applications=], such as the [=id=],
-[=platform=], or [=fingerprints=] of each specified [=external application
-resource=].
+information contained in the [=related applications=] member of the manifest,
+such as the [=id=], [=platform=], or [=fingerprints=] of each specified
+[=external application resource=].
 
 ## Determining if a [=native payment app=] can handle a {{PaymentRequest}} ## {#sctn-hasenrolled-instrument}
 
 A [=native payment app provider=] MUST provide a method by which the user agent
 can check if a [=native payment app=] is <dfn export>able to handle a payment
-request</dfn>. In order to support this functionality, the user agent MAY pass
-information about the specific {{PaymentRequest}} to the [=native payment
-app=], but considerations SHOULD be made regarding user privacy.
+request</dfn> for a given {{PaymentRequest}} |request|. In order to support
+this functionality, the user agent MAY pass information about |request| to the
+[=native payment app=], but considerations SHOULD be made regarding user
+privacy.
 
 NOTE: This functionality is used to answer the `hasEnrolledInstrument` method
 on {{PaymentRequest}}, which was removed from the [[payment-request]]
@@ -318,7 +332,7 @@ ISSUE(4): We should speak to the privacy issues in a privacy section.
 A [=native payment app provider=] MUST provide a method by which the user agent
 can <dfn export>communicate with an invoked payment app</dfn>.
 
-ISSUE(5): This needs fleshed out, to include; notifying that the payment method
+ISSUE: This needs fleshed out, to include; notifying that the payment method
 has changed, notifying that the shipping address or options have changed,
 notifying that payer details have changed. Also, what capabilty needs to be
 defined at the payment handler level rather than in the model.
@@ -330,11 +344,11 @@ payment app=] to <dfn>indicate success</dfn> back to the user agent. When this
 occurs, the user agent MUST run the [=user accepts the payment request
 algorithm=] from [[payment-request]].
 
-A [=native payment app provider=] MUST also provide a way for the user agent to
-<dfn>retrieve the converted result details</dfn> for an invoked [=native payment
-app=] that has [=indicated success=]. This must be converted to a form suitable
-for the user agent to place in the {{PaymentResponse/details}} field of the
-response that will be returned from {{PaymentRequest/show()}}.
+A [=native payment app provider=] MUST provide a way for the user agent to
+<dfn>retrieve the converted result details</dfn> for an invoked [=native
+payment app=] that has [=indicated success=]. The details must be converted to
+a form suitable for the user agent to place in the {{PaymentResponse/details}}
+field of the response that will be returned from {{PaymentRequest/show()}}.
 
 ## Indicating user cancel from an invoked [=native payment app=] ## {#sctn-indicating-user-cancel}
 
