@@ -727,7 +727,7 @@ internal error algorithm=] from [[payment-request]].
 ## Tracking risks via readiness checks ## {#sctn-tracking-risks}
 
 Probing whether a native payment app is installed or ready to pay (via
-{{PaymentRequest/canMakePayment()}} or {{PaymentRequest/hasEnrolledInstrument()}}
+{{PaymentRequest/canMakePayment()}} or `hasEnrolledInstrument()`)
 presents potential tracking risks:
 
 - **Fingerprinting**: Websites could query multiple payment methods to silently
