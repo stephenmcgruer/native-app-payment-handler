@@ -406,6 +406,121 @@ Given a {{PaymentRequest}}, |request|, and a [=native payment app=], |app|:
      `true` and |app|'s [=supported delegations=] contains
      {{PaymentDelegation/"payerPhone"}}.
 
+## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
+
+[=Native payment apps=] have both a [=claimed payment method identifier=] and a
+set of [=claimed third-party origins=].  Verification of these claims relies
+upon the payment and application manifests specified in
+[[payment-method-manifest]] and [[appmanifest]].
+
+ISSUE(2): Should we allow for alternate methods to verify the claims, to
+support cases like payment apps built into the browser?
+
+Given a [=payment method identifier=], |identifier|, and a [=native payment
+app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
+the payment method identifier</dfn> |identifier|:
+
+1. If |identifier| is not a [=URL-based payment method identifier=], return
+     `false`.
+
+1. Let |paymentMethodManifest| be the [=ingest payment method
+     manifests|ingested=] and [=parsed payment method manifest|parsed=]
+     [=payment method manifest=] for |identifier|. If ingestion or parsing
+     fails, return `false`.
+
+1. Let |claimedIdentifier| be the [=claimed payment method identifier=]
+    for |app|.
+
+1. If |claimedIdentifier| is equal to |identifier|, then:
+
+    1. For each [=URL=] |webAppManifestURL| in |paymentMethodManifest|'s
+         [=default applications=]:
+
+        1. Let |webAppManifestString| be the result of [=fetch the web app
+             manifest for a default payment app|fetching the web app manifest=]
+             at |webAppManifestURL|. If the fetch fails, continue to the next
+             iteration of this loop.
+
+        1. Let |webAppManifest| be the result of running the [=steps for
+             processing a web app manifest=] given |webAppManifestString|. If
+             processing fails, continue to the next iteration of this loop.
+
+        ISSUE: The payment method manifest spec should really cache and attach
+               the relevant web-app manifests to the payment method manifest,
+               so we don't have to do this.
+
+        1. If |app| [=is a related application=] for |webAppManifest|, return
+             `true`.
+
+    1. Return `false`.
+
+1. Otherwise:
+
+    1. Let |claimedOrigins| be the [=claimed third-party origins=] for |app|.
+
+    1. If none of the |claimedOrigins| [=match the origins allowed for a
+        payment method identifier|match the origins allowed for=] |identifier|,
+        return `false`.
+
+    1. Let |claimedPaymentMethodManifest| be the [=ingest payment method
+        manifests|ingested=] and [=parsed payment method manifest|parsed=]
+        [=payment method manifest=] for |claimedIdentifier|. If ingestion or
+        parsing fails, return `false`.
+
+    1. For each [=URL=] |webAppManifestURL| in |claimedPaymentMethodManifest|'s
+         [=default applications=]:
+
+        1. Let |webAppManifestString| be the result of [=fetch the web app
+             manifest for a default payment app|fetching the web app manifest=]
+             at |webAppManifestURL|. If the fetch fails, continue to the next
+             iteration of this loop.
+
+        1. Let |webAppManifest| be the result of running the [=steps for
+             processing a web app manifest=] given |webAppManifestString|. If
+             processing fails, continue to the next iteration of this loop.
+
+        ISSUE: The payment method manifest spec should really cache and attach
+               the relevant web-app manifests to the payment method manifest,
+               so we don't have to do this.
+
+        1. If |app| [=is a related application=] for |webAppManifest|, return
+             `true`.
+
+    1. Return `false`.
+
+## Match origins allowed for a payment method identifier ## {#sctn-match-origins}
+
+ISSUE(3): This algorithm should probably exist in [[payment-method-manifest]]
+          rather than here.
+
+To determine if a [=set=] of [=origins=], |claimedOrigins|, <dfn>match the
+origins allowed for a payment method identifier</dfn>, |identifier|, run the
+following steps:
+
+1. Let |paymentMethodManifest| be the [=ingest payment method
+     manifests|ingested=] and [=parsed payment method manifest|parsed=]
+     [=payment method manifest=] for |identifier|. If ingesting or parsing
+     fails, return `false`.
+
+1. For each [=origin=] |claimedOrigin| in |claimedOrigins|:
+
+    1. If |claimedOrigin| is equal to |identifier|'s [=origin=], return `true`.
+
+             ISSUE: Is this right? The |identifier| can cause a redirect, so
+             what should we be checking against?
+
+    1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
+        return `true`.
+
+    1. If |paymentMethodManifest|'s [=supported origins=] contains
+        |claimedOrigin|, return `true`.
+
+        NOTE: The [=supported origins=] can either be the string "*",
+              indicating that any [=origin=] is allowed to handle this
+              |identifier|, or an explicit [=set=] of allowed [=origins=].
+
+1. Return `false`.
+
 ## The NativePaymentHandlerResponse dictionary ## {#sctn-nativepaymenthandlerresponse}
 
 A [=native payment app=] provides its transaction response to the user agent using
@@ -540,121 +655,6 @@ PaymentRequestDetailsUpdate</dfn>:
          |matchingModifiers|.
 
 1. Return |update|.
-
-## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
-
-[=Native payment apps=] have both a [=claimed payment method identifier=] and a
-set of [=claimed third-party origins=].  Verification of these claims relies
-upon the payment and application manifests specified in
-[[payment-method-manifest]] and [[appmanifest]].
-
-ISSUE(2): Should we allow for alternate methods to verify the claims, to
-support cases like payment apps built into the browser?
-
-Given a [=payment method identifier=], |identifier|, and a [=native payment
-app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
-the payment method identifier</dfn> |identifier|:
-
-1. If |identifier| is not a [=URL-based payment method identifier=], return
-     `false`.
-
-1. Let |paymentMethodManifest| be the [=ingest payment method
-     manifests|ingested=] and [=parsed payment method manifest|parsed=]
-     [=payment method manifest=] for |identifier|. If ingestion or parsing
-     fails, return `false`.
-
-1. Let |claimedIdentifier| be the [=claimed payment method identifier=]
-    for |app|.
-
-1. If |claimedIdentifier| is equal to |identifier|, then:
-
-    1. For each [=URL=] |webAppManifestURL| in |paymentMethodManifest|'s
-         [=default applications=]:
-
-        1. Let |webAppManifestString| be the result of [=fetch the web app
-             manifest for a default payment app|fetching the web app manifest=]
-             at |webAppManifestURL|. If the fetch fails, continue to the next
-             iteration of this loop.
-
-        1. Let |webAppManifest| be the result of running the [=steps for
-             processing a web app manifest=] given |webAppManifestString|. If
-             processing fails, continue to the next iteration of this loop.
-
-        ISSUE: The payment method manifest spec should really cache and attach
-               the relevant web-app manifests to the payment method manifest,
-               so we don't have to do this.
-
-        1. If |app| [=is a related application=] for |webAppManifest|, return
-             `true`.
-
-    1. Return `false`.
-
-1. Otherwise:
-
-    1. Let |claimedOrigins| be the [=claimed third-party origins=] for |app|.
-
-    1. If none of the |claimedOrigins| [=match the origins allowed for a
-        payment method identifier|match the origins allowed for=] |identifier|,
-        return `false`.
-
-    1. Let |claimedPaymentMethodManifest| be the [=ingest payment method
-        manifests|ingested=] and [=parsed payment method manifest|parsed=]
-        [=payment method manifest=] for |claimedIdentifier|. If ingestion or
-        parsing fails, return `false`.
-
-    1. For each [=URL=] |webAppManifestURL| in |claimedPaymentMethodManifest|'s
-         [=default applications=]:
-
-        1. Let |webAppManifestString| be the result of [=fetch the web app
-             manifest for a default payment app|fetching the web app manifest=]
-             at |webAppManifestURL|. If the fetch fails, continue to the next
-             iteration of this loop.
-
-        1. Let |webAppManifest| be the result of running the [=steps for
-             processing a web app manifest=] given |webAppManifestString|. If
-             processing fails, continue to the next iteration of this loop.
-
-        ISSUE: The payment method manifest spec should really cache and attach
-               the relevant web-app manifests to the payment method manifest,
-               so we don't have to do this.
-
-        1. If |app| [=is a related application=] for |webAppManifest|, return
-             `true`.
-
-    1. Return `false`.
-
-## Match origins allowed for a payment method identifier ## {#sctn-match-origins}
-
-ISSUE(3): This algorithm should probably exist in [[payment-method-manifest]]
-          rather than here.
-
-To determine if a [=set=] of [=origins=], |claimedOrigins|, <dfn>match the
-origins allowed for a payment method identifier</dfn>, |identifier|, run the
-following steps:
-
-1. Let |paymentMethodManifest| be the [=ingest payment method
-     manifests|ingested=] and [=parsed payment method manifest|parsed=]
-     [=payment method manifest=] for |identifier|. If ingesting or parsing
-     fails, return `false`.
-
-1. For each [=origin=] |claimedOrigin| in |claimedOrigins|:
-
-    1. If |claimedOrigin| is equal to |identifier|'s [=origin=], return `true`.
-
-             ISSUE: Is this right? The |identifier| can cause a redirect, so
-             what should we be checking against?
-
-    1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
-        return `true`.
-
-    1. If |paymentMethodManifest|'s [=supported origins=] contains
-        |claimedOrigin|, return `true`.
-
-        NOTE: The [=supported origins=] can either be the string "*",
-              indicating that any [=origin=] is allowed to handle this
-              |identifier|, or an explicit [=set=] of allowed [=origins=].
-
-1. Return `false`.
 
 # Native payment app provider model # {#sctn-native-payment-app-model}
 
