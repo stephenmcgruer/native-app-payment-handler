@@ -58,6 +58,93 @@ spec:url; type:dfn; for:/; text:url
 }
 </pre>
 
+<style>
+/* The heading colors reference https://www.w3.org/StyleSheets/TR/2021/base.css */
+:root {
+  --note-heading-text: var(--bg);
+  --note-heading-bg: var(--note-text);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --note-heading-text: var(--bg);
+    --note-heading-bg: var(--note-text);
+  }
+}
+
+/* The .domintro style is reused from https://resources.whatwg.org/standard.css
+   and https://resources.whatwg.org/spec.css */
+.domintro {
+  margin: 1.5em 0;
+  padding: 0.5em 1em;
+}
+li > .domintro {
+  margin: 1em 0;
+}
+.domintro > :first-child, .domintro > .self-link:first-child + * {
+  margin-top: 0;
+}
+.domintro > :last-child {
+  margin-bottom: 0;
+}
+
+/* These ones have decorations */
+.domintro {
+  position: relative;
+
+  /* top gets extra 0.5em (both above and below) for the decoration;
+     then we add the padding to the bottom as well for symmetry */
+  margin-top: 2em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+li > .domintro {
+  margin-top: 1.5em;
+}
+.domintro::before {
+  padding: 0.15em 0.25em;
+  position: absolute;
+  top: -0.8em;
+  left: -0.8em;
+}
+
+.domintro {
+  color: var(--note-text);
+  background: var(--note-bg);
+}
+.domintro::before {
+  color:  var(--note-heading-text);
+  background: var(--note-heading-bg);
+}
+.domintro dt, .domintro dt * {
+  color: var(--text);
+}
+.domintro dd p {
+  margin: 0.5em 0;
+}
+.domintro dd p:first-child {
+  margin-top: 0;
+}
+.domintro dd p:last-child {
+  margin-bottom: 0;
+}
+.domintro dd p + p.note, .domintro dd p + p.warning {
+  /* Fix the gap above */
+  margin-top: 1.3em;
+  /* 1.3em = 0.5em + 0.8em */
+  /* 0.5em = margin-bottom of .domintro dd p */
+  /* 0.8em = top of .note::before */
+}
+.domintro dd span.note {
+  /* Differentiate inline notes from the background */
+  border: thin solid;
+  border-left: none;
+  padding-top: 0.15em; /* 0.15em = padding-top of .note::before */
+  padding-bottom: 0.15em;
+}
+
+dl.domintro::before { content: 'For web developers (non-normative)'; }
+</style>
+
 <div class="non-normative">
 
 # Introduction # {#sctn-intro}
@@ -85,125 +172,6 @@ that can be accessed via a [=native payment app provider=].
 This section describes the steps the user agent MUST take when intermediating
 between a {{PaymentRequest}} object and one or more [=native payment apps=] from
 a single [=native payment app provider=].
-
-## Delegation ## {#sctn-delegation}
-
-When a merchant creates a {{PaymentRequest}} with {{PaymentOptions}} such as
-{{PaymentOptions/requestShipping}} or {{PaymentOptions/requestPayerName}}, the
-user agent can either collect this information itself, or delegate the
-collection of this information to the selected [=native-app payment handler=].
-
-<pre class="idl">
-enum PaymentDelegation {
-  "shippingAddress",
-  "payerName",
-  "payerPhone",
-  "payerEmail"
-};
-</pre>
-
-Given a {{PaymentRequest}}, |request|, and a [=native payment app=], |app|:
-
-1. The user agent <dfn>delegates shipping address collection</dfn> to |app| if
-     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestShipping}} is
-     `true` and |app|'s [=supported delegations=] contains
-     {{PaymentDelegation/"shippingAddress"}}.
-
-1. The user agent <dfn>delegates payer name collection</dfn> to |app| if
-     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerName}} is
-     `true` and |app|'s [=supported delegations=] contains
-     {{PaymentDelegation/"payerName"}}.
-
-1. The user agent <dfn>delegates payer email collection</dfn> to |app| if
-     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerEmail}} is
-     `true` and |app|'s [=supported delegations=] contains
-     {{PaymentDelegation/"payerEmail"}}.
-
-1. The user agent <dfn>delegates payer phone collection</dfn> to |app| if
-     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerPhone}} is
-     `true` and |app|'s [=supported delegations=] contains
-     {{PaymentDelegation/"payerPhone"}}.
-
-## The NativePaymentHandlerResponse dictionary ## {#sctn-nativepaymenthandlerresponse}
-
-A [=native payment app=] provides its transaction response to the user agent using
-the {{NativePaymentHandlerResponse}} dictionary.
-
-<pre class="idl">
-dictionary NativePaymentHandlerResponse {
-  DOMString methodName;
-  object details;
-  DOMString? payerName = null;
-  DOMString? payerEmail = null;
-  DOMString? payerPhone = null;
-  AddressInit shippingAddress;
-  DOMString? shippingOption = null;
-};
-</pre>
-
-<dfn dict-member for="NativePaymentHandlerResponse">methodName</dfn>
-: The [=payment method identifier=] for the payment method used to complete the
-    transaction.
-
-<dfn dict-member for="NativePaymentHandlerResponse">details</dfn>
-: An object containing payment method specific information supplied by the
-    native payment app to complete the transaction.
-
-<dfn dict-member for="NativePaymentHandlerResponse">payerName</dfn>
-: The payer's name, if payer name collection was delegated to the native
-    payment app.
-
-<dfn dict-member for="NativePaymentHandlerResponse">payerEmail</dfn>
-: The payer's email address, if payer email collection was delegated to the
-    native payment app.
-
-<dfn dict-member for="NativePaymentHandlerResponse">payerPhone</dfn>
-: The payer's phone number, if payer phone collection was delegated to the
-    native payment app.
-
-<dfn dict-member for="NativePaymentHandlerResponse">shippingAddress</dfn>
-: The shipping address selected by the user, if shipping address collection was
-    delegated to the native payment app.
-
-<dfn dict-member for="NativePaymentHandlerResponse">shippingOption</dfn>
-: The {{PaymentShippingOption/id}} of the shipping option selected by the user,
-    if shipping address collection was delegated to the native payment app.
-
-## The PaymentRequestDetailsUpdate dictionary ## {#sctn-paymentrequestdetailsupdate}
-
-When a [=native payment app=] communicates an update to the transaction (such as a
-change of payment method, shipping option, or shipping address), the user agent
-provides the merchant's updated transaction details back to the native payment
-app using the {{PaymentRequestDetailsUpdate}} dictionary.
-
-<pre class="idl">
-dictionary PaymentRequestDetailsUpdate {
-  PaymentCurrencyAmount total;
-  sequence&lt;PaymentDetailsModifier&gt; modifiers;
-  DOMString error;
-  AddressErrors shippingAddressErrors;
-  object paymentMethodErrors;
-  sequence&lt;PaymentShippingOption&gt; shippingOptions;
-};
-</pre>
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">total</dfn>
-: An updated total amount for the payment request.
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">modifiers</dfn>
-: A sequence of modifiers for supported payment methods.
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">error</dfn>
-: An error message string indicating an issue with the transaction details.
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">shippingAddressErrors</dfn>
-: An {{AddressErrors}} dictionary containing validation error messages for the shipping address.
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">paymentMethodErrors</dfn>
-: An object containing validation error messages for the payment method.
-
-<dfn dict-member for="PaymentRequestDetailsUpdate">shippingOptions</dfn>
-: A sequence of updated {{PaymentShippingOption}} objects available for the transaction.
 
 ## Integration with [[payment-request]] ## {#sctn-integration-with-payment-request}
 
@@ -399,6 +367,135 @@ ISSUE: [[payment-request]] assumes the user agent renders the payment UI
 itself, and needs to provide formal extension hooks for payment handlers to
 receive the resolved {{PaymentDetailsUpdate}} from
 {{PaymentRequestUpdateEvent/updateWith()}}.
+
+## Delegating user information collection ## {#sctn-delegation}
+
+When a merchant creates a {{PaymentRequest}} with {{PaymentOptions}} such as
+{{PaymentOptions/requestShipping}} or {{PaymentOptions/requestPayerName}}, the
+user agent can either collect this information itself, or delegate the
+collection of this information to the selected [=native-app payment handler=].
+
+<pre class="idl">
+enum PaymentDelegation {
+  "shippingAddress",
+  "payerName",
+  "payerPhone",
+  "payerEmail"
+};
+</pre>
+
+Given a {{PaymentRequest}}, |request|, and a [=native payment app=], |app|:
+
+1. The user agent <dfn>delegates shipping address collection</dfn> to |app| if
+     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestShipping}} is
+     `true` and |app|'s [=supported delegations=] contains
+     {{PaymentDelegation/"shippingAddress"}}.
+
+1. The user agent <dfn>delegates payer name collection</dfn> to |app| if
+     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerName}} is
+     `true` and |app|'s [=supported delegations=] contains
+     {{PaymentDelegation/"payerName"}}.
+
+1. The user agent <dfn>delegates payer email collection</dfn> to |app| if
+     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerEmail}} is
+     `true` and |app|'s [=supported delegations=] contains
+     {{PaymentDelegation/"payerEmail"}}.
+
+1. The user agent <dfn>delegates payer phone collection</dfn> to |app| if
+     |request|.{{PaymentRequest/[[options]]}}.{{PaymentOptions/requestPayerPhone}} is
+     `true` and |app|'s [=supported delegations=] contains
+     {{PaymentDelegation/"payerPhone"}}.
+
+## The NativePaymentHandlerResponse dictionary ## {#sctn-nativepaymenthandlerresponse}
+
+A [=native payment app=] provides its transaction response to the user agent using
+the {{NativePaymentHandlerResponse}} dictionary.
+
+<pre class="idl">
+dictionary NativePaymentHandlerResponse {
+  DOMString methodName;
+  object details;
+  DOMString? payerName = null;
+  DOMString? payerEmail = null;
+  DOMString? payerPhone = null;
+  AddressInit shippingAddress;
+  DOMString? shippingOption = null;
+};
+</pre>
+
+<dl class="domintro">
+
+: {{NativePaymentHandlerResponse/methodName}}
+:: The [=payment method identifier=] for the payment method used to complete the
+     transaction.
+
+: {{NativePaymentHandlerResponse/details}}
+:: An object containing payment method specific information supplied by the
+     native payment app to complete the transaction.
+
+: {{NativePaymentHandlerResponse/payerName}}
+:: The payer's name, if payer name collection was delegated to the native
+     payment app.
+
+: {{NativePaymentHandlerResponse/payerEmail}}
+:: The payer's email address, if payer email collection was delegated to the
+     native payment app.
+
+: {{NativePaymentHandlerResponse/payerPhone}}
+:: The payer's phone number, if payer phone collection was delegated to the
+     native payment app.
+
+: {{NativePaymentHandlerResponse/shippingAddress}}
+:: The shipping address selected by the user, if shipping address collection was
+     delegated to the native payment app.
+
+: {{NativePaymentHandlerResponse/shippingOption}}
+:: The {{PaymentShippingOption/id}} of the shipping option selected by the user,
+     if shipping address collection was delegated to the native payment app.
+
+</dl>
+
+## The PaymentRequestDetailsUpdate dictionary ## {#sctn-paymentrequestdetailsupdate}
+
+When a [=native payment app=] communicates an update to the transaction (such as a
+change of payment method, shipping option, or shipping address), the user agent
+provides the merchant's updated transaction details back to the native payment
+app using the {{PaymentRequestDetailsUpdate}} dictionary.
+
+<pre class="idl">
+dictionary PaymentRequestDetailsUpdate {
+  PaymentCurrencyAmount total;
+  sequence&lt;PaymentDetailsModifier&gt; modifiers;
+  DOMString error;
+  AddressErrors shippingAddressErrors;
+  object paymentMethodErrors;
+  sequence&lt;PaymentShippingOption&gt; shippingOptions;
+};
+</pre>
+
+<dl class="domintro">
+
+: {{PaymentRequestDetailsUpdate/total}}
+:: An updated total amount for the payment request.
+
+: {{PaymentRequestDetailsUpdate/modifiers}}
+:: A sequence of modifiers for supported payment methods.
+
+: {{PaymentRequestDetailsUpdate/error}}
+:: An error message string indicating an issue with the transaction details.
+
+: {{PaymentRequestDetailsUpdate/shippingAddressErrors}}
+:: An {{AddressErrors}} dictionary containing validation error messages for the
+     shipping address.
+
+: {{PaymentRequestDetailsUpdate/paymentMethodErrors}}
+:: An object containing validation error messages for the payment method.
+
+: {{PaymentRequestDetailsUpdate/shippingOptions}}
+:: A sequence of updated {{PaymentShippingOption}} objects available for the
+    transaction.
+
+</dl>
 
 ### Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate ### {#sctn-convert-payment-details-update}
 
