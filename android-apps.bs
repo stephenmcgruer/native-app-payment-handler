@@ -27,14 +27,26 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:get the list of native payment apps; url: get-the-list-of-native-payment-apps
         text:claimed payment method identifier; url: claimed-payment-method-identifier
         text:claimed third-party origins; url: claimed-third-party-origins
+        text:supported delegations; url: supported-delegations
         text:is a related application; url: is-a-related-application
         text:able to handle a payment request; url:able-to-handle-a-payment-request
         text:invoke the native payment app; url:invoke-the-native-payment-app
-        text:communicate with an invoked payment app; url:communicate-with-an-invoked-payment-app
+        text:inform the user agent that the user has changed their payment method; url:inform-the-user-agent-that-the-user-has-changed-their-payment-method
+        text:inform the user agent that the user has changed their shipping option; url:inform-the-user-agent-that-the-user-has-changed-their-shipping-option
+        text:inform the user agent that the user has changed their shipping address; url:inform-the-user-agent-that-the-user-has-changed-their-shipping-address
+        text:update payment details; url:update-payment-details
+        text:notify payment details not updated; url:notify-payment-details-not-updated
         text:indicate success; url:indicate-success
         text:indicate user cancellation; url:indicate-user-cancellation
         text:indicate internal error; url:indicate-internal-error
         text:retrieve the converted result details; url:retrieve-the-converted-result-details
+    type: enum
+        text:PaymentDelegation; url:enumdef-paymentdelegation
+    type: enum-value
+        text:"shippingAddress"; for:PaymentDelegation; url:dom-paymentdelegation-shippingaddress
+        text:"payerName"; for:PaymentDelegation; url:dom-paymentdelegation-payername
+        text:"payerPhone"; for:PaymentDelegation; url:dom-paymentdelegation-payerphone
+        text:"payerEmail"; for:PaymentDelegation; url:dom-paymentdelegation-payeremail
 </pre>
 
 <!-- Manual fix for 'origin' due to HTML spec ambiguity -->
@@ -52,7 +64,7 @@ spec:infra; type:dfn; for:/; text:set
 {
     "native-app-payment-handler": {
         "title": "Native-app Payment Handler",
-        "href": "https://todo.example"
+        "href": "https://stephenmcgruer.github.io/native-app-payment-handler/spec.html"
     }
 }
 </pre>
@@ -96,7 +108,9 @@ following concepts in their `AndroidManifest.xml` file:
     bind to and call when [[#sctn-hasenrolled-instrument|determining if the
     app can handle a PaymentRequest]].
 
-Issue: TODO add the update service
+- An **optional** `UPDATE_PAYMENT_DETAILS` Android service, which the user
+    agent will bind to when [[#sctn-dynamic-updates|communicating dynamic
+    updates with the invoked payment app]].
 
 If an Android payment app specifies more than one activity or service that
 matches one of the above, the user agent behavior is undefined.
@@ -112,6 +126,7 @@ and have:
 - An intent filter with an `org.chromium.intent.action.PAY` action
 - An "`org.chromium.default_payment_method_name`" `<meta-data>` tag.
 - Optionally, an "`org.chromium.payment_method_names`" `<meta-data>` tag.
+- Optionally, an "`org.chromium.payment_supported_delegations`" `<meta-data>` tag.
 
 The "`org.chromium.default_payment_method_name`" tag must have an
 `android:value` attribute containing a valid [=url-based payment method
@@ -121,6 +136,11 @@ The "`org.chromium.payment_method_names`" tag, if present, must have an
 `android:resource` attribute pointing at a `<string-array>` resource each of
 which must be a valid [=url-based payment method identifier=]. This will be
 used for [[#sctn-claiming-origins]].
+
+The "`org.chromium.payment_supported_delegations`" tag, if present, must have an
+`android:resource` attribute pointing at a `<string-array>` resource listing
+the delegation capabilities supported by the payment app (see
+[[#sctn-supported-delegations]]).
 
 <div class="example">
 <xmp>
@@ -137,7 +157,26 @@ used for [[#sctn-claiming-origins]].
     <meta-data
         android:name="org.chromium.payment_method_names"
         android:resource="@array/other_payment_method_names" />
+    <meta-data
+        android:name="org.chromium.payment_supported_delegations"
+        android:resource="@array/supported_delegations" />
   </activity>
+</xmp>
+</div>
+
+<div class="example">
+<xmp>
+  <resources>
+    <string-array name="other_payment_method_names">
+      <item>https://anotherapp.example/payment</item>
+    </string-array>
+    <string-array name="supported_delegations">
+      <item>shippingAddress</item>
+      <item>payerName</item>
+      <item>payerPhone</item>
+      <item>payerEmail</item>
+    </string-array>
+  </resources>
 </xmp>
 </div>
 
@@ -166,6 +205,28 @@ action.
 </xmp>
 </div>
 
+### The `UPDATE_PAYMENT_DETAILS` service ### {#sctn-update-payment-details-service}
+
+The `UPDATE_PAYMENT_DETAILS` service receives connections from the user agent
+when the payment app is invoked to facilitate two-way communication for
+[[#sctn-dynamic-updates|dynamic updates]] (e.g. shipping address or payment
+method changes). If present, it must be <a
+href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
+and have an intent filter with an
+`org.chromium.intent.action.UPDATE_PAYMENT_DETAILS` action.
+
+<div class="example">
+<xmp>
+  <service
+      android:name=".PaymentDetailsUpdateService"
+      android:exported="true">
+    <intent-filter>
+      <action android:name="org.chromium.intent.action.UPDATE_PAYMENT_DETAILS" />
+    </intent-filter>
+  </service>
+</xmp>
+</div>
+
 ## User agent app AndroidManifest.xml ## {#sctn-user-agent-android-manifest}
 
 In order to be able to interact with Android [=native payment apps=], the user
@@ -177,8 +238,7 @@ following actions:
 
 - `"org.chromium.intent.action.PAY"`
 - `"org.chromium.intent.action.IS_READY_TO_PAY"`
-
-Issue: TODO - UPDATE_PAYMENT_DETAILS
+- `"org.chromium.intent.action.UPDATE_PAYMENT_DETAILS"`
 
 <div class="example">
 <xmp>
@@ -188,6 +248,9 @@ Issue: TODO - UPDATE_PAYMENT_DETAILS
     </intent>
     <intent>
       <action android:name="org.chromium.intent.action.IS_READY_TO_PAY"/>
+    </intent>
+    <intent>
+      <action android:name="org.chromium.intent.action.UPDATE_PAYMENT_DETAILS"/>
     </intent>
   </queries>
 </xmp>
@@ -239,6 +302,38 @@ tag in |app|'s AndroidManifest.xml file, as follows:
 
 ISSUE: We need to document why this is an array of method URLs, rather than
 just an array of origins.
+
+## Supported delegations ## {#sctn-supported-delegations}
+
+The [=set=] of [=supported delegations=] for an Android application, |app|, is
+created from the `org.chromium.payment_supported_delegations` `<meta-data>` tag
+in |app|'s `PAY` activity, as follows:
+
+1. Let |delegations| be an empty [=set=].
+
+1. Let |delegationNames| be the string array resource referenced by the
+     `org.chromium.payment_supported_delegations` `<meta-data>` tag in |app|'s
+     `PAY` activity.
+
+1. If |delegationNames| is null or empty, return |delegations|.
+
+1. For each string |name| in |delegationNames|:
+
+    1. If |name| is equal to `"shippingAddress"`, add
+         {{PaymentDelegation/"shippingAddress"}} to |delegations|.
+
+    1. Else if |name| is equal to `"payerName"`, add
+         {{PaymentDelegation/"payerName"}} to |delegations|.
+
+    1. Else if |name| is equal to `"payerPhone"`, add
+         {{PaymentDelegation/"payerPhone"}} to |delegations|.
+
+    1. Else if |name| is equal to `"payerEmail"`, add
+         {{PaymentDelegation/"payerEmail"}} to |delegations|.
+
+    1. Otherwise, ignore |name|.
+
+1. Return |delegations|.
 
 ## Checking if a native payment app is a related application for a web app manifest ## {#sctn-checking-related-application}
 
@@ -323,8 +418,8 @@ In order to [=invoke the native payment app=], |app|, for a {{PaymentRequest}}
 
 ## Communicating with an invoked Android native payment app ## {#sctn-dynamic-updates}
 
-In order to [=communicate with an invoked payment app=], |app|, the user agent
-performs the following steps:
+In order to support dynamic transaction updates with an invoked [=native
+payment app=], |app|, the user agent performs the following steps:
 
 1. TODO, use the service
 
