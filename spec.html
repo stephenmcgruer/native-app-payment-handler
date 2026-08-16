@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="bd1ba820837733093dbea7bfaa61e0d6cbe09d92" name="revision">
+  <meta content="5851fbdbf4b0d9415783e7028a15a87a47532b80" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 /* The heading colors reference https://www.w3.org/StyleSheets/TR/2021/base.css */
@@ -2577,36 +2577,25 @@ changed their shipping address to an <code class="idl"><a data-link-type="idl" h
      <p><a data-link-type="dfn" href="#propagate-payment-detail-updates" id="ref-for-propagate-payment-detail-updates②">Propagate payment detail updates</a> for <var>event</var> and <var>app</var>.</p>
    </ol>
    <h4 class="heading settled" data-level="2.1.8" id="sctn-propagate-payment-details-update"><span class="secno">2.1.8. </span><span class="content">Propagating payment detail updates</span><a class="self-link" href="#sctn-propagate-payment-details-update"></a></h4>
-   <p>When a change event <var>event</var> (a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent" id="ref-for-dom-paymentrequestupdateevent②">PaymentRequestUpdateEvent</a></code> or
-<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethodchangeevent" id="ref-for-dom-paymentmethodchangeevent①">PaymentMethodChangeEvent</a></code>) is dispatched on a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑥">PaymentRequest</a></code>, <var>request</var>,
-for an active <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑥">native payment app</a>, <var>app</var>, the user agent MUST run the
-following steps to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="propagate-payment-detail-updates">propagate payment detail updates</dfn>:</p>
+   <p>When a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent" id="ref-for-dom-paymentrequestupdateevent②">PaymentRequestUpdateEvent</a></code> or <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethodchangeevent" id="ref-for-dom-paymentmethodchangeevent①">PaymentMethodChangeEvent</a></code> event,
+<var>event</var>, is dispatched on a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑥">PaymentRequest</a></code> <var>request</var> for an invoked
+<a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑥">native payment app</a> <var>app</var> the user agent MUST run the following steps to
+<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="propagate-payment-detail-updates">propagate payment detail updates</dfn>:</p>
    <ol>
     <li data-md>
      <p>If <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith" id="ref-for-dom-paymentrequestupdateevent-updatewith">updateWith(detailsPromise)</a></code> was
  invoked on <var>event</var>:</p>
      <ol>
       <li data-md>
-       <p>In parallel:</p>
+       <p>In parallel, wait for <var>detailsPromise</var> to settle.</p>
+      <li data-md>
+       <p>If <var>detailsPromise</var> resolves with a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate" id="ref-for-dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> <var>details</var>:</p>
        <ol>
         <li data-md>
-         <p>Wait for <var>detailsPromise</var> to settle.</p>
+         <p>Let <var>update</var> be the result of running <a data-link-type="dfn" href="#convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate" id="ref-for-convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate">convert a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate</a> with
+  <var>details</var> and <var>app</var>.</p>
         <li data-md>
-         <p>If <var>detailsPromise</var> resolves with a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate" id="ref-for-dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> <var>details</var>:</p>
-         <ol>
-          <li data-md>
-           <p>Let <var>update</var> be the result of running <a data-link-type="dfn" href="#convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate" id="ref-for-convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate">convert a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate</a> with
- <var>details</var> and <var>app</var>.</p>
-          <li data-md>
-           <p><a data-link-type="dfn" href="#update-payment-details" id="ref-for-update-payment-details">Update payment details</a> in <var>app</var> with <var>update</var>.</p>
-         </ol>
-        <li data-md>
-         <p>If <var>detailsPromise</var> rejects:</p>
-         <ol>
-          <li data-md>
-           <p>Run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-user-aborts-the-payment-request-algorithm" id="ref-for-dfn-user-aborts-the-payment-request-algorithm">user aborts the payment request algorithm</a> from
- <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>.</p>
-         </ol>
+         <p><a data-link-type="dfn" href="#update-payment-details" id="ref-for-update-payment-details">Update payment details</a> in <var>app</var> with <var>update</var>.</p>
        </ol>
      </ol>
     <li data-md>
@@ -2616,9 +2605,9 @@ following steps to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id
        <p><a data-link-type="dfn" href="#notify-payment-details-not-updated" id="ref-for-notify-payment-details-not-updated">Notify payment details not updated</a> in <var>app</var>.</p>
      </ol>
    </ol>
-   <p class="issue" id="issue-9a6f21f5"><a class="self-link" href="#issue-9a6f21f5"></a> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
-itself, and needs to provide formal extension hooks for payment handlers to
-receive the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate" id="ref-for-dom-paymentdetailsupdate①">PaymentDetailsUpdate</a></code> from
+   <p class="issue" id="issue-74eb3ad9"><a class="self-link" href="#issue-74eb3ad9"></a> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
+itself, and needs to provide extension hooks for payment handlers to receive
+the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate" id="ref-for-dom-paymentdetailsupdate①">PaymentDetailsUpdate</a></code> from
 <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith" id="ref-for-dom-paymentrequestupdateevent-updatewith①">updateWith()</a></code>.</p>
    <h3 class="heading settled" data-level="2.2" id="sctn-delegation"><span class="secno">2.2. </span><span class="content">Delegating user information collection</span><a class="self-link" href="#sctn-delegation"></a></h3>
    <p>When a merchant creates a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑦">PaymentRequest</a></code> with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions①">PaymentOptions</a></code> such as
@@ -3001,7 +2990,7 @@ converting native-app specific response data into the appropriate dictionary
 fields.</p>
    <h3 class="heading settled" data-level="3.14" id="sctn-indicating-user-cancel"><span class="secno">3.14. </span><span class="content">Indicating user cancel from an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps③⑧">native payment app</a></span><a class="self-link" href="#sctn-indicating-user-cancel"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider②③">native payment app provider</a> MUST provide a way for an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps③⑨">native payment app</a> to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="indicate-user-cancellation">indicate user cancellation</dfn> back to the user agent.
-When this occurs, the user agent MUST run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-user-aborts-the-payment-request-algorithm" id="ref-for-dfn-user-aborts-the-payment-request-algorithm①">user aborts the payment request algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>.</p>
+When this occurs, the user agent MUST run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-user-aborts-the-payment-request-algorithm" id="ref-for-dfn-user-aborts-the-payment-request-algorithm">user aborts the payment request algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>.</p>
    <h3 class="heading settled" data-level="3.15" id="sctn-indicating-internal-error"><span class="secno">3.15. </span><span class="content">Indicating internal error from an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps④⓪">native payment app</a></span><a class="self-link" href="#sctn-indicating-internal-error"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider②④">native payment app provider</a> MUST provide a way for an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps④①">native payment app</a> to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="indicate-internal-error">indicate internal error</dfn> back to the user agent.
 When this occurs, the user agent MUST run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-payment-handler-indicates-an-internal-error-algorithm" id="ref-for-dfn-payment-handler-indicates-an-internal-error-algorithm">payment handler indicates an internal error algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>.</p>
@@ -3457,9 +3446,9 @@ should be passed to an invoked payment handler. We should be more specific. <a h
 populate the full <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentresponse">PaymentResponse</a></code> (e.g., delegated shipping and payer
 data), rather than only the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentresponse-details">details</a></code>. <a class="issue-return" href="#issue-aa46b481" title="Jump to section">↵</a></div>
    <div class="issue"> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
-itself, and needs to provide formal extension hooks for payment handlers to
-receive the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> from
-<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith">updateWith()</a></code>. <a class="issue-return" href="#issue-9a6f21f5" title="Jump to section">↵</a></div>
+itself, and needs to provide extension hooks for payment handlers to receive
+the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> from
+<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith">updateWith()</a></code>. <a class="issue-return" href="#issue-74eb3ad9" title="Jump to section">↵</a></div>
    <div class="issue"> Should we allow for alternate methods to verify the claims, to
 support cases like payment apps built into the browser? <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/2">[Issue #2]</a> <a class="issue-return" href="#issue-2af3b0e2" title="Jump to section">↵</a></div>
    <div class="issue"> The payment method manifest spec should really cache and attach
@@ -3687,7 +3676,7 @@ let dfnPanelData = {
 "15e48c39": {"dfnID":"15e48c39","dfnText":"set","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-set"},{"id":"ref-for-ordered-set\u2460"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-ordered-set\u2461"}],"title":"3.3. Claiming a set of origins"},{"refs":[{"id":"ref-for-ordered-set\u2462"}],"title":"3.4. Supporting delegations"}],"url":"https://infra.spec.whatwg.org/#ordered-set"},
 "166572aa": {"dfnID":"166572aa","dfnText":"object","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-object"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-dfn-object\u2460"}],"title":"3.8. Changing the payment method"}],"url":"https://w3c.github.io/rdf-concepts/spec/#dfn-object"},
 "1be9ea31": {"dfnID":"1be9ea31","dfnText":"shipping option changed algorithm","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-shipping-option-changed-algorithm"}],"title":"2.1.6. Shipping option changed algorithm"}],"url":"https://w3c.github.io/payment-request/#dfn-shipping-option-changed-algorithm"},
-"1c786b1f": {"dfnID":"1c786b1f","dfnText":"user aborts the payment request algorithm","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-user-aborts-the-payment-request-algorithm"}],"title":"2.1.8. Propagating payment detail updates"},{"refs":[{"id":"ref-for-dfn-user-aborts-the-payment-request-algorithm\u2460"}],"title":"3.14. Indicating user cancel from an invoked native payment app"}],"url":"https://w3c.github.io/payment-request/#dfn-user-aborts-the-payment-request-algorithm"},
+"1c786b1f": {"dfnID":"1c786b1f","dfnText":"user aborts the payment request algorithm","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-user-aborts-the-payment-request-algorithm"}],"title":"3.14. Indicating user cancel from an invoked native payment app"}],"url":"https://w3c.github.io/payment-request/#dfn-user-aborts-the-payment-request-algorithm"},
 "1ea15fbe": {"dfnID":"1ea15fbe","dfnText":"id","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentshippingoption-id"}],"title":"2.1.6. Shipping option changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentshippingoption-id\u2460"}],"title":"2.5. The NativePaymentHandlerResponse dictionary"},{"refs":[{"id":"ref-for-dom-paymentshippingoption-id\u2461"}],"title":"3.9. Changing the shipping option"}],"url":"https://w3c.github.io/payment-request/#dom-paymentshippingoption-id"},
 "22176f90": {"dfnID":"22176f90","dfnText":"payment handler","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-payment-handler"}],"title":"2. Native-app payment handlers"},{"refs":[{"id":"ref-for-dfn-payment-handler\u2460"}],"title":"2.1.1. Can make payment algorithm"}],"url":"https://w3c.github.io/payment-request/#dfn-payment-handler"},
 "2b5865dd": {"dfnID":"2b5865dd","dfnText":"updateWith()","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequestupdateevent-updatewith"},{"id":"ref-for-dom-paymentrequestupdateevent-updatewith\u2460"}],"title":"2.1.8. Propagating payment detail updates"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith"},
