@@ -549,10 +549,6 @@ their shipping address. When run, the [=native payment app provider=] MUST run t
 [[#sctn-shipping-address-changed-algorithm|shipping address changed algorithm]],
 converting native-app specific data into an {{AddressInit}} dictionary.
 
-TODO: Surely there should be another sub-section here for changing payer
-details? Or do we not support that for native-app payment handlers? (It isn't
-in the spec for web-based...)
-
 TODO: For the above 'changing the X' methods, we also need a way for the user
 agent to communicate back to the native payment app when the developer calls
 updateWith() on the relevant PaymentRequestUpdateEvent that was triggered for
