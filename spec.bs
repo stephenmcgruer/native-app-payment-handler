@@ -24,6 +24,8 @@ spec: payment-request; urlPrefix: https://w3c.github.io/payment-request/
         text:can make payment algorithm; url:dfn-can-make-payment-algorithm
         text:steps to check if a payment can be made; url:dfn-steps-to-check-if-a-payment-can-be-made
         text:steps to respond to a payment request; url:dfn-steps-to-respond-to-a-payment-request
+    type: dictionary
+        text:AddressInit; url:dom-addressinit
 
 spec: appmanifest; urlPrefix: https://w3c.github.io/manifest/;
     type: dfn
@@ -117,6 +119,51 @@ Given a {{PaymentRequest}}, |request|, and a [=native payment app=], |app|:
      `true` and |app|'s [=supported delegations=] contains
      {{PaymentDelegation/"payerPhone"}}.
 
+## The NativePaymentHandlerResponse dictionary ## {#sctn-nativepaymenthandlerresponse}
+
+A [=native payment app=] provides its transaction response to the user agent using
+the {{NativePaymentHandlerResponse}} dictionary.
+
+<pre class="idl">
+dictionary NativePaymentHandlerResponse {
+  DOMString methodName;
+  object details;
+  DOMString? payerName = null;
+  DOMString? payerEmail = null;
+  DOMString? payerPhone = null;
+  AddressInit shippingAddress;
+  DOMString? shippingOption = null;
+};
+</pre>
+
+<dfn dict-member for="NativePaymentHandlerResponse">methodName</dfn>
+: The [=payment method identifier=] for the payment method used to complete the
+    transaction.
+
+<dfn dict-member for="NativePaymentHandlerResponse">details</dfn>
+: An object containing payment method specific information supplied by the
+    native payment app to complete the transaction.
+
+<dfn dict-member for="NativePaymentHandlerResponse">payerName</dfn>
+: The payer's name, if payer name collection was delegated to the native
+    payment app.
+
+<dfn dict-member for="NativePaymentHandlerResponse">payerEmail</dfn>
+: The payer's email address, if payer email collection was delegated to the
+    native payment app.
+
+<dfn dict-member for="NativePaymentHandlerResponse">payerPhone</dfn>
+: The payer's phone number, if payer phone collection was delegated to the
+    native payment app.
+
+<dfn dict-member for="NativePaymentHandlerResponse">shippingAddress</dfn>
+: The shipping address selected by the user, if shipping address collection was
+    delegated to the native payment app.
+
+<dfn dict-member for="NativePaymentHandlerResponse">shippingOption</dfn>
+: The {{PaymentShippingOption/id}} of the shipping option selected by the user,
+    if shipping address collection was delegated to the native payment app.
+
 ## Integration with [[payment-request]] ## {#sctn-integration-with-payment-request}
 
 ### Can make payment algorithm ### {#sctn-can-make-payment-algorithm}
@@ -194,31 +241,37 @@ The [=steps to respond to a payment request=] for a {{PaymentRequest}},
 
 1. If the user agent [=delegates shipping address collection=] to |app|:
 
+    1. Let |address| be the result of running the [=create a ContactAddress from
+         user-provided input=] algorithm, treating
+         |result|.{{NativePaymentHandlerResponse/shippingAddress}} as the
+         user-provided input.
+
     1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/shippingAddress}}
-         to |result|.shippingAddress
+         to |address|.
 
     1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/shippingOption}}
-         to |result|.shippingOption
+         to |result|.{{NativePaymentHandlerResponse/shippingOption}}.
 
 1. If the user agent [=delegates payer name collection=] to |app|:
 
     1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/payerName}}
-         to |result|.payerName
+         to |result|.{{NativePaymentHandlerResponse/payerName}}.
 
 1. If the user agent [=delegates payer email collection=] to |app|:
 
     1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/payerEmail}}
-         to |result|.payerEmail
+         to |result|.{{NativePaymentHandlerResponse/payerEmail}}.
 
 1. If the user agent [=delegates payer phone collection=] to |app|:
 
     1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/payerPhone}}
-         to |result|.payerPhone
+         to |result|.{{NativePaymentHandlerResponse/payerPhone}}.
 
-1. Return |result|.details.
+1. Return |result|.{{NativePaymentHandlerResponse/details}}.
 
-TODO: Write an issue here noting that [[payment-request]] needs to allow the
-      handler to modify the full {{PaymentResponse}} not just the details.
+ISSUE: [[payment-request]] needs to be updated to allow payment handlers to
+populate the full {{PaymentResponse}} (e.g., delegated shipping and payer
+data), rather than only the {{PaymentResponse/details}}.
 
 ## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
 
@@ -489,14 +542,10 @@ algorithm=] from [[payment-request]].
 
 A [=native payment app provider=] MUST provide a way for the user agent to
 <dfn>retrieve the converted result details</dfn> for an invoked [=native
-payment app=] that has [=indicated success=]. The details must be converted to
-a form suitable for the user agent to place in the {{PaymentResponse/details}}
-field of the response that will be returned from {{PaymentRequest/show()}}.
-
-TODO: Actually because we need to return shipping address/etc here too, we need
-    to specify a new NativePaymentHandlerResponse object, have this method
-    return one of those, and use that in the steps to respond to a payment
-    request.
+payment app=] that has [=indicated success=]. This method returns a
+{{NativePaymentHandlerResponse}} dictionary containing the transaction result,
+converting native-app specific response data into the appropriate dictionary
+fields.
 
 ## Indicating user cancel from an invoked [=native payment app=] ## {#sctn-indicating-user-cancel}
 
