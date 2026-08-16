@@ -629,8 +629,8 @@ A [=native payment app provider=] MUST provide a method the user agent can call
 to determine if a [=native payment app=] is <dfn export>able to handle a
 payment request</dfn> for a given {{PaymentRequest}} |request|. In order to
 support this functionality, the user agent MAY pass information about |request|
-to the [=native payment app=], but considerations SHOULD be made regarding user
-privacy.
+to the [=native payment app=], subject to the privacy considerations in
+[[#sctn-tracking-risks]].
 
 NOTE: This functionality is used to answer the `hasEnrolledInstrument` method
 on {{PaymentRequest}}, which was removed from the [[payment-request]]
@@ -731,16 +731,17 @@ Probing whether a native payment app is installed or ready to pay (via
 presents potential tracking risks:
 
 - **Fingerprinting**: Websites could query multiple payment methods to silently
-    fingerprint the user based on the specific set of installed payment apps.
-- **App availability**: In addition to fingerprinting risks, a users installed
-    payment apps can leak information about the user to a website. For example,
-    the existence of a specific payment app could indicate user geography or
-    socio-economic status.
+    fingerprint the user based on the specific set of installed native payment
+    apps.
+- **App availability**: In addition to fingerprinting risks, a user's installed
+    payment apps can leak sensitive information about the user to a website.
+    For example, the existence of a specific payment app could reveal user
+    geography, banking relationships, or socio-economic status.
 - **Website to app communication**: When determining if an app is [=able to
-    handle a payment request=], passing any information from the
-    {{PaymentRequest}} call to the app may allow installed payment apps to
-    learn information about the user (such as what websites they are visiting)
-    without explicit user interaction and consent.
+    handle a payment request=], passing transaction context (such as the top-level
+    origin or payment method data) to the app allows installed payment apps to
+    silently learn what websites the user visits, without explicit user
+    interaction or consent.
 
 To mitigate these risks:
 
@@ -757,15 +758,14 @@ meet them today.
 ## Payment method verification and spoofing prevention ## {#sctn-spoofing}
 
 User agents MUST NOT allow a [=URL-based payment method identifier=] to claim a
-native app that it doesn't own, or allow a native-app to claim a [=URL-based
+native app that it doesn't own, or allow a native app to claim a [=URL-based
 payment method identifier=] that it doesn't own. To avoid such spoofing:
 
 - User agents MUST only allow [=native payment app providers=] that verify
     native apps against the information present in the [=application
-    manifest=], most importantly the package identifier and crptographic
+    manifest=], most importantly the package identifier and cryptographic
     signing certificate fingerprints.
-
-- Native apps claiming support for a URL-based payment method identifier
+- Native apps claiming support for a [=URL-based payment method identifier=]
     MUST be validated against the [=payment method manifest=] for that
     identifier
 
