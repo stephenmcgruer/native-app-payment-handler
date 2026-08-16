@@ -334,38 +334,32 @@ changed their shipping address to an {{AddressInit}} dictionary,
 
 ### Propagating payment detail updates ### {#sctn-propagate-payment-details-update}
 
-When a change event |event| (a {{PaymentRequestUpdateEvent}} or
-{{PaymentMethodChangeEvent}}) is dispatched on a {{PaymentRequest}}, |request|,
-for an active [=native payment app=], |app|, the user agent MUST run the
-following steps to <dfn>propagate payment detail updates</dfn>:
+When a {{PaymentRequestUpdateEvent}} or {{PaymentMethodChangeEvent}} event,
+|event|, is dispatched on a {{PaymentRequest}} |request| for an invoked
+[=native payment app=] |app| the user agent MUST run the following steps to
+<dfn>propagate payment detail updates</dfn>:
 
 1. If {{PaymentRequestUpdateEvent/updateWith()|updateWith(detailsPromise)}} was
      invoked on |event|:
 
-    1. In parallel:
+    1. In parallel, wait for |detailsPromise| to settle.
 
-        1. Wait for |detailsPromise| to settle.
+    1. If |detailsPromise| resolves with a {{PaymentDetailsUpdate}} |details|:
 
-        1. If |detailsPromise| resolves with a {{PaymentDetailsUpdate}} |details|:
+        1. Let |update| be the result of running [=convert a
+              PaymentDetailsUpdate to a PaymentRequestDetailsUpdate=] with
+              |details| and |app|.
 
-            1. Let |update| be the result of running [=convert a
-                 PaymentDetailsUpdate to a PaymentRequestDetailsUpdate=] with
-                 |details| and |app|.
+        1. [=Update payment details=] in |app| with |update|.
 
-            1. [=Update payment details=] in |app| with |update|.
-
-        1. If |detailsPromise| rejects:
-
-            1. Run the [=user aborts the payment request algorithm=] from
-                 [[payment-request]].
 
 1. Otherwise:
 
     1. [=Notify payment details not updated=] in |app|.
 
 ISSUE: [[payment-request]] assumes the user agent renders the payment UI
-itself, and needs to provide formal extension hooks for payment handlers to
-receive the resolved {{PaymentDetailsUpdate}} from
+itself, and needs to provide extension hooks for payment handlers to receive
+the resolved {{PaymentDetailsUpdate}} from
 {{PaymentRequestUpdateEvent/updateWith()}}.
 
 ## Delegating user information collection ## {#sctn-delegation}
