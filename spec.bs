@@ -9,6 +9,10 @@ Markup Shorthands: markdown yes
 </pre>
 
 <pre class="anchors">
+spec: appmanifest; urlPrefix: https://w3c.github.io/manifest/;
+    type: dfn
+        text: steps for processing a web app manifest; url: #dfn-processing-a-manifest
+
 spec: manifest-incubations; urlPrefix: https://wicg.github.io/manifest-incubations/
     type: dfn
         text:external application resource; url:dfn-external-application-resource
@@ -28,12 +32,7 @@ spec: payment-request; urlPrefix: https://w3c.github.io/payment-request/
         text:shipping address changed algorithm; url:dfn-shipping-address-changed-algorithm
         text:update a PaymentRequest's details algorithm; url:dfn-update-a-paymentrequest-s-details-algorithm
     type: dictionary
-        text:AddressInit; url:dom-addressinit
         text:AddressErrors; url:dom-addresserrors
-
-spec: appmanifest; urlPrefix: https://w3c.github.io/manifest/;
-    type: dfn
-        text: steps for processing a web app manifest; url: #dfn-processing-a-manifest
 </pre>
 
 <!-- Manual fix for 'origin' due to HTML spec ambiguity -->
@@ -284,15 +283,19 @@ data), rather than only the {{PaymentResponse/details}}.
 
 ### Payment method changed algorithm ### {#sctn-payment-method-changed-algorithm}
 
-When a [=native payment app=], |app|, informs the user agent that the user has
-changed their payment method, given optional method-specific details,
-|methodDetails| (which is an [=object=] or `null`), the user agent MUST run the
+When a [=native payment app=], |app|, [=informs the user agent that the user
+has changed their payment method=] with method-specific details,
+|methodDetails| (an [=object=] or `null`), the user agent MUST run the
 following steps:
 
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
 1. Let |methodName| be the [=payment method identifier=] of the [=native-app
      payment handler=] corresponding to |app|.
+
+     TODO: Verify which [=payment method identifier=] should be sent back in
+           the case of a third-party app being invoked. What does Chromium
+           code do today?
 
 1. Run the [=payment method changed algorithm=] from [[payment-request]] on
      |request| with |methodName| and |methodDetails|. Let |event| be the
@@ -302,9 +305,9 @@ following steps:
 
 ### Shipping option changed algorithm ### {#sctn-shipping-option-changed-algorithm}
 
-When a [=native payment app=], |app|, informs the user agent that the user has
-changed their shipping option to a {{DOMString}}, |shippingOption| (representing
-the {{PaymentShippingOption/id}}), the user agent MUST run the following steps:
+When a [=native payment app=], |app|, [=informs the user agent that the user
+has changed their shipping option=] to a {{DOMString}}, |shippingOption|, the
+user agent MUST run the following steps:
 
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
@@ -316,18 +319,14 @@ the {{PaymentShippingOption/id}}), the user agent MUST run the following steps:
 
 ### Shipping address changed algorithm ### {#sctn-shipping-address-changed-algorithm}
 
-When a [=native payment app=], |app|, informs the user agent that the user has
-changed their shipping address to an {{AddressInit}} dictionary,
-|shippingAddressDict|, the user agent MUST run the following steps:
+When a [=native payment app=], |app|, [=informs the user agent that the user
+has changed their shipping address=] to a {{ContactAddress}},
+|shippingAddress|, the user agent MUST run the following steps:
 
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
-1. Let |contactAddress| be the result of running the [=create a ContactAddress
-     from user-provided input=] algorithm, treating |shippingAddressDict| as the
-     user-provided input.
-
 1. Run the [=shipping address changed algorithm=] from [[payment-request]] on
-     |request| with |contactAddress|. Let |event| be the dispatched
+     |request| with |shippingAddress|. Let |event| be the dispatched
      {{PaymentRequestUpdateEvent}}.
 
 1. [=Propagate payment detail updates=] for |event| and |app|.
@@ -336,7 +335,7 @@ changed their shipping address to an {{AddressInit}} dictionary,
 
 When a {{PaymentRequestUpdateEvent}} or {{PaymentMethodChangeEvent}} event,
 |event|, is dispatched on a {{PaymentRequest}} |request| for an invoked
-[=native payment app=] |app| the user agent MUST run the following steps to
+[=native payment app=] |app|, the user agent MUST run the following steps to
 <dfn>propagate payment detail updates</dfn>:
 
 1. If {{PaymentRequestUpdateEvent/updateWith()|updateWith(detailsPromise)}} was
@@ -350,8 +349,12 @@ When a {{PaymentRequestUpdateEvent}} or {{PaymentMethodChangeEvent}} event,
               PaymentDetailsUpdate to a PaymentRequestDetailsUpdate=] with
               |details| and |app|.
 
-        1. [=Update payment details=] in |app| with |update|.
+              NOTE: We convert from a {{PaymentDetailsUpdate}} to a
+                    {{PaymentRequestDetailsUpdate}} to remove information that
+                    the payment app does not need to know, such as the
+                    {{PaymentDetailsBase/displayItems}}.
 
+        1. [=Update payment details=] in |app| with |update|.
 
 1. Otherwise:
 
@@ -364,10 +367,10 @@ the resolved {{PaymentDetailsUpdate}} from
 
 ## Delegating user information collection ## {#sctn-delegation}
 
-When a merchant creates a {{PaymentRequest}} with {{PaymentOptions}} such as
-{{PaymentOptions/requestShipping}} or {{PaymentOptions/requestPayerName}}, the
-user agent can either collect this information itself, or delegate the
-collection of this information to the selected [=native-app payment handler=].
+When a merchant creates a {{PaymentRequest}} with {{PaymentOptions}} that
+request data about the user, the user agent can either collect this information
+itself or it can delegate the collection of this information to the selected
+[=native-app payment handler=].
 
 <pre class="idl">
 enum PaymentDelegation {
@@ -403,9 +406,10 @@ Given a {{PaymentRequest}}, |request|, and a [=native payment app=], |app|:
 ## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
 
 [=Native payment apps=] have both a [=claimed payment method identifier=] and a
-set of [=claimed third-party origins=].  Verification of these claims relies
-upon the payment and application manifests specified in
-[[payment-method-manifest]] and [[appmanifest]].
+set of [=claimed third-party origins=], which the app claims it is authorized
+to act on behalf of. Verification of these claims relies upon the payment and
+application manifests specified in [[payment-method-manifest]] and
+[[appmanifest]].
 
 ISSUE(2): Should we allow for alternate methods to verify the claims, to
 support cases like payment apps built into the browser?
@@ -527,7 +531,7 @@ dictionary NativePaymentHandlerResponse {
   DOMString? payerName = null;
   DOMString? payerEmail = null;
   DOMString? payerPhone = null;
-  AddressInit shippingAddress;
+  ContactAddress shippingAddress;
   DOMString? shippingOption = null;
 };
 </pre>
@@ -566,45 +570,11 @@ dictionary NativePaymentHandlerResponse {
 
 ## The PaymentRequestDetailsUpdate dictionary ## {#sctn-paymentrequestdetailsupdate}
 
-When a [=native payment app=] communicates an update to the transaction (such as a
-change of payment method, shipping option, or shipping address), the user agent
-provides the merchant's updated transaction details back to the native payment
-app using the {{PaymentRequestDetailsUpdate}} dictionary.
-
-<pre class="idl">
-dictionary PaymentRequestDetailsUpdate {
-  PaymentCurrencyAmount total;
-  sequence&lt;PaymentDetailsModifier&gt; modifiers;
-  DOMString error;
-  AddressErrors shippingAddressErrors;
-  object paymentMethodErrors;
-  sequence&lt;PaymentShippingOption&gt; shippingOptions;
-};
-</pre>
-
-<dl class="domintro">
-
-: {{PaymentRequestDetailsUpdate/total}}
-:: An updated total amount for the payment request.
-
-: {{PaymentRequestDetailsUpdate/modifiers}}
-:: A sequence of modifiers for supported payment methods.
-
-: {{PaymentRequestDetailsUpdate/error}}
-:: An error message string indicating an issue with the transaction details.
-
-: {{PaymentRequestDetailsUpdate/shippingAddressErrors}}
-:: An {{AddressErrors}} dictionary containing validation error messages for the
-     shipping address.
-
-: {{PaymentRequestDetailsUpdate/paymentMethodErrors}}
-:: An object containing validation error messages for the payment method.
-
-: {{PaymentRequestDetailsUpdate/shippingOptions}}
-:: A sequence of updated {{PaymentShippingOption}} objects available for the
-    transaction.
-
-</dl>
+When a [=native payment app=] communicates an update to the transaction (such
+as a change of payment method, shipping option, or shipping address), the user
+agent provides the merchant's updated transaction details back to the native
+payment app using a {{PaymentRequestDetailsUpdate}} dictionary as defined in
+[[web-based-payment-handler]].
 
 ### Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate ### {#sctn-convert-payment-details-update}
 
@@ -614,32 +584,38 @@ PaymentRequestDetailsUpdate</dfn>:
 
 1. Let |update| be a new {{PaymentRequestDetailsUpdate}} dictionary.
 
-1. If |details|["error"] [=map/exists=], set
-     |update|.{{PaymentRequestDetailsUpdate/error}} to |details|["error"].
+1. If |details|["{{PaymentDetailsUpdate/error}}"] [=map/exists=], set
+     |update|.{{PaymentRequestDetailsUpdate/error}} to
+     |details|["{{PaymentDetailsUpdate/error}}"].
 
-1. If |details|["total"] [=map/exists=], set
+1. If |details|["{{PaymentDetailsUpdate/total}}"] [=map/exists=], set
      |update|.{{PaymentRequestDetailsUpdate/total}} to
-     |details|["total"].{{PaymentItem/amount}}.
+     |details|["{{PaymentDetailsUpdate/total}}"].{{PaymentItem/amount}}.
+
+     NOTE: This step strips out the {{PaymentItem/label}} from the information
+           shared to the app, as it does not need to know that.
 
 1. If the user agent [=delegates shipping address collection=] to |app|:
 
-    1. If |details|["shippingAddressErrors"] [=map/exists=], set
+    1. If |details|["{{PaymentDetailsUpdate/shippingAddressErrors}}"]
+         [=map/exists=], set
          |update|.{{PaymentRequestDetailsUpdate/shippingAddressErrors}} to
-         |details|["shippingAddressErrors"].
+         |details|["{{PaymentDetailsUpdate/shippingAddressErrors}}"].
 
-    1. If |details|["shippingOptions"] [=map/exists=], set
+    1. If |details|["{{PaymentDetailsBase/shippingOptions}}"]
+         [=map/exists=], set
          |update|.{{PaymentRequestDetailsUpdate/shippingOptions}} to
-         |details|["shippingOptions"].
+         |details|["{{PaymentDetailsBase/shippingOptions}}"].
 
-1. If |details|["paymentMethodErrors"] [=map/exists=], set
-     |update|.{{PaymentRequestDetailsUpdate/paymentMethodErrors}} to
-     |details|["paymentMethodErrors"].
+1. If |details|["{{PaymentDetailsUpdate/paymentMethodErrors}}"] [=map/exists=],
+     set |update|.{{PaymentRequestDetailsUpdate/paymentMethodErrors}} to
+     |details|["{{PaymentDetailsUpdate/paymentMethodErrors}}"].
 
-1. If |details|["modifiers"] [=map/exists=]:
+1. If |details|["{{PaymentDetailsBase/modifiers}}"] [=map/exists=]:
 
     1. Let |matchingModifiers| be a new empty [=list=].
 
-    1. For each |modifier| in |details|["modifiers"]:
+    1. For each |modifier| in |details|["{{PaymentDetailsBase/modifiers}}"]:
 
         1. If |app| [=is allowed to handle the payment method identifier=]
              |modifier|.{{PaymentDetailsModifier/supportedMethods}}, append
@@ -746,27 +722,47 @@ ISSUE(4): We should speak to the privacy issues in a privacy section.
 ## Changing the payment method ## {#sctn-change-payment-method}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can inform the user agent that the user has changed
-their payment method. When run, the [=native payment app provider=] MUST run the
-[[#sctn-payment-method-changed-algorithm|payment method changed algorithm]],
-converting native-app specific method details into an [=object=] or `null` value.
+[=native payment app=] can <dfn>inform the user agent that the user has changed
+their payment method</dfn>. When this method is called, the [=native payment
+app provider=] MUST perform the following steps:
+
+1. Let |methodDetails| be the method details provided by the native app,
+     converted into an [=object=], or `null` if no details are provided.
+
+1. Run the [[#sctn-payment-method-changed-algorithm|payment
+     method changed algorithm]], passing in |methodDetails|.
 
 ## Changing the shipping option ## {#sctn-change-shipping-option}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can inform the user agent that the user has changed
-their shipping option. When run, the [=native payment app provider=] MUST run the
-[[#sctn-shipping-option-changed-algorithm|shipping option changed algorithm]],
-converting native-app specific data into a {{DOMString}} representing the
-{{PaymentShippingOption/id}} for the selected shipping option.
+[=native payment app=] can <dfn>inform the user agent that the user has changed
+their shipping option</dfn>. When this method is called, the [=native payment
+app provider=] MUST run the following steps:
+
+1. Let |shippingOption| be the result of converting the native-app specific
+     data representing the {{PaymentShippingOption/id}} into a {{DOMString}}.
+
+     NOTE: As the website code will ultimately match |shippingOption| to the
+           {{PaymentShippingOption/id}} for one of the options they originally
+           provided, care must be taken to preserve identity when converting
+           this value to and from native-app specific data.
+
+2. Run the [[#sctn-shipping-option-changed-algorithm|shipping option changed algorithm]],
+     passing in |shippingOption|.
 
 ## Changing the shipping address ## {#sctn-change-shipping-address}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can inform the user agent that the user has changed
-their shipping address. When run, the [=native payment app provider=] MUST run the
-[[#sctn-shipping-address-changed-algorithm|shipping address changed algorithm]],
-converting native-app specific data into an {{AddressInit}} dictionary.
+[=native payment app=] can <dfn>inform the user agent that the user has changed
+their shipping address</dfn>. When this method is called, the [=native payment
+app provider=] MUST run the following steps:
+
+1. Let |shippingAddress| be the result of running the [=create a ContactAddress
+     from user-provided input=] algorithm, using the data provided by the
+     native-app as the user-provided input.
+
+1. Run the [[#sctn-shipping-address-changed-algorithm|shipping address changed
+     algorithm]], passing in |shippingAddress|.
 
 ## Updating payment details in an invoked native payment app ## {#sctn-updating-payment-details}
 
@@ -850,15 +846,21 @@ meet them today.
 
 User agents MUST NOT allow a [=URL-based payment method identifier=] to claim a
 native app that it doesn't own, or allow a native app to claim a [=URL-based
-payment method identifier=] that it doesn't own. To avoid such spoofing:
+payment method identifier=] that it doesn't own. Failure to enforce these
+boundaries can lead to spoofing attacks where a domain claims ownership of an
+unrelated payment app, or an application claims ownership of an unrelated
+origin. Both of these scenarios can lead to defrauding users.
+
+To avoid such spoofing attacks:
 
 - User agents MUST only allow [=native payment app providers=] that verify
     native apps against the information present in the [=application
     manifest=], most importantly the package identifier and cryptographic
     signing certificate fingerprints.
+
 - Native apps claiming support for a [=URL-based payment method identifier=]
     MUST be validated against the [=payment method manifest=] for that
-    identifier
+    identifier.
 
 ## Other privacy considerations ## {#sctn-todo-other}
 
