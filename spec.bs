@@ -24,6 +24,8 @@ spec: payment-request; urlPrefix: https://w3c.github.io/payment-request/
         text:can make payment algorithm; url:dfn-can-make-payment-algorithm
         text:steps to check if a payment can be made; url:dfn-steps-to-check-if-a-payment-can-be-made
         text:steps to respond to a payment request; url:dfn-steps-to-respond-to-a-payment-request
+        text:shipping option changed algorithm; url:dfn-shipping-option-changed-algorithm
+        text:shipping address changed algorithm; url:dfn-shipping-address-changed-algorithm
     type: dictionary
         text:AddressInit; url:dom-addressinit
 
@@ -273,6 +275,47 @@ ISSUE: [[payment-request]] needs to be updated to allow payment handlers to
 populate the full {{PaymentResponse}} (e.g., delegated shipping and payer
 data), rather than only the {{PaymentResponse/details}}.
 
+### Payment method changed algorithm ### {#sctn-payment-method-changed-algorithm}
+
+When a [=native payment app=], |app|, informs the user agent that the user has
+changed their payment method, given optional method-specific details,
+|methodDetails| (which is an [=object=] or `null`), the user agent MUST run the
+following steps:
+
+1. Let |request| be the active {{PaymentRequest}} for |app|.
+
+1. Let |methodName| be the [=payment method identifier=] of the [=native-app
+     payment handler=] corresponding to |app|.
+
+1. Run the [=payment method changed algorithm=] from [[payment-request]] on
+     |request| with |methodName| and |methodDetails|.
+
+### Shipping option changed algorithm ### {#sctn-shipping-option-changed-algorithm}
+
+When a [=native payment app=], |app|, informs the user agent that the user has
+changed their shipping option to a {{DOMString}}, |shippingOption| (representing
+the {{PaymentShippingOption/id}}), the user agent MUST run the following steps:
+
+1. Let |request| be the active {{PaymentRequest}} for |app|.
+
+1. Run the [=shipping option changed algorithm=] from [[payment-request]] on
+     |request|, with |shippingOption| as the user-provided input.
+
+### Shipping address changed algorithm ### {#sctn-shipping-address-changed-algorithm}
+
+When a [=native payment app=], |app|, informs the user agent that the user has
+changed their shipping address to an {{AddressInit}} dictionary,
+|shippingAddressDict|, the user agent MUST run the following steps:
+
+1. Let |request| be the active {{PaymentRequest}} for |app|.
+
+1. Let |contactAddress| be the result of running the [=create a ContactAddress
+     from user-provided input=] algorithm, treating |shippingAddressDict| as the
+     user-provided input.
+
+1. Run the [=shipping address changed algorithm=] from [[payment-request]] on
+     |request| with |contactAddress|.
+
 ## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
 
 [=Native payment apps=] have both a [=claimed payment method identifier=] and a
@@ -485,39 +528,26 @@ ISSUE(4): We should speak to the privacy issues in a privacy section.
 
 A [=native payment app provider=] MUST provide a method by which an invoked
 [=native payment app=] can inform the user agent that the user has changed
-their payment method. When run, the [=native payment app provider=] MUST call
-the TODO method, converting native-app specific method details into an
-[=object=] or `null` value.
-
-TODO: This should call a method in the Native App Payment Handler section,
-which will then call the "payment method changed algorithm" on the relevant
-{{PaymentRequest}} with the relevant methodName for the payment method
-identifier of the invoked app.
+their payment method. When run, the [=native payment app provider=] MUST run the
+[[#sctn-payment-method-changed-algorithm|payment method changed algorithm]],
+converting native-app specific method details into an [=object=] or `null` value.
 
 ## Changing the shipping option ## {#sctn-change-shipping-option}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
 [=native payment app=] can inform the user agent that the user has changed
-their shipping option. When run, the [=native payment app provider=] MUST call
-the TODO method, converting native-app specific data into a {{DOMString}}
-representing the {{PaymentShippingOption/id}} for the selected shipping option.
-
-TODO: This should call a method in the Native App Payment Handler section,
-which will then call the "shipping option changed algorithm" on the relevant
-{{PaymentRequest}} , passing the shippingOption ID.
+their shipping option. When run, the [=native payment app provider=] MUST run the
+[[#sctn-shipping-option-changed-algorithm|shipping option changed algorithm]],
+converting native-app specific data into a {{DOMString}} representing the
+{{PaymentShippingOption/id}} for the selected shipping option.
 
 ## Changing the shipping address ## {#sctn-change-shipping-address}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
 [=native payment app=] can inform the user agent that the user has changed
-their shipping address. When run, the [=native payment app provider=] MUST call
-the TODO method, converting native-app specific data into a [=map=] containing
-suitable data for passing to the [=create a ContactAddress from user-provided
-input=] algorithm.
-
-TODO: This should call a method in the Native App Payment Handler section,
-which will then call the "shipping address changed algorithm" on the relevant
-{{PaymentRequest}} , passing the dict.
+their shipping address. When run, the [=native payment app provider=] MUST run the
+[[#sctn-shipping-address-changed-algorithm|shipping address changed algorithm]],
+converting native-app specific data into an {{AddressInit}} dictionary.
 
 TODO: Surely there should be another sub-section here for changing payer
 details? Or do we not support that for native-app payment handlers? (It isn't
