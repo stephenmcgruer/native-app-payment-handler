@@ -26,8 +26,10 @@ spec: payment-request; urlPrefix: https://w3c.github.io/payment-request/
         text:steps to respond to a payment request; url:dfn-steps-to-respond-to-a-payment-request
         text:shipping option changed algorithm; url:dfn-shipping-option-changed-algorithm
         text:shipping address changed algorithm; url:dfn-shipping-address-changed-algorithm
+        text:update a PaymentRequest's details algorithm; url:dfn-update-a-paymentrequest-s-details-algorithm
     type: dictionary
         text:AddressInit; url:dom-addressinit
+        text:AddressErrors; url:dom-addresserrors
 
 spec: appmanifest; urlPrefix: https://w3c.github.io/manifest/;
     type: dfn
@@ -43,6 +45,7 @@ spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/browsers.html#
 
 <pre class="link-defaults">
 spec:infra; type:dfn; for:/; text:set
+spec:infra; type:dfn; for:/; text:list
 spec:url; type:dfn; for:/; text:url
 </pre>
 
@@ -166,6 +169,42 @@ dictionary NativePaymentHandlerResponse {
 : The {{PaymentShippingOption/id}} of the shipping option selected by the user,
     if shipping address collection was delegated to the native payment app.
 
+## The PaymentRequestDetailsUpdate dictionary ## {#sctn-paymentrequestdetailsupdate}
+
+When a [=native payment app=] communicates an update to the transaction (such as a
+change of payment method, shipping option, or shipping address), the user agent
+provides the merchant's updated transaction details back to the native payment
+app using the {{PaymentRequestDetailsUpdate}} dictionary.
+
+<pre class="idl">
+dictionary PaymentRequestDetailsUpdate {
+  PaymentCurrencyAmount total;
+  sequence&lt;PaymentDetailsModifier&gt; modifiers;
+  DOMString error;
+  AddressErrors shippingAddressErrors;
+  object paymentMethodErrors;
+  sequence&lt;PaymentShippingOption&gt; shippingOptions;
+};
+</pre>
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">total</dfn>
+: An updated total amount for the payment request.
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">modifiers</dfn>
+: A sequence of modifiers for supported payment methods.
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">error</dfn>
+: An error message string indicating an issue with the transaction details.
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">shippingAddressErrors</dfn>
+: An {{AddressErrors}} dictionary containing validation error messages for the shipping address.
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">paymentMethodErrors</dfn>
+: An object containing validation error messages for the payment method.
+
+<dfn dict-member for="PaymentRequestDetailsUpdate">shippingOptions</dfn>
+: A sequence of updated {{PaymentShippingOption}} objects available for the transaction.
+
 ## Integration with [[payment-request]] ## {#sctn-integration-with-payment-request}
 
 ### Can make payment algorithm ### {#sctn-can-make-payment-algorithm}
@@ -288,7 +327,10 @@ following steps:
      payment handler=] corresponding to |app|.
 
 1. Run the [=payment method changed algorithm=] from [[payment-request]] on
-     |request| with |methodName| and |methodDetails|.
+     |request| with |methodName| and |methodDetails|. Let |event| be the
+     dispatched {{PaymentMethodChangeEvent}}.
+
+1. [=Propagate payment detail updates=] for |event| and |app|.
 
 ### Shipping option changed algorithm ### {#sctn-shipping-option-changed-algorithm}
 
@@ -299,7 +341,10 @@ the {{PaymentShippingOption/id}}), the user agent MUST run the following steps:
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
 1. Run the [=shipping option changed algorithm=] from [[payment-request]] on
-     |request|, with |shippingOption| as the user-provided input.
+     |request|, with |shippingOption| as the user-provided input. Let |event| be
+     the dispatched {{PaymentRequestUpdateEvent}}.
+
+1. [=Propagate payment detail updates=] for |event| and |app|.
 
 ### Shipping address changed algorithm ### {#sctn-shipping-address-changed-algorithm}
 
@@ -314,7 +359,90 @@ changed their shipping address to an {{AddressInit}} dictionary,
      user-provided input.
 
 1. Run the [=shipping address changed algorithm=] from [[payment-request]] on
-     |request| with |contactAddress|.
+     |request| with |contactAddress|. Let |event| be the dispatched
+     {{PaymentRequestUpdateEvent}}.
+
+1. [=Propagate payment detail updates=] for |event| and |app|.
+
+### Propagating payment detail updates ### {#sctn-propagate-payment-details-update}
+
+When a change event |event| (a {{PaymentRequestUpdateEvent}} or
+{{PaymentMethodChangeEvent}}) is dispatched on a {{PaymentRequest}}, |request|,
+for an active [=native payment app=], |app|, the user agent MUST run the
+following steps to <dfn>propagate payment detail updates</dfn>:
+
+1. If {{PaymentRequestUpdateEvent/updateWith()|updateWith(detailsPromise)}} was
+     invoked on |event|:
+
+    1. In parallel:
+
+        1. Wait for |detailsPromise| to settle.
+
+        1. If |detailsPromise| resolves with a {{PaymentDetailsUpdate}} |details|:
+
+            1. Let |update| be the result of running [=convert a
+                 PaymentDetailsUpdate to a PaymentRequestDetailsUpdate=] with
+                 |details| and |app|.
+
+            1. [=Update payment details=] in |app| with |update|.
+
+        1. If |detailsPromise| rejects:
+
+            1. Run the [=user aborts the payment request algorithm=] from
+                 [[payment-request]].
+
+1. Otherwise:
+
+    1. [=Notify payment details not updated=] in |app|.
+
+ISSUE: [[payment-request]] assumes the user agent renders the payment UI
+itself, and needs to provide formal extension hooks for payment handlers to
+receive the resolved {{PaymentDetailsUpdate}} from
+{{PaymentRequestUpdateEvent/updateWith()}}.
+
+### Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate ### {#sctn-convert-payment-details-update}
+
+Given a {{PaymentDetailsUpdate}}, |details|, and a [=native payment app=],
+|app|, the following steps <dfn>convert a PaymentDetailsUpdate to a
+PaymentRequestDetailsUpdate</dfn>:
+
+1. Let |update| be a new {{PaymentRequestDetailsUpdate}} dictionary.
+
+1. If |details|["error"] [=map/exists=], set
+     |update|.{{PaymentRequestDetailsUpdate/error}} to |details|["error"].
+
+1. If |details|["total"] [=map/exists=], set
+     |update|.{{PaymentRequestDetailsUpdate/total}} to
+     |details|["total"].{{PaymentItem/amount}}.
+
+1. If the user agent [=delegates shipping address collection=] to |app|:
+
+    1. If |details|["shippingAddressErrors"] [=map/exists=], set
+         |update|.{{PaymentRequestDetailsUpdate/shippingAddressErrors}} to
+         |details|["shippingAddressErrors"].
+
+    1. If |details|["shippingOptions"] [=map/exists=], set
+         |update|.{{PaymentRequestDetailsUpdate/shippingOptions}} to
+         |details|["shippingOptions"].
+
+1. If |details|["paymentMethodErrors"] [=map/exists=], set
+     |update|.{{PaymentRequestDetailsUpdate/paymentMethodErrors}} to
+     |details|["paymentMethodErrors"].
+
+1. If |details|["modifiers"] [=map/exists=]:
+
+    1. Let |matchingModifiers| be a new empty [=list=].
+
+    1. For each |modifier| in |details|["modifiers"]:
+
+        1. If |app| [=is allowed to handle the payment method identifier=]
+             |modifier|.{{PaymentDetailsModifier/supportedMethods}}, append
+             |modifier| to |matchingModifiers|.
+
+    1. Set |update|.{{PaymentRequestDetailsUpdate/modifiers}} to
+         |matchingModifiers|.
+
+1. Return |update|.
 
 ## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
 
@@ -549,15 +677,20 @@ their shipping address. When run, the [=native payment app provider=] MUST run t
 [[#sctn-shipping-address-changed-algorithm|shipping address changed algorithm]],
 converting native-app specific data into an {{AddressInit}} dictionary.
 
-TODO: For the above 'changing the X' methods, we also need a way for the user
-agent to communicate back to the native payment app when the developer calls
-updateWith() on the relevant PaymentRequestUpdateEvent that was triggered for
-the update. This is not very easy to spec, since on the PaymentRequest side it
-generally assumes that the user agent itself will be the one updating its
-(internal) data. Maybe we just need to monkey patch the update a
-PaymentRequest's details algorithm, but got to be careful as thats also called
-from within show() and so lets make sure it acts correctly there too if we
-monkey patch.
+## Updating payment details in an invoked native payment app ## {#sctn-updating-payment-details}
+
+A [=native payment app provider=] MUST provide a method the user agent can call
+to <dfn>update payment details</dfn> in an invoked [=native payment app=], given
+a {{PaymentRequestDetailsUpdate}} dictionary, |update|. When called, the
+provider MUST transmit the updated details to the invoked app, converting the
+dictionary fields into a native format.
+
+## Notifying payment details not updated in an invoked native payment app ## {#sctn-notifying-payment-details-not-updated}
+
+A [=native payment app provider=] MUST provide a method the user agent can call
+to <dfn>notify payment details not updated</dfn> in an invoked [=native payment
+app=]. When called, the provider MUST inform the invoked app that the merchant
+made no changes to the transaction details in response to the change event.
 
 ## Indicating success of an invoked [=native payment app=] ## {#sctn-indicating-success}
 
