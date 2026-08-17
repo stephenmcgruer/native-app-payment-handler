@@ -48,6 +48,8 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:"payerName"; for:PaymentDelegation; url:dom-paymentdelegation-payername
         text:"payerPhone"; for:PaymentDelegation; url:dom-paymentdelegation-payerphone
         text:"payerEmail"; for:PaymentDelegation; url:dom-paymentdelegation-payeremail
+    type: dictionary
+        text: NativePaymentHandlerResponse; url: dictdef-nativepaymenthandlerresponse
 </pre>
 
 <!-- Manual fix for 'origin' due to HTML spec ambiguity -->
@@ -823,68 +825,260 @@ a {{PaymentRequestDetailsUpdate}}, |update|:
 In order for an invoked Android application, |app|, to [=indicate success=]
 back to the user agent, |app| performs the following steps:
 
-1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a> and with an Intent containing:
+1. Create a new Android Intent object, |intent|.
 
-    1. A "`methodName`" Intent extra, set to the string name of the method being used.
+1. Insert the string identifier of the payment method selected by the user into
+     |intent| with the key `"methodName"`.
 
-    1. A "`details`" Intent extra, set to a JSON string containing any
-        payment-app specific result information.
+1. Insert a JSON-stringified object containing the payment-method-specific
+     transaction details into |intent| with the key `"details"`.
 
-1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+1. If |app| supports and was requested to provide payer information:
 
-To [=retrieve the converted result details=], the user agent performs the
-following steps:
+    1. If payer name collection was delegated, insert the payer's name string
+         into |intent| with the key `"payerName"`.
 
-1. Obtain the Intent bundle from the result via HOW
+    1. If payer email collection was delegated, insert the payer's email string
+         into |intent| with the key `"payerEmail"`.
 
-1. TODO - conversion steps
+    1. If payer phone collection was delegated, insert the payer's phone string
+         into |intent| with the key `"payerPhone"`.
+
+1. If |app| supported and was requested to provide shipping information:
+
+    1. Insert the identifier of the selected shipping option into |intent| with
+         the key `"shippingOptionId"`.
+
+    1. Let |addressBundle| be an Android Bundle representing the selected
+         shipping address, populated with the address keys defined in
+         [=parse a shipping address Android bundle=]. Insert |addressBundle|
+         into |intent| with the key `"shippingAddress"`.
+
+1. Call <a
+     href="https://developer.android.com/reference/android/app/Activity#setResult(int,%20android.content.Intent)">Activity.setResult</a>
+     with <a
+     href="https://developer.android.com/reference/android/app/Activity#RESULT_OK">Activity.RESULT_OK</a>
+     and |intent|.
+
+1. Terminate |app|'s activity, e.g. via <a
+     href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+
+To [=retrieve the converted result details=] from the payment activity's result
+Intent, |resultIntent|, with the requested {{PaymentOptions}} |paymentOptions|,
+the user agent performs the following steps:
+
+1. If |resultIntent| is null or does not contain extras, return failure.
+
+1. Let |extras| be the Bundle of extras from |resultIntent|.
+
+1. Let |details| be the string extra `"details"` in |extras|.
+
+1. If |details| is null or empty, return failure.
+
+1. Let |methodName| be the string extra `"methodName"` in |extras|.
+
+1. If |methodName| is null or empty, return failure.
+
+1. Let |response| be a new {{NativePaymentHandlerResponse}} dictionary with:
+    - |response|["methodName"] set to |methodName|
+    - |response|["details"] set to |details|
+
+1. If |paymentOptions| was supplied:
+
+    1. If |paymentOptions|["requestShipping"] is true:
+
+        1. Let |addressBundle| be the Bundle extra `"shippingAddress"` in |extras|.
+
+        1. If |addressBundle| is null or empty, return failure.
+
+        1. Let |shippingAddress| be the result of [=parsing a shipping address Android bundle=] from |addressBundle|.
+
+        1. If |shippingAddress| is null, return failure.
+
+        1. Set |response|["shippingAddress"] to |shippingAddress|.
+
+        1. Let |shippingOptionId| be the string extra `"shippingOptionId"` in |extras|.
+
+        1. If |shippingOptionId| is null or empty, return failure.
+
+        1. Set |response|["shippingOption"] to |shippingOptionId|.
+
+    1. If |paymentOptions|["requestPayerName"] is true:
+
+        1. Let |payerName| be the string extra `"payerName"` in |extras|.
+
+        1. If |payerName| is null or empty, return failure.
+
+        1. Set |response|["payerName"] to |payerName|.
+
+    1. If |paymentOptions|["requestPayerEmail"] is true:
+
+        1. Let |payerEmail| be the string extra `"payerEmail"` in |extras|.
+
+        1. If |payerEmail| is null or empty, return failure.
+
+        1. Set |response|["payerEmail"] to |payerEmail|.
+
+    1. If |paymentOptions|["requestPayerPhone"] is true:
+
+        1. Let |payerPhone| be the string extra `"payerPhone"` in |extras|.
+
+        1. If |payerPhone| is null or empty, return failure.
+
+        1. Set |response|["payerPhone"] to |payerPhone|.
+
+1. Return |response|.
 
 ## Indicating user cancel from an invoked Android native payment app ## {#sctn-indicate-user-cancel}
 
-In order for an invoked Android application, |app|, to [=indicate user cancellation=]
-back to the user agent, |app| performs the following steps:
+In order for an invoked Android application, |app|, to [=indicate user
+cancellation=] back to the user agent, |app| performs the following steps:
 
-1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with <a href="https://developer.android.com/reference/android/app/Activity#RESULT_CANCEL">Activity.RESULT_CANCEL</a>.
+1. Call <a
+     href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a>
+     with <a
+     href="https://developer.android.com/reference/android/app/Activity#RESULT_CANCEL">Activity.RESULT_CANCEL</a>.
 
-1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+1. Terminate |app|'s activity, e.g. via <a
+     href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
 
 ## Indicating internal error from an invoked Android native payment app ## {#sctn-indicate-app-error}
 
 In order for an invoked Android application, |app|, to [=indicate internal
 error=] back to the user agent, |app| performs the following steps:
 
-1. Let |RESULT_INTERNAL_ERROR| be equal to <a href="https://developer.android.com/reference/android/app/Activity#RESULT_FIRST_USER">Activity.RESULT_FIRST_USER</a>.
+1. Let |RESULT_INTERNAL_ERROR| be equal to <a
+     href="https://developer.android.com/reference/android/app/Activity#RESULT_FIRST_USER">Activity.RESULT_FIRST_USER</a>
+     (integer value `1`).
 
-1. Call <a href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a> with |RESULT_INTERNAL_ERROR|.
+1. Call <a
+     href="https://developer.android.com/reference/android/app/Activity#setResult(int)">Activity.setResult</a>
+     with |RESULT_INTERNAL_ERROR|.
 
-1. Terminate the |app|'s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
+1. Terminate |app|'s activity, e.g. via <a
+     href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
 
 ## Creating an Android bundle ## {#sctn-creating-bundle}
 
-To <dfn>create an Android bundle</dfn> from a {{PaymentRequest}}, |request|,
-perform the following steps:
+To <dfn>create an Android bundle</dfn> from a {{PaymentRequest}}, |request|, for
+an application |app|:
 
-1. Let |bundle| be a new Bundle object.
+1. Let |bundle| be a new Android Bundle object.
 
 1. Insert |request|.{{PaymentRequest/id}} into |bundle| with the key
-     "`paymentRequestId`".
+     `"paymentRequestId"`.
 
 1. Insert the {{Document/title}} of |request|'s [=relevant global object=]'s
-     [=associated Document=] into |bundle| with the key "`merchantName`".
+     [=associated Document=] into |bundle| with the key `"merchantName"`.
 
-1. Insert |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsInit/total}}.{{PaymentItem/amount}}
-     into |bundle| with the key "`total`".
+1. Let |totalItem| be |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsInit/total}}.
 
-     ISSUE: This needs to be serialized to JSON.
+1. Let |serializedTotal| be a JSON-serialized object containing `"currency"` set
+     to |totalItem|.{{PaymentItem/amount}}.{{PaymentCurrencyAmount/currency}}
+     and `"value"` set to
+     |totalItem|.{{PaymentItem/amount}}.{{PaymentCurrencyAmount/value}}. Insert
+     |serializedTotal| into |bundle| with the key `"total"`.
 
-1. ISSUE: TODO - handle modifiers
+1. If |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsBase/modifiers}}
+     exists and is not empty:
 
-1. ISSUE: TODO - handle shipping options
+    1. Let |modifiersList| be an empty JSON array.
 
-1. ISSUE: TODO - handle payment options
+    1. For each {{PaymentDetailsModifier}} |modifier| in
+         |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsBase/modifiers}}:
 
-1. ISSUE: TODO - handle common extras
+        1. Let |modObj| be a new JSON object.
 
-1. ISSUE: TODO - handle deprecated fields
+        1. If |modifier|.{{PaymentDetailsModifier/total}} exists, set
+             |modObj|["total"] to a JSON object with `"currency"` and `"value"`
+             from |modifier|.{{PaymentDetailsModifier/total}}.{{PaymentItem/amount}}.
+
+        1. Set |modObj|["supportedMethods"] to a JSON array containing the
+             single string |modifier|.{{PaymentDetailsModifier/supportedMethods}}.
+
+        1. Set |modObj|["data"] to the JSON-serialized string of
+             |modifier|.{{PaymentDetailsModifier/data}} if present, or `"{}"`
+             otherwise.
+
+        1. Append |modObj| to |modifiersList|.
+
+    1. Insert the JSON-stringified serialization of |modifiersList| into
+         |bundle| with the key `"modifiers"`.
+
+1. Let |options| be |request|.{{PaymentRequest/[[options]]}}.
+
+1. If |options| exists:
+
+    1. Let |optionsBundle| be a new Android Bundle object containing:
+        - `"requestPayerName"` set to |options|.{{PaymentOptions/requestPayerName}}
+        - `"requestPayerEmail"` set to |options|.{{PaymentOptions/requestPayerEmail}}
+        - `"requestPayerPhone"` set to |options|.{{PaymentOptions/requestPayerPhone}}
+        - `"requestShipping"` set to |options|.{{PaymentOptions/requestShipping}}
+
+    1. If |options|.{{PaymentOptions/shippingType}} exists and is not null:
+        - Insert |options|.{{PaymentOptions/shippingType}} into |optionsBundle|
+            with the key `"shippingType"`.
+
+    1. Insert |optionsBundle| into |bundle| with the key `"paymentOptions"`.
+
+1. If |options| exists and |options|.{{PaymentOptions/requestShipping}} is true:
+
+    1. If |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsBase/shippingOptions}}
+         exists and is not empty:
+
+        1. Let |optionsArray| be an empty Parcelable array.
+
+        1. For each {{PaymentShippingOption}} |option| in
+             |request|.{{PaymentRequest/[[details]]}}.{{PaymentDetailsBase/shippingOptions}}:
+
+            1. Let |optBundle| be a new Android Bundle object containing:
+                - `"id"` set to |option|.{{PaymentShippingOption/id}}
+                - `"label"` set to |option|.{{PaymentShippingOption/label}}
+                - `"amount"` set to a Bundle containing `"currency"` and
+                    `"value"` from |option|.{{PaymentShippingOption/amount}}
+                - `"selected"` set to |option|.{{PaymentShippingOption/selected}}
+
+            1. Append |optBundle| to |optionsArray|.
+
+        1. Insert |optionsArray| into |bundle| with the key `"shippingOptions"`.
+
+1. Let |topOrigin| be |request|'s [=relevant global object=]'s [=associated
+     Document=]'s [=origin=], formatted without a scheme (e.g.
+     `"merchant.example"`). Insert |topOrigin| into |bundle| with the key
+     `"topLevelOrigin"`.
+
+1. Let |iframeOrigin| be |request|'s [=relevant settings object=]'s [=environment
+     settings object/origin=], formatted without a scheme. Insert |iframeOrigin|
+     into |bundle| with the key `"paymentRequestOrigin"`.
+
+1. If the top-level document was loaded over a secure HTTPS connection and a
+     server certificate chain is available, let |certArray| be a Parcelable
+     array containing each certificate's raw DER-encoded byte array inside an
+     Android Bundle with key `"certificate"`. Insert |certArray| into |bundle|
+     with the key `"topLevelCertificateChain"`.
+
+1. Let |matchingMethodNames| be a new empty [=list=] of strings.
+
+1. Let |methodDataBundle| be a new Android Bundle object.
+
+1. For each [=payment method identifier=] |identifier| supported by |request|:
+
+    1. If |app| [=is allowed to handle the payment method identifier=]
+         |identifier|:
+
+        1. Append |identifier| to |matchingMethodNames|.
+
+        1. Let |dataString| be the JSON serialization of the method-specific
+             data associated with |identifier| in |request|, or `"{}"` if no data
+             was supplied.
+
+        1. Insert |dataString| into |methodDataBundle| with key |identifier|.
+
+1. Insert |matchingMethodNames| (as an ArrayList of strings) into |bundle| with
+     the key `"methodNames"`.
+
+1. Insert |methodDataBundle| into |bundle| with the key `"methodData"`.
+
+1. Return |bundle|.
 
 </div>
