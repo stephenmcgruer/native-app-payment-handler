@@ -105,15 +105,15 @@ In order to be visible to the user agent, the Android payment app defines the
 following concepts in their `AndroidManifest.xml` file:
 
 - A **mandatory** `PAY` Android activity, which will receive an intent when
-    the user agent [[#sctn-invoking|invokes the app]].
+    the user agent [=invokes the native payment app=].
 
 - An **optional** `IS_READY_TO_PAY` Android service, which the user agent will
-    bind to and call when [[#sctn-hasenrolled-instrument|determining if the
-    app can handle a PaymentRequest]].
+    bind to and call when determining if the app is [=able to handle a
+    payment request=].
 
 - An **optional** `UPDATE_PAYMENT_DETAILS` Android service, which the user
-    agent will bind to when [[#sctn-dynamic-updates|communicating dynamic
-    updates with the invoked payment app]].
+    agent will bind to when communicating dynamic updates with the invoked
+    [=native payment app=].
 
 If an Android payment app specifies more than one activity or service that
 matches one of the above, the user agent behavior is undefined.
@@ -121,8 +121,8 @@ matches one of the above, the user agent behavior is undefined.
 ### The `PAY` activity ### {#sctn-pay-activity}
 
 The `PAY` activity will receive an intent from the user agent when the user
-agent [[#sctn-invoking|invokes the app]] to handle a PaymentRequest. It must be
-<a
+agent [=invokes the native payment app=] to handle a {{PaymentRequest}}. It
+must be <a
 href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
 and have:
 
@@ -133,17 +133,17 @@ and have:
 
 The "`org.chromium.default_payment_method_name`" tag must have an
 `android:value` attribute containing a valid [=url-based payment method
-identifier=]. This will be used for [[#sctn-claiming-method-url]].
+identifier=]. This will be used for determining the [=claimed payment method
+identifier=].
 
 The "`org.chromium.payment_method_names`" tag, if present, must have an
 `android:resource` attribute pointing at a `<string-array>` resource each of
 which must be a valid [=url-based payment method identifier=]. This will be
-used for [[#sctn-claiming-origins]].
+used for determining the [=claimed third-party origins=].
 
-The "`org.chromium.payment_supported_delegations`" tag, if present, must have an
-`android:resource` attribute pointing at a `<string-array>` resource listing
-the delegation capabilities supported by the payment app (see
-[[#sctn-supported-delegations]]).
+The "`org.chromium.payment_supported_delegations`" tag, if present, must have
+an `android:resource` attribute pointing at a `<string-array>` resource listing
+the [=supported delegations=] of the payment app.
 
 <div class="example">
 <xmp>
@@ -190,9 +190,9 @@ ISSUE: The chromium.org namespace used here should be replaced by a w3.org one,
 ### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
 
 The `IS_READY_TO_PAY` service receives calls from the user agent to
-[[#sctn-hasenrolled-instrument|determine if the app can handle a
-PaymentRequest]] (such as checking whether the user has an enrolled payment
-instrument ready to pay). If present, it must be <a
+determine if the app is [=able to handle a payment request=] (such as
+checking whether the user has an enrolled payment instrument ready to pay). If
+present, it must be <a
 href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
 and have an intent filter with an `org.chromium.intent.action.IS_READY_TO_PAY`
 action.
@@ -212,29 +212,26 @@ action.
 Communication with the service is defined by the following Android Interface
 Definition Language (AIDL) interfaces:
 
-<div class="example">
-<xmp>
-  package org.chromium;
+<pre class="lang-java">
+package org.chromium;
 
-  import org.chromium.IsReadyToPayServiceCallback;
+import org.chromium.IsReadyToPayServiceCallback;
 
-  // Implemented by the payment app.
-  interface IsReadyToPayService {
-      oneway void isReadyToPay(IsReadyToPayServiceCallback callback, in Bundle parameters);
-  }
-</xmp>
-</div>
+// Implemented by the payment app.
+interface IsReadyToPayService {
+    oneway void isReadyToPay(
+        IsReadyToPayServiceCallback callback, in Bundle parameters);
+}
+</pre>
 
-<div class="example">
-<xmp>
-  package org.chromium;
+<pre class="lang-java">
+package org.chromium;
 
-  // Implemented by the user agent.
-  interface IsReadyToPayServiceCallback {
-      oneway void handleIsReadyToPay(boolean isReadyToPay);
-  }
-</xmp>
-</div>
+// Implemented by the user agent.
+interface IsReadyToPayServiceCallback {
+    oneway void handleIsReadyToPay(boolean isReadyToPay);
+}
+</pre>
 
 ISSUE: As with the intent actions and meta-data tags, the `org.chromium` package
        namespace used by these AIDL interfaces should eventually be standardized
@@ -242,10 +239,11 @@ ISSUE: As with the intent actions and meta-data tags, the `org.chromium` package
 
 The user agent calls the `isReadyToPay` method with a callback on which it
 expects to receive the result of the readiness check, along with transaction
-metadata in the `parameters` bundle (see [[#sctn-hasenrolled-instrument]]). The
-payment app then invokes `handleIsReadyToPay` asynchronously when it is ready.
-This asynchronous flow ensures that an unresponsive or slow payment application
-does not block or hang the user agent's execution threads.
+metadata in the `parameters` bundle (when checking if the app is [=able to
+handle a payment request=]). The payment app then invokes `handleIsReadyToPay`
+asynchronously when it is ready. This asynchronous flow ensures that an
+unresponsive or slow payment application does not block or hang the user agent's
+execution threads.
 
 ### The `UPDATE_PAYMENT_DETAILS` service ### {#sctn-update-payment-details-service}
 
@@ -272,52 +270,49 @@ and have an intent filter with an
 Communication with the service is defined by the following Android Interface
 Definition Language (AIDL) interfaces:
 
-<div class="example">
-<xmp>
-  package org.chromium.components.payments;
+<pre class="lang-java">
+package org.chromium.components.payments;
 
-  import android.os.Bundle;
-  import org.chromium.components.payments.IPaymentDetailsUpdateServiceCallback;
+import android.os.Bundle;
+import org.chromium.components.payments.IPaymentDetailsUpdateServiceCallback;
 
-  // Implemented by the user agent.
-  interface IPaymentDetailsUpdateService {
-      oneway void changePaymentMethod(in Bundle paymentHandlerMethodData,
-              IPaymentDetailsUpdateServiceCallback callback);
-      oneway void changeShippingOption(in String shippingOptionId,
-              IPaymentDetailsUpdateServiceCallback callback);
-      oneway void changeShippingAddress(in Bundle shippingAddress,
-              IPaymentDetailsUpdateServiceCallback callback);
-  }
-</xmp>
-</div>
+// Implemented by the user agent.
+interface IPaymentDetailsUpdateService {
+    oneway void changePaymentMethod(in Bundle paymentHandlerMethodData,
+            IPaymentDetailsUpdateServiceCallback callback);
+    oneway void changeShippingOption(in String shippingOptionId,
+            IPaymentDetailsUpdateServiceCallback callback);
+    oneway void changeShippingAddress(in Bundle shippingAddress,
+            IPaymentDetailsUpdateServiceCallback callback);
+}
+</pre>
 
-<div class="example">
-<xmp>
-  package org.chromium.components.payments;
+<pre class="lang-java">
+package org.chromium.components.payments;
 
-  import android.os.Bundle;
-  import org.chromium.components.payments.IPaymentDetailsUpdateService;
+import android.os.Bundle;
+import org.chromium.components.payments.IPaymentDetailsUpdateService;
 
-  // Implemented by the payment app.
-  interface IPaymentDetailsUpdateServiceCallback {
-      oneway void updateWith(in Bundle updatedPaymentDetails);
-      oneway void paymentDetailsNotUpdated();
-      oneway void setPaymentDetailsUpdateService(
-              IPaymentDetailsUpdateService service);
-  }
-</xmp>
-</div>
+// Implemented by the payment app.
+interface IPaymentDetailsUpdateServiceCallback {
+    oneway void updateWith(in Bundle updatedPaymentDetails);
+    oneway void paymentDetailsNotUpdated();
+    oneway void setPaymentDetailsUpdateService(
+            IPaymentDetailsUpdateService service);
+}
+</pre>
 
 ISSUE: As with the other intent actions and AIDL interfaces, the
        `org.chromium.components.payments` package namespace used here should
        eventually be standardized under a vendor-neutral namespace such as
        `org.w3c.payments`.
 
-When the user agent [[#sctn-invoking|invokes]] the payment app's `PAY` activity,
-it concurrently binds to the app's `UPDATE_PAYMENT_DETAILS` service (which
-implements `IPaymentDetailsUpdateServiceCallback`). Upon connecting, the user
-agent calls `setPaymentDetailsUpdateService` to hand the payment app a Binder proxy
-to the user agent's own `IPaymentDetailsUpdateService` implementation.
+When the user agent [=invoke the native payment app|invokes=] the payment app's
+`PAY` activity, it concurrently binds to the app's `UPDATE_PAYMENT_DETAILS`
+service (which implements `IPaymentDetailsUpdateServiceCallback`). Upon
+connecting, the user agent calls `setPaymentDetailsUpdateService` to hand the
+payment app a Binder proxy to the user agent's own
+`IPaymentDetailsUpdateService` implementation.
 
 When the user changes the payment method, shipping option, or shipping address
 within the payment app UI, the payment app calls the corresponding method on
@@ -589,31 +584,44 @@ back to the web merchant via the `UPDATE_PAYMENT_DETAILS` service (see
 
 ### Establishing the update service connection ### {#sctn-dynamic-updates-connection}
 
-The user agent perform the following steps to <dfn>establish the update service
+The user agent performs the following steps to <dfn>establish the update service
 connection</dfn> for an invoked [=native payment app=] |app|:
 
 1. Create a new Android Intent object targeting |app|'s package name, |app|'s
      `UPDATE_PAYMENT_DETAILS` service class name, and action
      `org.chromium.intent.action.UPDATE_PAYMENT_DETAILS`.
 
-1. Bind to the service via <a
+1. Attempt to bind to the service via <a
      href="https://developer.android.com/reference/android/content/Context#bindService(android.content.Intent,%20android.content.ServiceConnection,%20int)">Context.bindService</a>
      using the `BIND_AUTO_CREATE` flag.
 
-1. When the service connection is established, obtain the
-     `IPaymentDetailsUpdateServiceCallback` interface from the returned
-     IBinder, and call `setPaymentDetailsUpdateService` passing the user agent's
-     `IPaymentDetailsUpdateService` Binder instance.
+     1. If binding fails, unbind the service and abort these steps.
+
+          NOTE: The payment flow continues normally; the payment app will
+                proceed without dynamic update capabilities.
+
+1. When the service connection is established:
+
+    1. Obtain the `IPaymentDetailsUpdateServiceCallback` interface from the
+         returned IBinder.
+
+    1. Call `setPaymentDetailsUpdateService` on that interface, passing the user
+         agent's `IPaymentDetailsUpdateService` Binder instance.
 
 1. Maintain this service connection active for the duration of the payment
      interaction. When |app|'s `PAY` activity finishes or is dismissed, unbind
      and terminate the service connection.
 
+     1. If the connection is lost or dies unexpectedly while the payment
+          interaction is still active, the user agent may attempt to reconnect.
+          If the connection cannot be restored, the user agent unbinds the
+          service and continues the payment flow without dynamic update
+          capabilities.
+
 ### Authorizing service requests ### {#sctn-dynamic-updates-authorization}
 
-Whenever any method on the user agent's `IPaymentDetailsUpdateService`
-interface is invoked by some application |app|, the user agent performs the
-following security checks before processing the request:
+To <dfn>authorize a dynamic update service request</dfn> from an application
+|app|:
 
 1. Let |callerUid| be the calling UID obtained via <a
      href="https://developer.android.com/reference/android/os/Binder#getCallingUid()">Binder.getCallingUid()</a>.
@@ -623,15 +631,17 @@ following security checks before processing the request:
 
 1. If none of the packages matching |callerUid| have a package name equal to
      |app|'s package name, or if their signing certificates do not match |app|'s
-     signing certificates, reject and ignore the request.
+     signing certificates, return `false`.
+
+1. Return `true`.
 
 ### Handling payment method change ### {#sctn-dynamic-updates-method-change}
 
 When `changePaymentMethod` is called on `IPaymentDetailsUpdateService` by
 |app|, with `paymentHandlerMethodData` and `callback`:
 
-1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
-     service request]]. If authorization fails, return.
+1. If the user agent is unable to [=authorize a dynamic update service
+     request=] from |app|, return.
 
 1. If `paymentHandlerMethodData` is null, or if the string extra `"methodName"`
      in `paymentHandlerMethodData` is null or empty:
@@ -660,8 +670,8 @@ When `changePaymentMethod` is called on `IPaymentDetailsUpdateService` by
 When `changeShippingOption` is called on `IPaymentDetailsUpdateService` by
 |app| with `shippingOptionId` and `callback`:
 
-1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
-     service request]]. If authorization fails, return.
+1. If the user agent is unable to [=authorize a dynamic update service
+     request=] from |app|, return.
 
 1. If `shippingOptionId` is null or empty:
 
@@ -679,8 +689,8 @@ When `changeShippingOption` is called on `IPaymentDetailsUpdateService` by
 When `changeShippingAddress` is called on `IPaymentDetailsUpdateService` by
 |app| with `shippingAddressBundle` and `callback`:
 
-1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
-     service request]]. If authorization fails, return.
+1. If the user agent is unable to [=authorize a dynamic update service
+     request=] from |app|, return.
 
 1. If `shippingAddressBundle` is null or empty:
 
