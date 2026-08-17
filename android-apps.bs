@@ -40,6 +40,7 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:indicate user cancellation; url:indicate-user-cancellation
         text:indicate internal error; url:indicate-internal-error
         text:retrieve the converted result details; url:retrieve-the-converted-result-details
+        text:is allowed to handle the payment method identifier; url:is-allowed-to-handle-the-payment-method-identifier
     type: enum
         text:PaymentDelegation; url:enumdef-paymentdelegation
     type: enum-value
@@ -58,6 +59,8 @@ spec: html; urlPrefix: https://html.spec.whatwg.org/multipage/browsers.html#
 
 <pre class="link-defaults">
 spec:infra; type:dfn; for:/; text:set
+spec:infra; type:dfn; for:/; text:list
+spec:url; type:dfn; for:/; text:url
 </pre>
 
 <pre class="biblio">
@@ -188,7 +191,8 @@ ISSUE: The chromium.org namespace used here should be replaced by a w3.org one,
 
 The `IS_READY_TO_PAY` service receives calls from the user agent to
 [[#sctn-hasenrolled-instrument|determine if the app can handle a
-PaymentRequest]]. If present, it must be <a
+PaymentRequest]] (such as checking whether the user has an enrolled payment
+instrument ready to pay). If present, it must be <a
 href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
 and have an intent filter with an `org.chromium.intent.action.IS_READY_TO_PAY`
 action.
@@ -204,6 +208,44 @@ action.
   </service>
 </xmp>
 </div>
+
+Communication with the service is defined by the following Android Interface
+Definition Language (AIDL) interfaces:
+
+<div class="example">
+<xmp>
+  package org.chromium;
+
+  import org.chromium.IsReadyToPayServiceCallback;
+
+  // Implemented by the payment app.
+  interface IsReadyToPayService {
+      oneway void isReadyToPay(IsReadyToPayServiceCallback callback, in Bundle parameters);
+  }
+</xmp>
+</div>
+
+<div class="example">
+<xmp>
+  package org.chromium;
+
+  // Implemented by the user agent.
+  interface IsReadyToPayServiceCallback {
+      oneway void handleIsReadyToPay(boolean isReadyToPay);
+  }
+</xmp>
+</div>
+
+ISSUE: As with the intent actions and meta-data tags, the `org.chromium` package
+       namespace used by these AIDL interfaces should eventually be standardized
+       under a vendor-neutral namespace such as `org.w3c.payments`.
+
+The user agent calls the `isReadyToPay` method with a callback on which it
+expects to receive the result of the readiness check, along with transaction
+metadata in the `parameters` bundle (see [[#sctn-hasenrolled-instrument]]). The
+payment app then invokes `handleIsReadyToPay` asynchronously when it is ready.
+This asynchronous flow ensures that an unresponsive or slow payment application
+does not block or hang the user agent's execution threads.
 
 ### The `UPDATE_PAYMENT_DETAILS` service ### {#sctn-update-payment-details-service}
 
@@ -372,24 +414,85 @@ user agent performs the following steps:
 In order to check if an Android application, |app|, is [=able to handle a
 payment request=], |request|, the user agent performs the following steps:
 
-1. If |app| does not have a service listed in its AndroidManifest.xml with an
-    intent-filter for `org.chromium.intent.action.IS_READY_TO_PAY` (see
-    [[#sctn-is-ready-to-pay-service]]), return `false` / `true` TODO
+1. If |app| does not have a service listed in its `AndroidManifest.xml` with an
+     intent-filter for `org.chromium.intent.action.IS_READY_TO_PAY` (see
+     [[#sctn-is-ready-to-pay-service]]), return `true`.
 
-1. If the user agent is in private browsing mode, return `false` / `true` TODO
+    NOTE: The `IS_READY_TO_PAY` service is optional. If a payment app does not
+          provide it, the user agent assumes the app is ready and delegates
+          the payment decision to when the app is invoked via the `PAY` activity.
 
-    ISSUE: Properly link this
+1. Let |parameters| be a new Android Bundle object.
 
-1. Call the IS_READY_TO_PAY service (TODO how), passing the following
-     information, and wait on the result.
+1. Insert the Android package name of the user agent application into
+     |parameters| with the key `"packageName"`.
 
-    1. TODO what information to pass
+1. Let |topOrigin| be |request|'s [=relevant global object=]'s [=associated
+     Document=]'s [=origin=], formatted without a scheme (e.g.
+     `"merchant.example"`). Insert |topOrigin| into |parameters| with the key
+     `"topLevelOrigin"`.
 
-    ISSUE: Properly document this
+1. Let |iframeOrigin| be |request|'s [=relevant settings object=]'s [=environment
+     settings object/origin=], formatted without a scheme. Insert |iframeOrigin|
+     with the key `"paymentRequestOrigin"`.
 
-1. TODO - convert the result to true/false and return that.
+1. If the top-level document was loaded over a secure HTTPS connection and a
+     server certificate chain is available, let |certArray| be a Parcelable
+     array containing each certificate's raw DER-encoded byte array inside an
+     Android Bundle with key `"certificate"`. Insert |certArray| into
+     |parameters| with the key `"topLevelCertificateChain"`.
 
-ISSUE: Document the privacy concerns.
+1. Let |matchingMethodNames| be a new empty [=list=] of strings.
+
+1. Let |methodDataBundle| be a new Android Bundle object.
+
+1. For each [=payment method identifier=] |identifier| supported by |request|:
+
+    1. If |app| [=is allowed to handle the payment method identifier=]
+         |identifier|:
+
+        1. Append |identifier| to |matchingMethodNames|.
+
+        1. Let |dataString| be the JSON serialization of the method-specific
+             data associated with |identifier| in |request|, or `"{}"` if no data
+             was supplied.
+
+        1. Insert |dataString| into |methodDataBundle| with key |identifier|.
+
+1. Insert |matchingMethodNames| (as an ArrayList of strings) into |parameters|
+     with the key `"methodNames"`.
+
+1. Insert |methodDataBundle| into |parameters| with the key `"methodData"`.
+
+1. Create a new Android Intent object targeting |app|'s package name, |app|'s
+     `IS_READY_TO_PAY` service class name, and action
+     `org.chromium.intent.action.IS_READY_TO_PAY`.
+
+1. Bind to the service via <a
+     href="https://developer.android.com/reference/android/content/Context#bindService(android.content.Intent,%20android.content.ServiceConnection,%20int)">Context.bindService</a>
+     using the `BIND_AUTO_CREATE` flag.
+
+1. If binding fails or a user agent defined connection timeout expires before
+     the service connects, unbind the service and return `false`.
+
+1. On service connection, call `isReadyToPay(callback, parameters)` on the
+     bound `IsReadyToPayService` interface.
+
+     ISSUE: Providing the above parameters to the isReadyToPay call is a
+     significant privacy issue. Websites and apps may collaborate to silently
+     track the user using the various origins and custom method data included.
+     While user agents can take steps to minimize this risk (e.g., requiring
+     one-time user consent before allowing each (website, app) pair to connect,
+     we should consider removing this information entirely from isReadyToPay.
+
+1. Wait asynchronously for the `handleIsReadyToPay(isReadyToPay)` method to be
+     invoked on the callback, subject to a user agent defined query timeout.
+
+    1. If `handleIsReadyToPay` is called with boolean |isReadyToPay| before the
+         timeout, unbind the service and return |isReadyToPay|.
+
+    1. If the query times out, the service disconnects, or an exception occurs,
+         unbind the service and return `false`.
 
 ## Invoking an Android native payment app ## {#sctn-invoking}
 
