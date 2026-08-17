@@ -437,29 +437,73 @@ In order to check if a given Android application, |app|, [=is a related
 application=] for a [=application manifest|web app manifest=], |manifest|, the
 user agent performs the following steps:
 
-1. Let |packageName| be the package name of |app|.
+1. Let |packageName| be the package name of |app| (e.g. obtained via <a
+     href="https://developer.android.com/reference/android/content/pm/PackageInfo#packageName">PackageInfo.packageName</a>).
 
-1. Let |version| be the version of |app|.
+1. Let |versionCode| be the version code of |app| (e.g. obtained via <a
+     href="https://developer.android.com/reference/android/content/pm/PackageInfo#getLongVersionCode()">PackageInfo.getLongVersionCode()</a>
+     or <a
+     href="https://developer.android.com/reference/android/content/pm/PackageInfo#versionCode">PackageInfo.versionCode</a>).
 
-1. Let |fingerprint| be ...
+1. Let |appFingerprints| be a new empty [=set=] of strings.
 
-    ISSUE: TODO - need to specify how to convert it to a string
+1. Let |signatures| be the cryptographic signing certificates for |app|
+     obtained from the Android operating system (e.g. via
+     <a href="https://developer.android.com/reference/android/content/pm/SigningInfo#getSigningCertificateHistory()">SigningInfo.getSigningCertificateHistory()</a>
+     or
+     <a href="https://developer.android.com/reference/android/content/pm/PackageInfo#signatures">PackageInfo.signatures</a>).
 
-1. For each [=related application=], |relatedApplication|, in the [=related
-     applications=] of |manifest|:
+1. If |signatures| is null or empty, return `false`.
+
+1. For each signing certificate |cert| in |signatures|:
+
+     1. Let |digest| be the result of computing the SHA-256 hash of |cert|'s
+          raw DER-encoded byte array.
+
+     1. Let |hexString| be the string produced by formatting each byte in
+          |digest| as a two-digit lowercase hexadecimal number (e.g.
+          `"%02x"` without any delimiter, such as
+          `"308201dd30820146020101300d06092a864886f70d010105050030..."`).
+
+     1. Add |hexString| to |appFingerprints|.
+
+1. For each [=external application resource=], |relatedApplication|, in the
+     [=related applications=] of |manifest|:
+
+    1. If |relatedApplication|'s [=platform=] is not equal to `"play"`, go to
+         the next iteration of this loop.
 
     1. If |packageName| is not equal to |relatedApplication|'s [=id=], go to
-        the next iteration of this loop.
+         the next iteration of this loop.
 
-    1. If |version| is less than |relatedApplication|'s [=minimum version=],
-        go to the next iteration of this loop.
+    1. If |relatedApplication| specifies a [=minimum version=]:
 
-        ISSUE: Need to define how the comparison is done.
+        1. Let |minVersion| be the result of parsing |relatedApplication|'s
+             [=minimum version=] as an integer.
 
-    1. If |fingerprint| does not match |relatedApplication|'s [=fingerprint=],
-        go to the next iteration of this loop.
+        1. If |versionCode| is strictly less than |minVersion|, go to the next
+             iteration of this loop.
 
-    1. Return `true`.
+    1. Let |manifestFingerprints| be a new empty [=set=] of strings.
+
+    1. For each fingerprint object |fp| in |relatedApplication|'s
+         [=fingerprints=]:
+
+        1. If |fp|'s `type` is equal to `"sha256_cert"`:
+
+            1. Let |normalizedFingerprint| be |fp|'s `value` with any ASCII
+                 whitespace, colons (`":"`), or other delimiters removed,
+                 converted to ASCII lowercase.
+
+            1. Add |normalizedFingerprint| to |manifestFingerprints|.
+
+    1. If |manifestFingerprints| is empty, go to the next iteration of this
+         loop.
+
+    1. If |appFingerprints| is equal to |manifestFingerprints| (i.e. both sets
+         contain the exact same fingerprint strings):
+
+        1. Return `true`.
 
 1. Return `false`.
 
@@ -556,9 +600,11 @@ In order to [=invoke the native payment app=], |app|, for a {{PaymentRequest}}
 1. Let |packageName| be the Android package name for |app|.
 1. Let |activityName| be the Activity name for |app|.
 
-     ISSUE: TODO - these name to be part of some sort of app concept
+     ISSUE: Package name and Activity name should be formally defined as part of
+            an Android payment app concept in this specification.
 
-1. Let |extras| be the result of [=creating an Android bundle=] for |request|.
+1. Let |extras| be the result of [=create an Android bundle|creating an Android
+     bundle=] from |request| for |app|.
 
 1. Create an Intent object, |intent|, whose:
 
