@@ -251,8 +251,8 @@ does not block or hang the user agent's execution threads.
 
 The `UPDATE_PAYMENT_DETAILS` service receives connections from the user agent
 when the payment app is invoked to facilitate two-way communication for
-[[#sctn-dynamic-updates|dynamic updates]] (e.g. shipping address or payment
-method changes). If present, it must be <a
+[[#sctn-dynamic-updates|dynamic updates]] (e.g. shipping address, shipping option,
+or payment method changes). If present, it must be <a
 href="https://developer.android.com/privacy-and-security/risks/android-exported">exported</a>
 and have an intent filter with an
 `org.chromium.intent.action.UPDATE_PAYMENT_DETAILS` action.
@@ -268,6 +268,63 @@ and have an intent filter with an
   </service>
 </xmp>
 </div>
+
+Communication with the service is defined by the following Android Interface
+Definition Language (AIDL) interfaces:
+
+<div class="example">
+<xmp>
+  package org.chromium.components.payments;
+
+  import android.os.Bundle;
+  import org.chromium.components.payments.IPaymentDetailsUpdateServiceCallback;
+
+  // Implemented by the user agent.
+  interface IPaymentDetailsUpdateService {
+      oneway void changePaymentMethod(in Bundle paymentHandlerMethodData,
+              IPaymentDetailsUpdateServiceCallback callback);
+      oneway void changeShippingOption(in String shippingOptionId,
+              IPaymentDetailsUpdateServiceCallback callback);
+      oneway void changeShippingAddress(in Bundle shippingAddress,
+              IPaymentDetailsUpdateServiceCallback callback);
+  }
+</xmp>
+</div>
+
+<div class="example">
+<xmp>
+  package org.chromium.components.payments;
+
+  import android.os.Bundle;
+  import org.chromium.components.payments.IPaymentDetailsUpdateService;
+
+  // Implemented by the payment app.
+  interface IPaymentDetailsUpdateServiceCallback {
+      oneway void updateWith(in Bundle updatedPaymentDetails);
+      oneway void paymentDetailsNotUpdated();
+      oneway void setPaymentDetailsUpdateService(
+              IPaymentDetailsUpdateService service);
+  }
+</xmp>
+</div>
+
+ISSUE: As with the other intent actions and AIDL interfaces, the
+       `org.chromium.components.payments` package namespace used here should
+       eventually be standardized under a vendor-neutral namespace such as
+       `org.w3c.payments`.
+
+When the user agent [[#sctn-invoking|invokes]] the payment app's `PAY` activity,
+it concurrently binds to the app's `UPDATE_PAYMENT_DETAILS` service (which
+implements `IPaymentDetailsUpdateServiceCallback`). Upon connecting, the user
+agent calls `setPaymentDetailsUpdateService` to hand the payment app a Binder proxy
+to the user agent's own `IPaymentDetailsUpdateService` implementation.
+
+When the user changes the payment method, shipping option, or shipping address
+within the payment app UI, the payment app calls the corresponding method on
+`IPaymentDetailsUpdateService`, passing the updated transaction parameters along
+with a callback. The user agent then notifies the web merchant and, upon
+receiving the merchant's response, communicates the updated payment details back
+to the payment app via `updateWith` or `paymentDetailsNotUpdated`.
 
 ## User agent app AndroidManifest.xml ## {#sctn-user-agent-android-manifest}
 
@@ -511,20 +568,245 @@ In order to [=invoke the native payment app=], |app|, for a {{PaymentRequest}}
     1. Class name is set to the combination of |packageName| and
          |activityName|, e.g. via <a href="https://developer.android.com/reference/android/content/Intent#setClassName(java.lang.String,%20java.lang.String)">Intent.setClassName</a>.
 
-    1. Action is set to `org.chromium.intent.action.IS_READY_TO_PAY`.
+    1. Action is set to `org.chromium.intent.action.PAY`.
 
     1. Extras are set to |extras|, e.g. via
          <a href="https://developer.android.com/reference/android/content/Intent#putExtras(android.os.Bundle)">Intent.putExtras</a>.
+
+1. If |app| declares an `UPDATE_PAYMENT_DETAILS` service in its
+     `AndroidManifest.xml`, [=establish the update service connection=]
+     concurrently.
 
 1. Send |intent| to the Android OS in such a way that the user agent will be
      notified on result, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#startActivityForResult(android.content.Intent,%20int)">Activity.startActivityForResult</a>.
 
 ## Communicating with an invoked Android native payment app ## {#sctn-dynamic-updates}
 
-In order to support dynamic transaction updates with an invoked [=native
-payment app=], |app|, the user agent performs the following steps:
+An invoked [=native payment app=], |app|, can communicate dynamic transaction
+changes (such as shipping address, shipping option, or payment method changes)
+back to the web merchant via the `UPDATE_PAYMENT_DETAILS` service (see
+[[#sctn-update-payment-details-service]]).
 
-1. TODO, use the service
+### Establishing the update service connection ### {#sctn-dynamic-updates-connection}
+
+The user agent perform the following steps to <dfn>establish the update service
+connection</dfn> for an invoked [=native payment app=] |app|:
+
+1. Create a new Android Intent object targeting |app|'s package name, |app|'s
+     `UPDATE_PAYMENT_DETAILS` service class name, and action
+     `org.chromium.intent.action.UPDATE_PAYMENT_DETAILS`.
+
+1. Bind to the service via <a
+     href="https://developer.android.com/reference/android/content/Context#bindService(android.content.Intent,%20android.content.ServiceConnection,%20int)">Context.bindService</a>
+     using the `BIND_AUTO_CREATE` flag.
+
+1. When the service connection is established, obtain the
+     `IPaymentDetailsUpdateServiceCallback` interface from the returned
+     IBinder, and call `setPaymentDetailsUpdateService` passing the user agent's
+     `IPaymentDetailsUpdateService` Binder instance.
+
+1. Maintain this service connection active for the duration of the payment
+     interaction. When |app|'s `PAY` activity finishes or is dismissed, unbind
+     and terminate the service connection.
+
+### Authorizing service requests ### {#sctn-dynamic-updates-authorization}
+
+Whenever any method on the user agent's `IPaymentDetailsUpdateService`
+interface is invoked by some application |app|, the user agent performs the
+following security checks before processing the request:
+
+1. Let |callerUid| be the calling UID obtained via <a
+     href="https://developer.android.com/reference/android/os/Binder#getCallingUid()">Binder.getCallingUid()</a>.
+
+1. Query the Android OS for the package names and cryptographic signing
+     certificates associated with |callerUid|.
+
+1. If none of the packages matching |callerUid| have a package name equal to
+     |app|'s package name, or if their signing certificates do not match |app|'s
+     signing certificates, reject and ignore the request.
+
+### Handling payment method change ### {#sctn-dynamic-updates-method-change}
+
+When `changePaymentMethod` is called on `IPaymentDetailsUpdateService` by
+|app|, with `paymentHandlerMethodData` and `callback`:
+
+1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
+     service request]]. If authorization fails, return.
+
+1. If `paymentHandlerMethodData` is null, or if the string extra `"methodName"`
+     in `paymentHandlerMethodData` is null or empty:
+
+    1. Call `callback.updateWith` with a Bundle containing an error message, and
+         return.
+
+1. Let |methodName| be the string extra `"methodName"` in
+     `paymentHandlerMethodData`.
+
+1. Let |stringifiedDetails| be the string extra `"details"` in
+     `paymentHandlerMethodData`, or `"{}"` if absent.
+
+1. Let |methodDetails| be the result of parsing |stringifiedDetails| as a JSON
+     object. If parsing throws an error, let |methodDetails| be null.
+
+1. [=Inform the user agent that the user has changed their payment method=] with
+     |app|, |methodName|, and |methodDetails|.
+
+     ISSUE: Currently this algorithm only takes |methodDetails|. Taking |app|
+            makes sense, but I believe the user agent should determine
+            |methodName|.
+
+### Handling shipping option change ### {#sctn-dynamic-updates-shipping-option-change}
+
+When `changeShippingOption` is called on `IPaymentDetailsUpdateService` by
+|app| with `shippingOptionId` and `callback`:
+
+1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
+     service request]]. If authorization fails, return.
+
+1. If `shippingOptionId` is null or empty:
+
+    1. Call `callback.updateWith` with a Bundle containing an error message, and
+         return.
+
+1. [=Inform the user agent that the user has changed their shipping option=] with
+     |app| and `shippingOptionId`.
+
+     ISSUE: Currently this algorithm only takes `shippingOptionId`. Taking |app|
+            makes sense, but we'll need to update spec.bs.
+
+### Handling shipping address change ### {#sctn-dynamic-updates-shipping-address-change}
+
+When `changeShippingAddress` is called on `IPaymentDetailsUpdateService` by
+|app| with `shippingAddressBundle` and `callback`:
+
+1. Perform the steps to [[#sctn-dynamic-updates-authorization|authorize the
+     service request]]. If authorization fails, return.
+
+1. If `shippingAddressBundle` is null or empty:
+
+    1. Call `callback.updateWith` with a Bundle containing an error message, and
+         return.
+
+1. Let |shippingAddress| be the result of [=parsing a shipping address Android
+     bundle=] from `shippingAddressBundle`.
+
+1. If |shippingAddress| is null:
+
+    1. Call `callback.updateWith` with a Bundle containing an error message, and
+         return.
+
+1. [=Inform the user agent that the user has changed their shipping address=] with
+     |app| and |shippingAddress|.
+
+### Updating payment details ### {#sctn-dynamic-updates-update-details}
+
+In order to [=update payment details=] for |app| with |detailsPromise|:
+
+1. Upon fulfillment of |detailsPromise| with a {{PaymentRequestDetailsUpdate}}
+     |update|:
+
+    1. Let |bundle| be the result of [=creating an Android bundle from a
+         PaymentRequestDetailsUpdate=] for |update|.
+
+    1. Call `callback.updateWith(bundle)` on the active
+         `IPaymentDetailsUpdateServiceCallback`.
+
+1. Upon rejection of |detailsPromise|:
+
+    1. Call `callback.paymentDetailsNotUpdated()` on the active
+         `IPaymentDetailsUpdateServiceCallback`.
+
+### Notifying payment details not updated ### {#sctn-dynamic-updates-not-updated}
+
+In order to [=notify payment details not updated=] for |app|:
+
+1. Call `callback.paymentDetailsNotUpdated()` on the active
+     `IPaymentDetailsUpdateServiceCallback`.
+
+### Parsing a shipping address Android bundle ### {#sctn-bundle-to-address}
+
+To <dfn>parse a shipping address Android bundle</dfn> from an Android Bundle,
+|bundle|:
+
+1. Let |country| be the string extra `"countryCode"` in |bundle|.
+
+1. If |country| is null, empty, or not a valid ISO 3166-1 alpha-2 country code,
+     return null.
+
+1. Let |address| be a new {{ContactAddress}} object with the following fields:
+
+    - `country` set to |country|.
+    - `addressLine` set to the string array extra `"addressLines"` in |bundle|,
+        or an empty list if absent.
+    - `region` set to the string extra `"region"` in |bundle|, or `""` if
+        absent.
+    - `city` set to the string extra `"city"` in |bundle|, or `""` if absent.
+    - `dependentLocality` set to the string extra `"dependentLocality"` in
+        |bundle|, or `""` if absent.
+    - `postalCode` set to the string extra `"postalCode"` in |bundle|, or `""`
+        if absent.
+    - `sortingCode` set to the string extra `"sortingCode"` in |bundle|, or
+        `""` if absent.
+    - `organization` set to the string extra `"organization"` in |bundle|, or
+        `""` if absent.
+    - `recipient` set to the string extra `"recipient"` in |bundle|, or `""` if
+        absent.
+    - `phone` set to the string extra `"phone"` in |bundle|, or `""` if absent.
+
+1. Return |address|.
+
+### Creating an Android bundle from a PaymentRequestDetailsUpdate ### {#sctn-details-update-to-bundle}
+
+To <dfn>create an Android bundle from a PaymentRequestDetailsUpdate</dfn> from
+a {{PaymentRequestDetailsUpdate}}, |update|:
+
+1. Let |bundle| be a new Android Bundle object.
+
+1. If |update|["total"] exists:
+
+    1. Let |totalBundle| be a new Android Bundle object containing:
+        - `"currency"` set to |update|["total"]["amount"]["currency"]
+        - `"value"` set to |update|["total"]["amount"]["value"]
+
+    1. Insert |totalBundle| into |bundle| with key `"total"`.
+
+1. If |update|["shippingOptions"] exists and is not empty:
+
+    1. Let |optionsArray| be an empty Parcelable array.
+
+    1. For each {{PaymentShippingOption}} |option| in |update|["shippingOptions"]:
+
+        1. Let |optBundle| be a new Android Bundle object containing:
+            - `"id"` set to |option|["id"]
+            - `"label"` set to |option|["label"]
+            - `"amount"` set to a Bundle containing `"currency"` and `"value"`
+                from |option|["amount"]
+            - `"selected"` set to |option|["selected"]
+
+        1. Append |optBundle| to |optionsArray|.
+
+    1. Insert |optionsArray| into |bundle| with key `"shippingOptions"`.
+
+1. If |update|["error"] exists and is not empty:
+
+    1. Insert |update|["error"] into |bundle| with key `"error"`.
+
+1. If |update|["stringifiedPaymentMethodErrors"] exists and is not empty:
+
+    1. Insert |update|["stringifiedPaymentMethodErrors"] into |bundle| with key
+         `"stringifiedPaymentMethodErrors"`.
+
+1. If |update|["shippingAddressErrors"] exists and is not null:
+
+    1. Let |addrErrorsBundle| be a new Android Bundle object.
+
+    1. For each key in |update|["shippingAddressErrors"] (such as `"country"`,
+         `"addressLine"`, `"city"`, `"postalCode"`, etc.), insert the string
+         error into |addrErrorsBundle| under that key.
+
+    1. Insert |addrErrorsBundle| into |bundle| with key `"addressErrors"`.
+
+1. Return |bundle|.
 
 ## Indicating success of an invoked Android native payment app ## {#sctn-indicate-success}
 
