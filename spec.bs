@@ -180,15 +180,15 @@ verifies that an installed native app is authorized to handle a requested
 
 Native payment apps are verified under one of two trust models:
 
-- **First-party (default) payment apps**: The app's [=claimed payment method
-    identifier=] matches the merchant's requested identifier directly. The user
-    agent fetches the payment method manifest for that identifier and verifies
-    that the installed native application is allowed to respond to requests
-    for the identifier.
+- **Authoritative payment method match**: The merchant's requested identifier
+    matches the app's [=authoritative payment method identifier=] directly. The
+    user agent fetches the payment method manifest for that identifier and
+    verifies that the installed native application is allowed to respond to
+    requests for the identifier.
 
-<div class="example" id="example-first-party-trust">
+<div class="example" id="example-authoritative-trust">
 Suppose a merchant initiates a payment request for `https://alicepay.example/pay`.
-A user has an application installed on their device whose [=claimed payment
+A user has an application installed on their device whose [=authoritative payment
 method identifier=] is `https://alicepay.example/pay`.
 
 The user agent fetches the [=payment method manifest=] at
@@ -199,25 +199,28 @@ cryptographic signing certificate fingerprints declared in that application
 manifest.
 </div>
 
-- **Third-party payment apps**: A payment app associated with a different origin
-    that claims the right to handle the payment. This may arise, for example,
-    with wallet apps that support multiple payment methods. In this scenario,
-    the user agent performs a **two-way trust verification**:
+- **Non-authoritative payment methods**: The merchant's requested identifier is
+    one of the app's other [=claimed payment method identifiers=] (different
+    from its [=authoritative payment method identifier=]). In this scenario, the
+    user agent performs a **two-way trust verification**:
 
-      - *Payment method authorization* verifies that the payment method owner
-        explicitly allows handlers from the third party's origin (via the
-        [=supported origins=] in its [=payment method manifest=]).
+      - *Payment method authorization* verifies that the requested payment
+        method permits the app's authoritative origin (either because both
+        identifiers share the same origin, or via the [=supported origins=]
+        declared in the requested method's [=payment method manifest=]).
 
       - *Native app authenticity* verifies that the installed app is genuinely
-        the authentic application from that third-party origin (and not an
-        imposter app falsely claiming that origin), by checking the third
-        party's own declared [=default applications=].
+        the authentic application from that authoritative origin (and not an
+        imposter app falsely claiming to handle the method), by checking the
+        app's own [=authoritative payment method identifier=].
 
-<div class="example" id="example-third-party-trust">
+<div class="example" id="example-non-authoritative-trust">
+*Case 1: Third-party wallet application*
+
 Suppose a merchant initiates a payment request for `https://alicepay.example/pay`.
 A user has a native wallet application, "BobPay", installed on their device.
-BobPay's primary payment method is `https://bobpay.example/pay`, but it also
-claims support for handling `https://alicepay.example/pay`.
+BobPay's [=authoritative payment method identifier=] is `https://bobpay.example/pay`,
+and its [=claimed payment method identifiers=] also include `https://alicepay.example/pay`.
 
 To verify BobPay:
 
@@ -227,9 +230,25 @@ origins=] include `https://bobpay.example` (or is `'*'`).
 
 *Native app authenticity*: To ensure an imposter application is not falsely
 claiming the `https://bobpay.example` origin, the user agent fetches the
-[=payment method manifest=] for `https://bobpay.example/pay` and validates the
-installed application's certificate fingerprints using BobPay's declared
-[=default applications | default application manifest=].
+[=payment method manifest=] for BobPay's [=authoritative payment method
+identifier=] (`https://bobpay.example/pay`) and validates the installed
+application's certificate fingerprints using BobPay's declared [=default
+applications | default application manifest=].
+
+*Case 2: Alternative same-origin payment method*
+
+Suppose AlicePay's native application has `https://alicepay.example/pay` as its
+[=authoritative payment method identifier=], but also claims support for an
+alternative method URL on the same origin, `https://alicepay.example/express`.
+
+When a merchant requests `https://alicepay.example/express`:
+
+*Payment method authorization*: The user agent recognizes that
+`https://alicepay.example/express` and the app's [=authoritative payment method
+identifier=] share the same origin (`https://alicepay.example`).
+
+*Native app authenticity*: The user agent validates the app's cryptographic
+credentials using the web app manifest linked from `https://alicepay.example/pay`.
 </div>
 
 </div>
@@ -247,11 +266,11 @@ which are external to the user agent.
 
 ## Verifying native-app payment handler claims ## {#sctn-verifying-app-claims}
 
-[=Native payment apps=] have both a [=claimed payment method identifier=] and a
-set of [=claimed third-party origins=], which the app claims it is authorized
-to act on behalf of. Verification of these claims relies upon the payment and
-application manifests specified in [[payment-method-manifest]] and
-[[appmanifest]].
+[=Native payment apps=] have both an [=authoritative payment method identifier=]
+(defining the root of authority for their cryptographic identity) and a [=set=]
+of [=claimed payment method identifiers=], which the app claims it is capable of
+handling. Verification of these claims relies upon the payment and application
+manifests specified in [[payment-method-manifest]] and [[appmanifest]].
 
 NOTE: See [[#sctn-trust-model]] for an overview of the first-party and
 third-party verification trust models.
@@ -260,104 +279,75 @@ ISSUE(2): Should we allow for alternate methods to verify the claims, to
 support cases like payment apps built into the browser?
 
 Given a [=payment method identifier=], |identifier|, and a [=native payment
-app=], |app|, the following steps determine if |app| <dfn>is allowed to handle
+app=], |app|, the following steps determine if |app| <dfn export>is allowed to handle
 the payment method identifier</dfn> |identifier|:
 
 1. If |identifier| is not a [=URL-based payment method identifier=], return
      `false`.
 
-1. Let |paymentMethodManifest| be the [=ingest payment method
+1. Let |claimedIdentifiers| be the [=claimed payment method identifiers=] for
+     |app|.
+
+1. If |claimedIdentifiers| does not contain |identifier|, return `false`.
+
+1. Let |authoritativeIdentifier| be the [=authoritative payment method
+     identifier=] for |app|.
+
+1. Let |origin| be |authoritativeIdentifier|'s [=origin=].
+
+1. If |origin| is not [=is allowed for a payment method
+     identifier|allowed for=] |identifier|, return `false`.
+
+1. Let |authoritativePaymentMethodManifest| be the [=ingest payment method
      manifests|ingested=] and [=parsed payment method manifest|parsed=]
-     [=payment method manifest=] for |identifier|. If ingestion or parsing
-     fails, return `false`.
+     [=payment method manifest=] for |authoritativeIdentifier|. If
+     ingestion or parsing fails, return `false`.
 
-1. Let |claimedIdentifier| be the [=claimed payment method identifier=]
-    for |app|.
+1. For each [=URL=] |webAppManifestURL| in
+     |authoritativePaymentMethodManifest|'s [=default applications=]:
 
-1. If |claimedIdentifier| is equal to |identifier|, then:
+    1. Let |webAppManifestString| be the result of [=fetch the web app
+         manifest for a default payment app|fetching the web app manifest=]
+         at |webAppManifestURL|. If the fetch fails, continue to the next
+         iteration of this loop.
 
-    1. For each [=URL=] |webAppManifestURL| in |paymentMethodManifest|'s
-         [=default applications=]:
+    1. Let |webAppManifest| be the result of running the [=steps for
+         processing a web app manifest=] given |webAppManifestString|. If
+         processing fails, continue to the next iteration of this loop.
 
-        1. Let |webAppManifestString| be the result of [=fetch the web app
-             manifest for a default payment app|fetching the web app manifest=]
-             at |webAppManifestURL|. If the fetch fails, continue to the next
-             iteration of this loop.
+    ISSUE(8): The payment method manifest spec should cache and attach the
+              relevant web-app manifests to the payment method manifest, so
+              we don't have to do this.
 
-        1. Let |webAppManifest| be the result of running the [=steps for
-             processing a web app manifest=] given |webAppManifestString|. If
-             processing fails, continue to the next iteration of this loop.
+    1. If |app| [=is a related application=] for |webAppManifest|, return
+         `true`.
 
-        ISSUE(8): The payment method manifest spec should cache and attach the
-                  relevant web-app manifests to the payment method manifest, so
-                  we don't have to do this.
+1. Return `false`.
 
-        1. If |app| [=is a related application=] for |webAppManifest|, return
-             `true`.
-
-    1. Return `false`.
-
-1. Otherwise:
-
-    1. Let |claimedOrigins| be the [=claimed third-party origins=] for |app|.
-
-    1. If none of the |claimedOrigins| [=match the origins allowed for a
-        payment method identifier|match the origins allowed for=] |identifier|,
-        return `false`.
-
-    1. Let |claimedPaymentMethodManifest| be the [=ingest payment method
-        manifests|ingested=] and [=parsed payment method manifest|parsed=]
-        [=payment method manifest=] for |claimedIdentifier|. If ingestion or
-        parsing fails, return `false`.
-
-    1. For each [=URL=] |webAppManifestURL| in |claimedPaymentMethodManifest|'s
-         [=default applications=]:
-
-        1. Let |webAppManifestString| be the result of [=fetch the web app
-             manifest for a default payment app|fetching the web app manifest=]
-             at |webAppManifestURL|. If the fetch fails, continue to the next
-             iteration of this loop.
-
-        1. Let |webAppManifest| be the result of running the [=steps for
-             processing a web app manifest=] given |webAppManifestString|. If
-             processing fails, continue to the next iteration of this loop.
-
-        ISSUE(8): The payment method manifest spec should cache and attach the
-                  relevant web-app manifests to the payment method manifest, so
-                  we don't have to do this.
-
-        1. If |app| [=is a related application=] for |webAppManifest|, return
-             `true`.
-
-    1. Return `false`.
-
-### Matching origins allowed for a payment method identifier ### {#sctn-match-origins}
+### Determining if an origin is allowed for a payment method identifier ### {#sctn-match-origins}
 
 ISSUE(3): This algorithm should probably exist in [[payment-method-manifest]]
           rather than here.
 
-To determine if a [=set=] of [=origins=], |claimedOrigins|, <dfn>match the
-origins allowed for a payment method identifier</dfn>, |identifier|, run the
-following steps:
+To determine if an [=origin=], |origin|, <dfn export>is allowed for a payment
+method identifier</dfn> |identifier|, run the following steps:
 
 1. Let |paymentMethodManifest| be the [=ingest payment method
      manifests|ingested=] and [=parsed payment method manifest|parsed=]
      [=payment method manifest=] for |identifier|. If ingesting or parsing
      fails, return `false`.
 
-1. For each [=origin=] |claimedOrigin| in |claimedOrigins|:
+1. If |origin| is equal to |identifier|'s [=origin=], return `true`.
 
-    1. If |claimedOrigin| is equal to |identifier|'s [=origin=], return `true`.
+1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
+     return `true`.
 
-    1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
-        return `true`.
+1. If |paymentMethodManifest|'s [=supported origins=] contains |origin|,
+     return `true`.
 
-    1. If |paymentMethodManifest|'s [=supported origins=] contains
-        |claimedOrigin|, return `true`.
-
-        NOTE: The [=supported origins=] can either be the string "*",
-              indicating that any [=origin=] is allowed to handle this
-              |identifier|, or an explicit [=set=] of allowed [=origins=].
+    NOTE: The [=supported origins=] can either be the string "*",
+          indicating that any [=origin=] is allowed to handle this
+          |identifier|, or an explicit [=set=] of allowed [=origins=].
 
 1. Return `false`.
 
@@ -759,27 +749,28 @@ A [=native payment app provider=] MUST provide a method the user agent can call
 to <dfn>get the list of native payment apps</dfn> known to the provider. This
 method returns a list of [=native payment apps=].
 
-## Claiming a payment method identifier URL ## {#sctn-claiming-method-url}
+## Authoritative payment method identifier ## {#sctn-authoritative-method-url}
 
 Given a [=native payment app=], |app|, a [=native payment app provider=] MUST
-provide a method the user agent can call to get the <dfn>claimed payment method
-identifier</dfn> for |app|. This method returns a [=url-based payment method
-identifier=] that |app| claims it is associated with - that is, a [=payment
-method identifier=] whose [=payment method manifest=] includes at least one
-[=default application=] pointing to a [=application manifest|web app manifest=]
-that has |app| as a [=related application=].
+provide a method the user agent can call to get the <dfn>authoritative payment
+method identifier</dfn> for |app|. This method returns a [=URL-based payment
+method identifier=] whose [=payment method manifest=] serves as the root of
+authority for |app|'s identity (that is, a [=payment method manifest=] whose
+[=default applications=] include at least one web app manifest that has |app| as
+a [=related application=]).
 
 The user agent MUST verify that the claim is valid (see
 [[#sctn-verifying-app-claims]]).
 
-## Claiming a set of origins ## {#sctn-claiming-origins}
+## Claiming payment method identifiers ## {#sctn-claimed-payment-methods}
 
 Given a [=native payment app=], |app|, a [=native payment app provider=] MUST
-provide a method the user agent can call to get the <dfn>claimed third-party
-origins</dfn>. This is a [=set=] of [=origins=] that the [=native payment app=]
-claims that it has the right to act on behalf of.
+provide a method the user agent can call to get the <dfn>claimed payment method
+identifiers</dfn> for |app|. This method returns a [=set=] of [=URL-based
+payment method identifiers=] that |app| claims it is capable of handling. This
+[=set=] MUST include |app|'s [=authoritative payment method identifier=].
 
-The user agents MUST verify that the claim is valid for each origin (see
+The user agent MUST verify that the claim is valid for each identifier (see
 [[#sctn-verifying-app-claims]]).
 
 ## Supporting delegations ## {#sctn-supported-delegations}

@@ -25,8 +25,8 @@ spec: native-app-payment-handler; urlPrefix: https://stephenmcgruer.github.io/na
         text:native payment apps; url: native-payment-apps
         text:native-app payment handler; url: native-app-payment-handler
         text:get the list of native payment apps; url: get-the-list-of-native-payment-apps
-        text:claimed payment method identifier; url: claimed-payment-method-identifier
-        text:claimed third-party origins; url: claimed-third-party-origins
+        text:authoritative payment method identifier; url: authoritative-payment-method-identifier
+        text:claimed payment method identifiers; url: claimed-payment-method-identifiers
         text:supported delegations; url: supported-delegations
         text:is a related application; url: is-a-related-application
         text:able to handle a payment request; url:able-to-handle-a-payment-request
@@ -101,19 +101,38 @@ concepts for cross-application communication and collaboration:
 - <a href="https://developer.android.com/guide/topics/intents/intents-filters">Intents</a>
 - <a href="https://developer.android.com/develop/background-work/services">Services</a>
 
+An <dfn>Android payment app</dfn> is a [=native payment app=] representing an
+installed Android application capable of handling web payment requests. An
+[=Android payment app=] has the following properties:
+
+- <dfn for="Android payment app">package name</dfn>: A string identifying the
+    Android application package name.
+- <dfn for="Android payment app">pay activity name</dfn>: A string identifying
+    the exported Activity component responding to the `PAY` intent.
+- <dfn for="Android payment app">is-ready-to-pay service name</dfn>: An
+    optional string identifying the Service component responding to the
+    `IS_READY_TO_PAY` intent.
+- <dfn for="Android payment app">update payment details service name</dfn>: An
+    optional string identifying the Service component responding to the
+    `UPDATE_PAYMENT_DETAILS` intent.
+- <dfn for="Android payment app">label</dfn>: A human-readable display label
+    for the application.
+- <dfn for="Android payment app">icon</dfn>: A graphical icon representing the
+    application.
+
 ## Payment app AndroidManifest.xml ## {#sctn-payment-app-android-manifest}
 
 In order to be visible to the user agent, the Android payment app defines the
 following concepts in their `AndroidManifest.xml` file:
 
-- A **mandatory** `PAY` Android activity, which will receive an intent when
+- A mandatory `PAY` Android activity, which will receive an intent when
     the user agent [=invokes the native payment app=].
 
-- An **optional** `IS_READY_TO_PAY` Android service, which the user agent will
+- An optional `IS_READY_TO_PAY` Android service, which the user agent will
     bind to and call when determining if the app is [=able to handle a
     payment request=].
 
-- An **optional** `UPDATE_PAYMENT_DETAILS` Android service, which the user
+- An optional `UPDATE_PAYMENT_DETAILS` Android service, which the user
     agent will bind to when communicating dynamic updates with the invoked
     [=native payment app=].
 
@@ -135,17 +154,22 @@ and have:
 
 The "`org.chromium.default_payment_method_name`" tag must have an
 `android:value` attribute containing a valid [=url-based payment method
-identifier=]. This will be used for determining the [=claimed payment method
-identifier=].
+identifier=]. This will be used for determining the [=authoritative payment
+method identifier=].
 
 The "`org.chromium.payment_method_names`" tag, if present, must have an
 `android:resource` attribute pointing at a `<string-array>` resource each of
-which must be a valid [=url-based payment method identifier=]. This will be
-used for determining the [=claimed third-party origins=].
+which must be a valid [=url-based payment method identifier=]. This will be used
+along with the [=authoritative payment method identifier=] for determining the
+[=claimed payment method identifiers=].
 
 The "`org.chromium.payment_supported_delegations`" tag, if present, must have
 an `android:resource` attribute pointing at a `<string-array>` resource listing
 the [=supported delegations=] of the payment app.
+
+ISSUE: The chromium.org namespace used here should be replaced by a w3.org one,
+       but Chromium currently ships with chromium.org so it would need to be
+       updated and a deprecation process followed, etc.
 
 <div class="example">
 <xmp>
@@ -184,10 +208,6 @@ the [=supported delegations=] of the payment app.
   </resources>
 </xmp>
 </div>
-
-ISSUE: The chromium.org namespace used here should be replaced by a w3.org one,
-       but Chromium currently ships with chromium.org so it would need to be
-       updated and a deprecation process followed, etc.
 
 ### The `IS_READY_TO_PAY` service ### {#sctn-is-ready-to-pay-service}
 
@@ -357,47 +377,94 @@ following actions:
 In order to [=get the list of native payment apps=], the user agent performs
 the following steps:
 
-1. Create a new Intent object, |intent|, targeting the
+1. Let |payIntent| be a new Intent object targeting the
      `org.chromium.intent.action.PAY` action.
 
-1. Query the Android OS for the list of activities that can be performed for
-     |intent|, for example via <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentActivities(android.content.Intent,%20int)">PackageManager.queryIntentActivities</a>.
+1. Let |readyToPayIntent| be a new Intent object targeting the
+     `org.chromium.intent.action.IS_READY_TO_PAY` action.
 
-ISSUE: do we need to spec how to turn the resultant info into a list of
-     apps? TBD.
+1. Let |updateIntent| be a new Intent object targeting the
+     `org.chromium.intent.action.UPDATE_PAYMENT_DETAILS` action.
 
-## Claiming a method URL ## {#sctn-claiming-method-url}
+1. Query the Android OS for the list of activities matching |payIntent| (e.g.
+     via <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentActivities(android.content.Intent,%20int)">PackageManager.queryIntentActivities</a>),
+     resulting in a list of <a
+     href="https://developer.android.com/reference/android/content/pm/ResolveInfo">`ResolveInfo`</a>
+     objects, |payActivities|.
 
-The [=claimed payment method identifier=] for an Android application, |app|, is
+1. Query the Android OS for services matching |readyToPayIntent| (e.g. via
+     <a href="https://developer.android.com/reference/android/content/pm/PackageManager#queryIntentServices(android.content.Intent,%20int)">PackageManager.queryIntentServices</a>),
+     and let |readyToPayMap| be a mapping from package name to service class
+     name.
+
+1. Query the Android OS for services matching |updateIntent| (e.g. via
+     `PackageManager.queryIntentServices`), and let |updateMap| be a mapping
+     from package name to service class name.
+
+1. Let |apps| be an empty [=list=].
+
+1. For each `ResolveInfo` |info| in |payActivities|:
+
+    1. Let |packageName| be |info|'s package name (`info.activityInfo.packageName`).
+
+    1. Let |activityName| be |info|'s activity name (`info.activityInfo.name`).
+
+    1. Let |label| be the application label retrieved from the package manager.
+         If |label| is empty, continue to the next iteration of this loop.
+
+    1. Let |icon| be the application icon retrieved from the package manager.
+
+    1. Let |app| be a new [=Android payment app=] with [=Android payment app/package name=]
+         |packageName|, [=Android payment app/pay activity name=] |activityName|,
+         [=Android payment app/label=] |label|, and [=Android payment app/icon=] |icon|.
+
+    1. If |readyToPayMap| contains an entry for |packageName|, set |app|'s
+         [=Android payment app/is-ready-to-pay service name=] to that entry's value.
+
+    1. If |updateMap| contains an entry for |packageName|, set |app|'s
+         [=Android payment app/update payment details service name=] to that
+         entry's value.
+
+    1. Append |app| to |apps|.
+
+1. Return |apps|.
+
+## Authoritative payment method identifier ## {#sctn-authoritative-method-url}
+
+The [=authoritative payment method identifier=] for an Android application, |app|, is
 the `android:value` attribute of the `org.chromium.default_payment_method_name`
 `<meta-data>` tag in |app|'s AndroidManifest.xml file.
 
-## Claiming a set of origins ## {#sctn-claiming-origins}
+## Claimed payment method identifiers ## {#sctn-claimed-payment-methods}
 
-The [=set=] of [=claimed third-party origins=] for an Android application,
-|app|, is created from the `org.chromium.payment_method_names` `<meta-data>`
-tag in |app|'s AndroidManifest.xml file, as follows:
+The [=set=] of [=claimed payment method identifiers=] for an Android application,
+|app|, is created as follows:
 
-1. Let |paymentMethodIdentifiers| be the value  of the `org.chromium.payment_method_names`
-    `<meta-data>` tag.
+1. Let |claimedIdentifiers| be a new empty [=set=].
 
-1. If |paymentMethodIdentifiers| is not a string array, return an empty [=set=].
+1. Let |authoritativeIdentifier| be |app|'s [=authoritative payment method
+     identifier=].
 
-1. Let |origins| be an empty [=set=].
+1. If |authoritativeIdentifier| is a valid [=url-based payment method
+     identifier=], add |authoritativeIdentifier| to |claimedIdentifiers|.
 
-1. For each string |identifier| in |paymentMethodIdentifiers|:
+1. Let |otherMethodIdentifiers| be the string array resource referenced by the
+     `org.chromium.payment_method_names` `<meta-data>` tag in |app|'s
+     AndroidManifest.xml file.
 
-    1. If |identifier| is not a valid [=url-based payment method identifier=],
-        go to the next iteration of the loop.
+1. If |otherMethodIdentifiers| is not null and is a string array:
 
-    1. Let |origin| be the [=origin=] of |identifier|.
+    1. For each string |identifier| in |otherMethodIdentifiers|:
 
-    1. Add |origin| to |origins|.
+        1. If |identifier| is a valid [=url-based payment method identifier=],
+             add |identifier| to |claimedIdentifiers|.
 
-1. Return |origins|.
+1. Return |claimedIdentifiers|.
 
-ISSUE: We need to document why this is an array of method URLs, rather than
-just an array of origins.
+NOTE: The [=claimed payment method identifiers=] automatically include the
+app's [=authoritative payment method identifier=], so payment applications do
+not need to duplicate their primary method URL inside
+`org.chromium.payment_method_names`.
 
 ## Supported delegations ## {#sctn-supported-delegations}
 
@@ -512,9 +579,11 @@ user agent performs the following steps:
 In order to check if an Android application, |app|, is [=able to handle a
 payment request=], |request|, the user agent performs the following steps:
 
-1. If |app| does not have a service listed in its `AndroidManifest.xml` with an
-     intent-filter for `org.chromium.intent.action.IS_READY_TO_PAY` (see
-     [[#sctn-is-ready-to-pay-service]]), return `true`.
+1. If the user agent is operating in a private browsing mode, return `true`
+     immediately without binding to or querying the `IS_READY_TO_PAY` service.
+
+1. If |app|'s [=Android payment app/is-ready-to-pay service name=] is null or not
+     present, return `true`.
 
     NOTE: The `IS_READY_TO_PAY` service is optional. If a payment app does not
           provide it, the user agent assumes the app is ready and delegates
@@ -562,9 +631,10 @@ payment request=], |request|, the user agent performs the following steps:
 
 1. Insert |methodDataBundle| into |parameters| with the key `"methodData"`.
 
-1. Create a new Android Intent object targeting |app|'s package name, |app|'s
-     `IS_READY_TO_PAY` service class name, and action
-     `org.chromium.intent.action.IS_READY_TO_PAY`.
+1. Let |serviceName| be |app|'s [=Android payment app/is-ready-to-pay service name=].
+
+1. Create a new Android Intent object targeting |app|'s [=Android payment app/package name=],
+     |serviceName|, and action `org.chromium.intent.action.IS_READY_TO_PAY`.
 
 1. Bind to the service via <a
      href="https://developer.android.com/reference/android/content/Context#bindService(android.content.Intent,%20android.content.ServiceConnection,%20int)">Context.bindService</a>
@@ -576,12 +646,11 @@ payment request=], |request|, the user agent performs the following steps:
 1. On service connection, call `isReadyToPay(callback, parameters)` on the
      bound `IsReadyToPayService` interface.
 
-     ISSUE: Providing the above parameters to the isReadyToPay call is a
-     significant privacy issue. Websites and apps may collaborate to silently
-     track the user using the various origins and custom method data included.
-     While user agents can take steps to minimize this risk (e.g., requiring
-     one-time user consent before allowing each (website, app) pair to connect,
-     we should consider removing this information entirely from isReadyToPay.
+     NOTE: Passing merchant origin and method data in the `isReadyToPay`
+     parameters bundle introduces potential tracking vectors. In private
+     browsing modes, the user agent bypasses background queries entirely.
+     Future iterations aim to minimize or remove identifying transaction
+     metadata from background readiness checks.
 
 1. Wait asynchronously for the `handleIsReadyToPay(isReadyToPay)` method to be
      invoked on the callback, subject to a user agent defined query timeout.
@@ -597,11 +666,8 @@ payment request=], |request|, the user agent performs the following steps:
 In order to [=invoke the native payment app=], |app|, for a {{PaymentRequest}}
 |request|, the user agent performs the following steps:
 
-1. Let |packageName| be the Android package name for |app|.
-1. Let |activityName| be the Activity name for |app|.
-
-     ISSUE: Package name and Activity name should be formally defined as part of
-            an Android payment app concept in this specification.
+1. Let |packageName| be |app|'s [=Android payment app/package name=].
+1. Let |activityName| be |app|'s [=Android payment app/pay activity name=].
 
 1. Let |extras| be the result of [=create an Android bundle|creating an Android
      bundle=] from |request| for |app|.
