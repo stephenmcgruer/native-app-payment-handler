@@ -178,44 +178,64 @@ verifies that an installed native app is authorized to handle a requested
 [=URL-based payment method identifier=] using payment method manifests
 ([[payment-method-manifest]]) and web application manifests ([[appmanifest]]).
 
-Native payment apps are verified under one of two trust models:
+Every verification performs a **two-step trust verification**:
 
-- **Authoritative payment method match**: The merchant's requested identifier
-    matches the app's [=authoritative payment method identifier=] directly. The
-    user agent fetches the payment method manifest for that identifier and
-    verifies that the installed native application is allowed to respond to
-    requests for the identifier.
+1. **Payment method authorization**: Verifies that the requested payment method
+     permits the app's authoritative origin (either because both share the same origin,
+     or via the [=supported origins=] declared in the requested method's
+     [=payment method manifest=]).
 
-<div class="example" id="example-authoritative-trust">
+1. **Native app authenticity**: Verifies that the installed native app is
+     authentically owned by that authoritative origin (and not an imposter application
+     falsely claiming the origin), by validating the app's package and signing
+     certificate fingerprints against the web app manifest declared by the app's
+     [=authoritative payment method identifier=].
+
+The following examples illustrate this two-step verification across common scenarios:
+
+<div class="example" id="example-direct-match">
+*Direct payment method match*
+
 Suppose a merchant initiates a payment request for `https://alicepay.example/pay`.
-A user has an application installed on their device whose [=authoritative payment
-method identifier=] is `https://alicepay.example/pay`.
+AlicePay's installed native app has `https://alicepay.example/pay` as its
+[=authoritative payment method identifier=].
 
-The user agent fetches the [=payment method manifest=] at
-`https://alicepay.example/pay`, which declares a [=default application|default
-application manifest=] at `https://alicepay.example/app.json`. The user agent
-then verifies that the installed application matches the package identifier and
-cryptographic signing certificate fingerprints declared in that application
+To verify AlicePay:
+
+*Payment method authorization*: Succeeded because `https://alicepay.example/pay`
+and the app's authoritative payment method identifier share the same
+`https://alicepay.example` origin.
+
+*Native app authenticity*: The user agent fetches the [=payment method
+manifest=] at `https://alicepay.example/pay`, which declares a [=default
+application|default application manifest=] at `https://alicepay.example/app.json`.
+The user agent verifies that the installed application matches the package
+identifier and cryptographic signing certificate fingerprints declared in that
 manifest.
 </div>
 
-- **Non-authoritative payment methods**: The merchant's requested identifier is
-    one of the app's other [=claimed payment method identifiers=] (different
-    from its [=authoritative payment method identifier=]). In this scenario, the
-    user agent performs a **two-way trust verification**:
+<div class="example" id="example-same-origin-alt">
+*Alternative same-origin payment method*
 
-      - *Payment method authorization* verifies that the requested payment
-        method permits the app's authoritative origin (either because both
-        identifiers share the same origin, or via the [=supported origins=]
-        declared in the requested method's [=payment method manifest=]).
+Suppose AlicePay's native application has `https://alicepay.example/pay` as its
+[=authoritative payment method identifier=], but also claims support for an
+alternative payment method URL on the same origin, `https://alicepay.example/express`.
 
-      - *Native app authenticity* verifies that the installed app is genuinely
-        the authentic application from that authoritative origin (and not an
-        imposter app falsely claiming to handle the method), by checking the
-        app's own [=authoritative payment method identifier=].
+When a merchant initiates a payment request for `https://alicepay.example/express`:
 
-<div class="example" id="example-non-authoritative-trust">
-*Case 1: Third-party wallet application*
+*Payment method authorization*: Succeeded because `https://alicepay.example/express`
+and the app's [=authoritative payment method identifier=] share the same
+`https://alicepay.example` origin.
+
+*Native app authenticity*: To verify that the installed app is the authentic
+AlicePay application, the user agent fetches the [=payment method manifest=] for
+the app's [=authoritative payment method identifier=] (`https://alicepay.example/pay`)
+and validates the app's package and certificate fingerprints against AlicePay's
+declared [=default applications | default application manifest=].
+</div>
+
+<div class="example" id="example-third-party-wallet">
+*Third-party wallet application*
 
 Suppose a merchant initiates a payment request for `https://alicepay.example/pay`.
 A user has a native wallet application, "BobPay", installed on their device.
@@ -225,30 +245,15 @@ and its [=claimed payment method identifiers=] also include `https://alicepay.ex
 To verify BobPay:
 
 *Payment method authorization*: The user agent fetches the [=payment method
-manifest=] for `https://alicepay.example/pay` and checks that its [=supported
+manifest=] for `https://alicepay.example/pay` and verifies that its [=supported
 origins=] include `https://bobpay.example` (or is `'*'`).
 
 *Native app authenticity*: To ensure an imposter application is not falsely
 claiming the `https://bobpay.example` origin, the user agent fetches the
 [=payment method manifest=] for BobPay's [=authoritative payment method
 identifier=] (`https://bobpay.example/pay`) and validates the installed
-application's certificate fingerprints using BobPay's declared [=default
-applications | default application manifest=].
-
-*Case 2: Alternative same-origin payment method*
-
-Suppose AlicePay's native application has `https://alicepay.example/pay` as its
-[=authoritative payment method identifier=], but also claims support for an
-alternative method URL on the same origin, `https://alicepay.example/express`.
-
-When a merchant requests `https://alicepay.example/express`:
-
-*Payment method authorization*: The user agent recognizes that
-`https://alicepay.example/express` and the app's [=authoritative payment method
-identifier=] share the same origin (`https://alicepay.example`).
-
-*Native app authenticity*: The user agent validates the app's cryptographic
-credentials using the web app manifest linked from `https://alicepay.example/pay`.
+application's package and certificate fingerprints against BobPay's declared
+[=default applications | default application manifest=].
 </div>
 
 </div>
