@@ -825,8 +825,6 @@ Depending on the capabilities of the [=native payment app provider=], the
 invoked app MAY be displayed partially over the user agent window (to improve
 user context and understanding of the flow).
 
-ISSUE(4): We should speak to the privacy issues in a privacy section.
-
 ## Changing the payment method ## {#sctn-change-payment-method}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
@@ -952,6 +950,35 @@ To mitigate these risks:
 
 TODO: Add more requirements, and note where implementations (Chromium) don't
 meet them today.
+
+## Tracking risks via invoked native apps not showing UX ## {#sctn-invokedapps-ux}
+
+As [=native payment apps=] are external to the user agent, the user agent
+cannot guarantee that an app will show UX when invoked. This leads to a
+tracking risk:
+
+1. A website creates a {{PaymentRequest}} pointing at such an app, and invokes
+     {{PaymentRequest/show()}}.
+
+2. The user agent invokes the native app, passing transaction details which
+     include the merchant origin and other data.
+
+3. The native app does not show any UX and immediately indicates success,
+     returning control to the user agent.
+
+4. The user agent, which cannot know that UX was not shown, passes the response
+     details back to the website.
+
+This attack allows for two-way communication of arbitrary data between an
+origin and a native app, without user knowledge.
+
+To mitigate this risk:
+
+- User agents SHOULD require a user activation for calls to
+    {{PaymentRequest/show()}}, as specified in [[payment-request]].
+
+- TODO: Add any other potential mitigations, but acknowledge that shipping user
+    agents today do not meet them.
 
 ## Payment method verification and spoofing prevention ## {#sctn-spoofing}
 
