@@ -709,10 +709,6 @@ When `changePaymentMethod` is called on `IPaymentDetailsUpdateService` by
 1. [=Inform the user agent that the user has changed their payment method=] with
      |app|, |methodName|, and |methodDetails|.
 
-     ISSUE: Currently this algorithm only takes |methodDetails|. Taking |app|
-            makes sense, but I believe the user agent should determine
-            |methodName|.
-
 ### Handling shipping option change ### {#sctn-dynamic-updates-shipping-option-change}
 
 When `changeShippingOption` is called on `IPaymentDetailsUpdateService` by
@@ -728,9 +724,6 @@ When `changeShippingOption` is called on `IPaymentDetailsUpdateService` by
 
 1. [=Inform the user agent that the user has changed their shipping option=] with
      |app| and `shippingOptionId`.
-
-     ISSUE: Currently this algorithm only takes `shippingOptionId`. Taking |app|
-            makes sense, but we'll need to update spec.bs.
 
 ### Handling shipping address change ### {#sctn-dynamic-updates-shipping-address-change}
 

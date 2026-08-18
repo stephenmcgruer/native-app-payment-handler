@@ -254,6 +254,14 @@ The [=steps to respond to a payment request=] for a {{PaymentRequest}},
 1. Let |result| be the result of [=retrieving the converted result details=]
      for |app|.
 
+1. If |result|.{{NativePaymentHandlerResponse/methodName}} is not one of the
+     [=payment method identifiers=] supported by |request|, or if |app| is not
+     [=allowed to handle the payment method identifier=]
+     |result|.{{NativePaymentHandlerResponse/methodName}}, return failure.
+
+1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/methodName}}
+     to |result|.{{NativePaymentHandlerResponse/methodName}}.
+
 1. If the user agent [=delegates shipping address collection=] to |app|:
 
     1. Let |address| be the result of running the [=create a ContactAddress from
@@ -291,24 +299,30 @@ data), rather than only the {{PaymentResponse/details}}.
 ### Payment method changed algorithm ### {#sctn-payment-method-changed-algorithm}
 
 When a [=native payment app=], |app|, [=informs the user agent that the user
-has changed their payment method=] with method-specific details,
-|methodDetails| (an [=object=] or `null`), the user agent MUST run the
-following steps:
+has changed their payment method=] with a [=payment method identifier=]
+|methodName| and method-specific details, |methodDetails| (an [=object=] or
+`null`), the user agent MUST run the following steps:
 
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
-1. Let |methodName| be the [=payment method identifier=] of the [=native-app
-     payment handler=] corresponding to |app|.
+1. If |methodName| is not one of the [=payment method identifiers=] supported by
+     |request|, or if |app| is not [=allowed to handle the payment method
+     identifier=] |methodName|:
 
-     TODO: Verify which [=payment method identifier=] should be sent back in
-           the case of a third-party app being invoked. What does Chromium
-           code do today?
+    1. [=Notify payment details not updated=] in |app|.
+
+    1. Terminate these steps.
 
 1. Run the [=payment method changed algorithm=] from [[payment-request]] on
      |request| with |methodName| and |methodDetails|. Let |event| be the
      dispatched {{PaymentMethodChangeEvent}}.
 
 1. [=Propagate payment detail updates=] for |event| and |app|.
+
+NOTE: An invoked native payment app can support multiple payment methods (such
+as its default payment method identifier and third-party payment method
+identifiers authorized by manifests). The native payment app explicitly supplies
+|methodName| so the user agent knows which payment method the user switched to.
 
 ### Shipping option changed algorithm ### {#sctn-shipping-option-changed-algorithm}
 
@@ -725,22 +739,25 @@ ISSUE(4): We should speak to the privacy issues in a privacy section.
 ## Changing the payment method ## {#sctn-change-payment-method}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can <dfn>inform the user agent that the user has changed
-their payment method</dfn>. When this method is called, the [=native payment
-app provider=] MUST perform the following steps:
+[=native payment app=], |app|, can <dfn>inform the user agent that the user has
+changed their payment method</dfn>. When this method is called, the [=native
+payment app provider=] MUST perform the following steps:
+
+1. Let |methodName| be the [=payment method identifier=] provided by the native
+     payment app.
 
 1. Let |methodDetails| be the method details provided by the native app,
      converted into an [=object=], or `null` if no details are provided.
 
-1. Run the [[#sctn-payment-method-changed-algorithm|payment
-     method changed algorithm]], passing in |methodDetails|.
+1. Run the [[#sctn-payment-method-changed-algorithm|payment method changed
+     algorithm]], passing in |app|, |methodName|, and |methodDetails|.
 
 ## Changing the shipping option ## {#sctn-change-shipping-option}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can <dfn>inform the user agent that the user has changed
-their shipping option</dfn>. When this method is called, the [=native payment
-app provider=] MUST run the following steps:
+[=native payment app=], |app|, can <dfn>inform the user agent that the user has
+changed their shipping option</dfn>. When this method is called, the [=native
+payment app provider=] MUST run the following steps:
 
 1. Let |shippingOption| be the result of converting the native-app specific
      data representing the {{PaymentShippingOption/id}} into a {{DOMString}}.
@@ -750,22 +767,22 @@ app provider=] MUST run the following steps:
            provided, care must be taken to preserve identity when converting
            this value to and from native-app specific data.
 
-2. Run the [[#sctn-shipping-option-changed-algorithm|shipping option changed algorithm]],
-     passing in |shippingOption|.
+1. Run the [[#sctn-shipping-option-changed-algorithm|shipping option changed
+     algorithm]], passing in |app| and |shippingOption|.
 
 ## Changing the shipping address ## {#sctn-change-shipping-address}
 
 A [=native payment app provider=] MUST provide a method by which an invoked
-[=native payment app=] can <dfn>inform the user agent that the user has changed
-their shipping address</dfn>. When this method is called, the [=native payment
-app provider=] MUST run the following steps:
+[=native payment app=], |app|, can <dfn>inform the user agent that the user has
+changed their shipping address</dfn>. When this method is called, the [=native
+payment app provider=] MUST run the following steps:
 
 1. Let |shippingAddress| be the result of running the [=create a ContactAddress
      from user-provided input=] algorithm, using the data provided by the
      native-app as the user-provided input.
 
 1. Run the [[#sctn-shipping-address-changed-algorithm|shipping address changed
-     algorithm]], passing in |shippingAddress|.
+     algorithm]], passing in |app| and |shippingAddress|.
 
 ## Updating payment details in an invoked native payment app ## {#sctn-updating-payment-details}
 
