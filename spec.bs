@@ -351,6 +351,12 @@ has changed their shipping address=] to a {{ContactAddress}},
      |request| with |shippingAddress|. Let |event| be the dispatched
      {{PaymentRequestUpdateEvent}}.
 
+     ISSUE(6): Currently the shipping address changed algorithm in
+     [[payment-request]] does not actually allow for an input parameter,
+     instead using non-specific user-provided input. This should be updated to
+     explicitly take a parameter (which may require changing [[contact-picker]]
+     as well).
+
 1. [=Propagate payment detail updates=] for |event| and |app|.
 
 ### Propagating payment detail updates ### {#sctn-propagate-payment-details-update}
