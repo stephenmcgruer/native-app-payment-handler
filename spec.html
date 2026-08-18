@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="cbb4b56a6f62db172acc8eb3f1ea312270140fd9" name="revision">
+  <meta content="84fab9045781c336d2e67b308c9c8c0fa561123a" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 /* The heading colors reference https://www.w3.org/StyleSheets/TR/2021/base.css */
@@ -3084,10 +3084,10 @@ changed their shipping address</dfn>. When this method is called, the <a data-li
    </ol>
    <h3 class="heading settled" data-level="3.11" id="sctn-updating-payment-details"><span class="secno">3.11. </span><span class="content">Updating payment details in an invoked native payment app</span><a class="self-link" href="#sctn-updating-payment-details"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider①⑨">native payment app provider</a> MUST provide a method the user agent can call
-to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="update-payment-details">update payment details</dfn> in an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps③③">native payment app</a>, given
-a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/web-based-payment-handler/#dom-paymentrequestdetailsupdate" id="ref-for-dom-paymentrequestdetailsupdate③">PaymentRequestDetailsUpdate</a></code> dictionary, <var>update</var>. When called, the
-provider MUST transmit the updated details to the invoked app, converting the
-dictionary fields into a native format.</p>
+to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="update-payment-details">update payment details</dfn> in an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps③③">native payment app</a>,
+given a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/web-based-payment-handler/#dom-paymentrequestdetailsupdate" id="ref-for-dom-paymentrequestdetailsupdate③">PaymentRequestDetailsUpdate</a></code> dictionary, <var>update</var>. When called, the
+provider MUST transmit <var>update</var> to the invoked app, converting the dictionary
+fields into a native format.</p>
    <h3 class="heading settled" data-level="3.12" id="sctn-notifying-payment-details-not-updated"><span class="secno">3.12. </span><span class="content">Notifying payment details not updated in an invoked native payment app</span><a class="self-link" href="#sctn-notifying-payment-details-not-updated"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider②⓪">native payment app provider</a> MUST provide a method the user agent can call
 to <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="notify-payment-details-not-updated">notify payment details not updated</dfn> in an invoked <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps③④">native payment app</a>. When called, the provider MUST inform the invoked app that the website
@@ -3108,6 +3108,9 @@ When this occurs, the user agent MUST run the <a data-link-type="dfn" href="http
 When this occurs, the user agent MUST run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-payment-handler-indicates-an-internal-error-algorithm" id="ref-for-dfn-payment-handler-indicates-an-internal-error-algorithm">payment handler indicates an internal error algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>.</p>
    <div class="non-normative">
     <h2 class="heading settled" data-level="4" id="sctn-security-and-privacy"><span class="secno">4. </span><span class="content">Security and privacy considerations</span><a class="self-link" href="#sctn-security-and-privacy"></a></h2>
+    <p>TODO: Refer to
+https://www.w3.org/TR/security-privacy-questionnaire/#considerations and make
+sure we’re following the guidance there.</p>
     <h3 class="heading settled" data-level="4.1" id="sctn-tracking-risks"><span class="secno">4.1. </span><span class="content">Tracking risks via readiness checks</span><a class="self-link" href="#sctn-tracking-risks"></a></h3>
     <p>Probing whether a native payment app is installed or ready to pay (via
 <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest-canmakepayment" id="ref-for-dom-paymentrequest-canmakepayment">canMakePayment()</a></code> or <code>hasEnrolledInstrument()</code>)
