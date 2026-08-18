@@ -876,10 +876,10 @@ payment app provider=] MUST run the following steps:
 ## Updating payment details in an invoked native payment app ## {#sctn-updating-payment-details}
 
 A [=native payment app provider=] MUST provide a method the user agent can call
-to <dfn>update payment details</dfn> in an invoked [=native payment app=], given
-a {{PaymentRequestDetailsUpdate}} dictionary, |update|. When called, the
-provider MUST transmit the updated details to the invoked app, converting the
-dictionary fields into a native format.
+to <dfn>update payment details</dfn> in an invoked [=native payment app=],
+given a {{PaymentRequestDetailsUpdate}} dictionary, |update|. When called, the
+provider MUST transmit |update| to the invoked app, converting the dictionary
+fields into a native format.
 
 ## Notifying payment details not updated in an invoked native payment app ## {#sctn-notifying-payment-details-not-updated}
 
@@ -919,6 +919,10 @@ internal error algorithm=] from [[payment-request]].
 <div class="non-normative">
 
 # Security and privacy considerations # {#sctn-security-and-privacy}
+
+TODO: Refer to
+https://www.w3.org/TR/security-privacy-questionnaire/#considerations and make
+sure we're following the guidance there.
 
 ## Tracking risks via readiness checks ## {#sctn-tracking-risks}
 
