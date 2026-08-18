@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="2679348dd3c60fab1c788cc269bb15c4b8c47ac6" name="revision">
+  <meta content="8b21d899c301d2ac00a625a93d9668045d7a216f" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 /* The heading colors reference https://www.w3.org/StyleSheets/TR/2021/base.css */
@@ -2593,6 +2593,11 @@ user agent MUST run the following steps:</p>
      <p>Run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-shipping-address-changed-algorithm" id="ref-for-dfn-shipping-address-changed-algorithm">shipping address changed algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> on
  <var>request</var> with <var>shippingAddress</var>. Let <var>event</var> be the dispatched
  <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent" id="ref-for-dom-paymentrequestupdateevent①">PaymentRequestUpdateEvent</a></code>.</p>
+     <p class="issue" id="issue-b3a9def4"><a class="self-link" href="#issue-b3a9def4"></a> Currently the shipping address changed algorithm in
+ <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> does not actually allow for an input parameter,
+ instead using non-specific user-provided input. This should be updated to
+ explicitly take a parameter (which may require changing <a data-link-type="biblio" href="#biblio-contact-picker" title="Contact Picker API">[contact-picker]</a>
+ as well). <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/6">[Issue #6]</a></p>
     <li data-md>
      <p><a data-link-type="dfn" href="#propagate-payment-detail-updates" id="ref-for-propagate-payment-detail-updates②">Propagate payment detail updates</a> for <var>event</var> and <var>app</var>.</p>
    </ol>
@@ -3474,6 +3479,11 @@ should be passed to an invoked payment handler. We should be more specific. <a h
    <div class="issue"> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> needs to be updated to allow payment handlers to
 populate the full <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentresponse">PaymentResponse</a></code> (e.g., delegated shipping and payer
 data), rather than only the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentresponse-details">details</a></code>. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/5">[Issue #5]</a> <a class="issue-return" href="#issue-aa46b481" title="Jump to section">↵</a></div>
+   <div class="issue"> Currently the shipping address changed algorithm in
+ <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> does not actually allow for an input parameter,
+ instead using non-specific user-provided input. This should be updated to
+ explicitly take a parameter (which may require changing <a data-link-type="biblio" href="#biblio-contact-picker" title="Contact Picker API">[contact-picker]</a>
+ as well). <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/6">[Issue #6]</a> <a class="issue-return" href="#issue-b3a9def4" title="Jump to section">↵</a></div>
    <div class="issue"> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
 itself, and needs to provide extension hooks for payment handlers to receive
 the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> from
