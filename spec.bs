@@ -166,13 +166,20 @@ For examples of concrete providers, see [[#sctn-examples]].
 
 A <dfn>native-app payment handler</dfn> is a [=payment handler=], as defined in
 [[payment-request]], that is backed by some underlying [=native payment app=]
-that can be accessed via a [=native payment app provider=].
-
-This section describes the steps the user agent MUST take when intermediating
-between a {{PaymentRequest}} object and one or more [=native payment apps=] from
-a single [=native payment app provider=].
+that can be accessed via a [=native payment app provider=]. <dfn>Native payment
+apps</dfn> are deliberately loosely defined, simply as some form of application
+that is not a web-based application as defined in
+[[web-based-payment-handler]]. This allows for user agent flexibility to
+provide access to, for example, applications that use web technologies but
+which are external to the user agent.
 
 ## Integration with [[payment-request]] ## {#sctn-integration-with-payment-request}
+
+As with all [=payment handlers=], websites utilize a {{PaymentRequest}} object
+to interact with [=native-app payment handlers=]. This section describes the
+steps the user agent MUST take when mediating between a {{PaymentRequest}}
+object and one or more [=native payment apps=] from a single [=native payment
+app provider=].
 
 ### Can make payment algorithm ### {#sctn-can-make-payment-algorithm}
 
@@ -277,7 +284,7 @@ The [=steps to respond to a payment request=] for a {{PaymentRequest}},
 
 1. Return |result|.{{NativePaymentHandlerResponse/details}}.
 
-ISSUE: [[payment-request]] needs to be updated to allow payment handlers to
+ISSUE(5): [[payment-request]] needs to be updated to allow payment handlers to
 populate the full {{PaymentResponse}} (e.g., delegated shipping and payer
 data), rather than only the {{PaymentResponse/details}}.
 
@@ -635,11 +642,7 @@ section describes that model.
 The <dfn>native payment app provider model</dfn> is an abstract functional
 model which describes the behavior of some <dfn>native payment app
 provider</dfn> (e.g., the operating system) that facilitates access to
-underlying [=native payment apps=]. <dfn>Native payment apps</dfn> are
-deliberately loosely defined, simply as some form of application that is not a
-web-based application as defined in [[web-based-payment-handler]]. This allows
-for user agent flexibility to provide access to, for example, applications that
-use web technologies but which are external to the user agent.
+underlying [=native payment apps=].
 
 Providers MAY implement and expose this abstract model in any way desired, as
 long as the normative requirements of the model are met. See
