@@ -388,7 +388,7 @@ the resolved {{PaymentDetailsUpdate}} from
 
 ## Delegating user information collection ## {#sctn-delegation}
 
-When a merchant creates a {{PaymentRequest}} with {{PaymentOptions}} that
+When a website creates a {{PaymentRequest}} with {{PaymentOptions}} that
 request data about the user, the user agent can either collect this information
 itself or it can delegate the collection of this information to the selected
 [=native-app payment handler=].
@@ -525,9 +525,6 @@ following steps:
 
     1. If |claimedOrigin| is equal to |identifier|'s [=origin=], return `true`.
 
-             ISSUE: Is this right? The |identifier| can cause a redirect, so
-             what should we be checking against?
-
     1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
         return `true`.
 
@@ -539,6 +536,12 @@ following steps:
               |identifier|, or an explicit [=set=] of allowed [=origins=].
 
 1. Return `false`.
+
+NOTE: A [=URL-based payment method identifier=] retains its string identity and
+[=origin=] as originally specified by the website or payment app, regardless of
+any same-site HTTP redirects encountered during discovery or retrieval of its
+[=payment method manifest=]. Manifest discovery redirects locate the manifest
+resource, but do not mutate the payment method identifier.
 
 ## The NativePaymentHandlerResponse dictionary ## {#sctn-nativepaymenthandlerresponse}
 
@@ -593,7 +596,7 @@ dictionary NativePaymentHandlerResponse {
 
 When a [=native payment app=] communicates an update to the transaction (such
 as a change of payment method, shipping option, or shipping address), the user
-agent provides the merchant's updated transaction details back to the native
+agent provides the website's updated transaction details back to the native
 payment app using a {{PaymentRequestDetailsUpdate}} dictionary as defined in
 [[web-based-payment-handler]].
 
@@ -796,7 +799,7 @@ dictionary fields into a native format.
 
 A [=native payment app provider=] MUST provide a method the user agent can call
 to <dfn>notify payment details not updated</dfn> in an invoked [=native payment
-app=]. When called, the provider MUST inform the invoked app that the merchant
+app=]. When called, the provider MUST inform the invoked app that the website
 made no changes to the transaction details in response to the change event.
 
 ## Indicating success of an invoked [=native payment app=] ## {#sctn-indicating-success}
