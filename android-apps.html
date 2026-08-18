@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="aa37b60744b968d0de490ed89a84455b65d1c395" name="revision">
+  <meta content="aa0524c081428f6833ebe22a628c7ec6656c844a" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2901,9 +2901,6 @@ connection</dfn> for an invoked <a data-link-type="dfn" href="https://stephenmcg
      <li data-md>
       <p><a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#inform-the-user-agent-that-the-user-has-changed-their-payment-method" id="ref-for-inform-the-user-agent-that-the-user-has-changed-their-payment-method">Inform the user agent that the user has changed their payment method</a> with
  <var>app</var>, <var>methodName</var>, and <var>methodDetails</var>.</p>
-      <p class="issue" id="issue-0aa89645"><a class="self-link" href="#issue-0aa89645"></a> Currently this algorithm only takes <var>methodDetails</var>. Taking <var>app</var>
-        makes sense, but I believe the user agent should determine
-        <var>methodName</var>.</p>
     </ol>
     <h4 class="heading settled" data-level="2.10.4" id="sctn-dynamic-updates-shipping-option-change"><span class="secno">2.10.4. </span><span class="content">Handling shipping option change</span><a class="self-link" href="#sctn-dynamic-updates-shipping-option-change"></a></h4>
     <p>When <code>changeShippingOption</code> is called on <code>IPaymentDetailsUpdateService</code> by
@@ -2921,8 +2918,6 @@ connection</dfn> for an invoked <a data-link-type="dfn" href="https://stephenmcg
      <li data-md>
       <p><a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#inform-the-user-agent-that-the-user-has-changed-their-shipping-option" id="ref-for-inform-the-user-agent-that-the-user-has-changed-their-shipping-option">Inform the user agent that the user has changed their shipping option</a> with
  <var>app</var> and <code>shippingOptionId</code>.</p>
-      <p class="issue" id="issue-b0fb252a"><a class="self-link" href="#issue-b0fb252a"></a> Currently this algorithm only takes <code>shippingOptionId</code>. Taking <var>app</var>
-        makes sense, but we’ll need to update spec.bs.</p>
     </ol>
     <h4 class="heading settled" data-level="2.10.5" id="sctn-dynamic-updates-shipping-address-change"><span class="secno">2.10.5. </span><span class="content">Handling shipping address change</span><a class="self-link" href="#sctn-dynamic-updates-shipping-address-change"></a></h4>
     <p>When <code>changeShippingAddress</code> is called on <code>IPaymentDetailsUpdateService</code> by
@@ -3728,11 +3723,6 @@ just an array of origins. <a class="issue-return" href="#issue-0d933124" title="
  we should consider removing this information entirely from isReadyToPay. <a class="issue-return" href="#issue-583d2db2" title="Jump to section">↵</a></div>
    <div class="issue"> Package name and Activity name should be formally defined as part of
         an Android payment app concept in this specification. <a class="issue-return" href="#issue-e1085e3e" title="Jump to section">↵</a></div>
-   <div class="issue"> Currently this algorithm only takes <var>methodDetails</var>. Taking <var>app</var>
-        makes sense, but I believe the user agent should determine
-        <var>methodName</var>. <a class="issue-return" href="#issue-0aa89645" title="Jump to section">↵</a></div>
-   <div class="issue"> Currently this algorithm only takes <code>shippingOptionId</code>. Taking <var>app</var>
-        makes sense, but we’ll need to update spec.bs. <a class="issue-return" href="#issue-b0fb252a" title="Jump to section">↵</a></div>
   </div>
 <script>/* Boilerplate: script-dom-helper */
 "use strict";
