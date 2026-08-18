@@ -817,21 +817,14 @@ When `changeShippingAddress` is called on `IPaymentDetailsUpdateService` by
 
 ### Updating payment details ### {#sctn-dynamic-updates-update-details}
 
-In order to [=update payment details=] for |app| with |detailsPromise|:
+In order to [=update payment details=] in an invoked [=Android payment app=],
+|app|, given a {{PaymentRequestDetailsUpdate}} dictionary, |update|:
 
-1. Upon fulfillment of |detailsPromise| with a {{PaymentRequestDetailsUpdate}}
-     |update|:
+1. Let |bundle| be the result of [=creating an Android bundle from a
+     PaymentRequestDetailsUpdate=] for |update|.
 
-    1. Let |bundle| be the result of [=creating an Android bundle from a
-         PaymentRequestDetailsUpdate=] for |update|.
-
-    1. Call `callback.updateWith(bundle)` on the active
-         `IPaymentDetailsUpdateServiceCallback`.
-
-1. Upon rejection of |detailsPromise|:
-
-    1. Call `callback.paymentDetailsNotUpdated()` on the active
-         `IPaymentDetailsUpdateServiceCallback`.
+1. Call `callback.updateWith(bundle)` on the active
+     `IPaymentDetailsUpdateServiceCallback`.
 
 ### Notifying payment details not updated ### {#sctn-dynamic-updates-not-updated}
 
@@ -882,8 +875,8 @@ a {{PaymentRequestDetailsUpdate}}, |update|:
 1. If |update|["total"] exists:
 
     1. Let |totalBundle| be a new Android Bundle object containing:
-        - `"currency"` set to |update|["total"]["amount"]["currency"]
-        - `"value"` set to |update|["total"]["amount"]["value"]
+        - `"currency"` set to |update|["total"]["currency"]
+        - `"value"` set to |update|["total"]["value"]
 
     1. Insert |totalBundle| into |bundle| with key `"total"`.
 
@@ -968,9 +961,14 @@ back to the user agent, |app| performs the following steps:
 1. Terminate |app|'s activity, e.g. via <a
      href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.
 
-To [=retrieve the converted result details=] from the payment activity's result
-Intent, |resultIntent|, with the requested {{PaymentOptions}} |paymentOptions|,
-the user agent performs the following steps:
+To [=retrieve the converted result details=] for an invoked [=Android payment
+app=], |app|:
+
+1. Let |resultIntent| be the result Intent returned when |app| [=indicated
+     success=].
+
+1. Let |paymentOptions| be the requested {{PaymentOptions}} passed when |app|
+     was [=invoke the native payment app|invoked=].
 
 1. If |resultIntent| is null or does not contain extras, return failure.
 

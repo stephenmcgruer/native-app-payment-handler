@@ -52,7 +52,7 @@ spec:url; type:dfn; for:/; text:url
 {
     "android-payment-app-provider": {
         "title": "Android Payment App Provider",
-        "href": "https://www.stephenmcgruer.com/native-app-payment-handler/android-apps.html"
+        "href": "https://stephenmcgruer.github.io/native-app-payment-handler/android-apps.html"
     }
 }
 </pre>
@@ -317,8 +317,9 @@ the payment method identifier</dfn> |identifier|:
          iteration of this loop.
 
     1. Let |webAppManifest| be the result of running the [=steps for
-         processing a web app manifest=] given |webAppManifestString|. If
-         processing fails, continue to the next iteration of this loop.
+         processing a web app manifest=] given |webAppManifestString| and
+         manifest URL |webAppManifestURL|. If processing fails, continue to the
+         next iteration of this loop.
 
     ISSUE(8): The payment method manifest spec should cache and attach the
               relevant web-app manifests to the payment method manifest, so
@@ -442,7 +443,7 @@ The [=steps to respond to a payment request=] for a {{PaymentRequest}},
 1. Let |app| be the underlying [=native payment app=] for |handler|.
 
 1. Let |result| be the result of [=retrieving the converted result details=]
-     for |app|.
+     for |app|. If |result| is failure, return failure.
 
 1. If |result|.{{NativePaymentHandlerResponse/methodName}} is not one of the
      [=payment method identifiers=] supported by |request|, or if |app| is not
@@ -574,6 +575,10 @@ When a {{PaymentRequestUpdateEvent}} or {{PaymentMethodChangeEvent}} event,
 
         1. [=Update payment details=] in |app| with |update|.
 
+    1. Else (if |detailsPromise| rejects):
+
+        1. [=Notify payment details not updated=] in |app|.
+
 1. Otherwise:
 
     1. [=Notify payment details not updated=] in |app|.
@@ -638,7 +643,7 @@ dictionary NativePaymentHandlerResponse {
   DOMString? payerName = null;
   DOMString? payerEmail = null;
   DOMString? payerPhone = null;
-  ContactAddress shippingAddress;
+  ContactAddress? shippingAddress = null;
   DOMString? shippingOption = null;
 };
 </pre>
@@ -900,9 +905,9 @@ algorithm=] from [[payment-request]].
 A [=native payment app provider=] MUST provide a way for the user agent to
 <dfn>retrieve the converted result details</dfn> for an invoked [=native
 payment app=] that has [=indicated success=]. This method returns a
-{{NativePaymentHandlerResponse}} dictionary containing the transaction result,
-converting native-app specific response data into the appropriate dictionary
-fields.
+{{NativePaymentHandlerResponse}} dictionary containing the transaction result
+(converting native-app specific response data into the appropriate dictionary
+fields), or failure if the response data is missing or invalid.
 
 ## Indicating user cancel from an invoked [=native payment app=] ## {#sctn-indicating-user-cancel}
 
