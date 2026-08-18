@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="8b21d899c301d2ac00a625a93d9668045d7a216f" name="revision">
+  <meta content="8aa4ce85bb7b3033764482c615686333a86e7d4a" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>
 /* The heading colors reference https://www.w3.org/StyleSheets/TR/2021/base.css */
@@ -2324,7 +2324,12 @@ Parts of this work may be from another specification document.  If so, those par
   <nav data-fill-with="table-of-contents" id="toc">
    <h2 class="no-num no-ref no-toc" id="contents">Table of Contents</h2>
    <ol class="toc">
-    <li><a href="#sctn-intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
+    <li>
+     <a href="#sctn-intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
+     <ol class="toc">
+      <li><a href="#sctn-arch-overview"><span class="secno">1.1</span> <span class="content">Architecture overview</span></a>
+      <li><a href="#sctn-trust-model"><span class="secno">1.2</span> <span class="content">Payment app trust model</span></a>
+     </ol>
     <li>
      <a href="#sctn-native-app-payment-handler"><span class="secno">2</span> <span class="content">Native-app payment handlers</span></a>
      <ol class="toc">
@@ -2401,10 +2406,80 @@ Parts of this work may be from another specification document.  If so, those par
     <p><em>This section is non-normative.</em></p>
     <p>This specification defines functionality allowing a native application to
 handle payment requests that originate on the web on behalf of users. Such
-applications are referred to as <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler">native-app payment handlers</a>. <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler①">Native-app payment handlers</a> are accessed via an abstract "provider", the <a data-link-type="dfn" href="#native-payment-app-provider-model" id="ref-for-native-payment-app-provider-model">native payment app provider model</a>, to avoid specifying details of specific operating
-systems or other integrations. The <a data-link-type="dfn" href="#native-payment-app-provider-model" id="ref-for-native-payment-app-provider-model①">native payment app provider model</a> has
-abstract operations which can be supported by concrete providers.</p>
-    <p>For examples of concrete providers, see <a href="#sctn-examples">§ 5 Example implementations of the native payment app provider model</a>.</p>
+applications are referred to as <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler">native-app payment handlers</a>.</p>
+    <h3 class="heading settled" data-level="1.1" id="sctn-arch-overview"><span class="secno">1.1. </span><span class="content">Architecture overview</span><a class="self-link" href="#sctn-arch-overview"></a></h3>
+    <p>Websites initiate payment requests using the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest">PaymentRequest</a></code> API defined in
+<a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>. When the user agent processes a request, it mediates
+between the merchant website and available payment handlers.</p>
+    <p>While <a data-link-type="biblio" href="#biblio-web-based-payment-handler" title="Web-based Payment Handler API">[web-based-payment-handler]</a> defines how web-based applications (such as
+Service Workers) can act as payment handlers, this specification defines the
+<a data-link-type="dfn" href="#native-payment-app-provider-model" id="ref-for-native-payment-app-provider-model">native payment app provider model</a> - an abstract interface allowing the user
+agent to discover, verify, invoke, and exchange dynamic updates with native
+applications. An abstract model is used to avoid specifying details of specific
+operating systems or other integrations; concrete providers may then support
+the abstract operations defined for the <a data-link-type="dfn" href="#native-payment-app-provider-model" id="ref-for-native-payment-app-provider-model①">native payment app provider model</a>.</p>
+    <p>For examples of concrete providers implementing the provider model, see
+<a href="#sctn-examples">§ 5 Example implementations of the native payment app provider model</a>.</p>
+    <h3 class="heading settled" data-level="1.2" id="sctn-trust-model"><span class="secno">1.2. </span><span class="content">Payment app trust model</span><a class="self-link" href="#sctn-trust-model"></a></h3>
+    <p>To protect users against spoofing and fraudulent payment apps, the user agent
+verifies that an installed native app is authorized to handle a requested
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier">URL-based payment method identifier</a> using payment method manifests
+(<a data-link-type="biblio" href="#biblio-payment-method-manifest" title="Payment Method Manifest">[payment-method-manifest]</a>) and web application manifests (<a data-link-type="biblio" href="#biblio-appmanifest" title="Web Application Manifest">[appmanifest]</a>).</p>
+    <p>Native payment apps are verified under one of two trust models:</p>
+    <ul>
+     <li data-md>
+      <p><strong>First-party (default) payment apps</strong>: The app’s <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier">claimed payment method identifier</a> matches the merchant’s requested identifier directly. The user
+agent fetches the payment method manifest for that identifier and verifies
+that the installed native application is allowed to respond to requests
+for the identifier.</p>
+    </ul>
+    <div class="example" id="example-first-party-trust">
+     <a class="self-link" href="#example-first-party-trust"></a>
+Suppose a merchant initiates a payment request for <code>https://alicepay.example/pay</code>.
+A user has an application installed on their device whose <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier①">claimed payment method identifier</a> is <code>https://alicepay.example/pay</code>.
+
+
+     <p>The user agent fetches the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest">payment method manifest</a> at
+<code>https://alicepay.example/pay</code>, which declares a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications">default
+application manifest</a> at <code>https://alicepay.example/app.json</code>. The user agent
+then verifies that the installed application matches the package identifier and
+cryptographic signing certificate fingerprints declared in that application
+manifest.</p>
+    </div>
+    <ul>
+     <li data-md>
+      <p><strong>Third-party payment apps</strong>: A payment app associated with a different origin
+that claims the right to handle the payment. This may arise, for example,
+with wallet apps that support multiple payment methods. In this scenario,
+the user agent performs a <strong>two-way trust verification</strong>:</p>
+      <ul>
+       <li data-md>
+        <p><em>Payment method authorization</em> verifies that the payment method owner
+explicitly allows handlers from the third party’s origin (via the
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins">supported origins</a> in its <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest①">payment method manifest</a>).</p>
+       <li data-md>
+        <p><em>Native app authenticity</em> verifies that the installed app is genuinely
+the authentic application from that third-party origin (and not an
+imposter app falsely claiming that origin), by checking the third
+party’s own declared <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications①">default applications</a>.</p>
+      </ul>
+    </ul>
+    <div class="example" id="example-third-party-trust">
+     <a class="self-link" href="#example-third-party-trust"></a>
+Suppose a merchant initiates a payment request for <code>https://alicepay.example/pay</code>.
+A user has a native wallet application, "BobPay", installed on their device.
+BobPay’s primary payment method is <code>https://bobpay.example/pay</code>, but it also
+claims support for handling <code>https://alicepay.example/pay</code>.
+
+
+     <p>To verify BobPay:</p>
+     <p><em>Payment method authorization</em>: The user agent fetches the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest②">payment method manifest</a> for <code>https://alicepay.example/pay</code> and checks that its <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins①">supported origins</a> include <code>https://bobpay.example</code> (or is <code>'*'</code>).</p>
+     <p><em>Native app authenticity</em>: To ensure an imposter application is not falsely
+claiming the <code>https://bobpay.example</code> origin, the user agent fetches the
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest③">payment method manifest</a> for <code>https://bobpay.example/pay</code> and validates the
+installed application’s certificate fingerprints using BobPay’s declared
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications②"> default application manifest</a>.</p>
+    </div>
    </div>
    <h2 class="heading settled" data-level="2" id="sctn-native-app-payment-handler"><span class="secno">2. </span><span class="content">Native-app payment handlers</span><a class="self-link" href="#sctn-native-app-payment-handler"></a></h2>
    <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="native-app-payment-handler">native-app payment handler</dfn> is a <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-payment-handler" id="ref-for-dfn-payment-handler">payment handler</a>, as defined in
@@ -2416,9 +2491,9 @@ that is not a web-based application as defined in
 provide access to, for example, applications that use web technologies but
 which are external to the user agent.</p>
    <h3 class="heading settled" data-level="2.1" id="sctn-integration-with-payment-request"><span class="secno">2.1. </span><span class="content">Integration with <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a></span><a class="self-link" href="#sctn-integration-with-payment-request"></a></h3>
-   <p>As with all <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-payment-handler" id="ref-for-dfn-payment-handler①">payment handlers</a>, websites utilize a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest">PaymentRequest</a></code> object
-to interact with <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler②">native-app payment handlers</a>. This section describes the
-steps the user agent MUST take when mediating between a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①">PaymentRequest</a></code>
+   <p>As with all <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-payment-handler" id="ref-for-dfn-payment-handler①">payment handlers</a>, websites utilize a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①">PaymentRequest</a></code> object
+to interact with <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler①">native-app payment handlers</a>. This section describes the
+steps the user agent MUST take when mediating between a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest②">PaymentRequest</a></code>
 object and one or more <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps①">native payment apps</a> from a single <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider①">native payment app provider</a>.</p>
    <h4 class="heading settled" data-level="2.1.1" id="sctn-can-make-payment-algorithm"><span class="secno">2.1.1. </span><span class="content">Can make payment algorithm</span><a class="self-link" href="#sctn-can-make-payment-algorithm"></a></h4>
    <p>When performing step 8.2. of the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-can-make-payment-algorithm" id="ref-for-dfn-can-make-payment-algorithm">can make payment algorithm</a> from
@@ -2444,7 +2519,7 @@ steps:</p>
    </ol>
    <h4 class="heading settled" data-level="2.1.2" id="sctn-show-method"><span class="secno">2.1.2. </span><span class="content">The show() method</span><a class="self-link" href="#sctn-show-method"></a></h4>
    <p>When performing step 17.5. of the <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest-show" id="ref-for-dom-paymentrequest-show">PaymentRequest.show()</a></code>
-method for a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest②">PaymentRequest</a></code>, which constructs the list of registered
+method for a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest③">PaymentRequest</a></code>, which constructs the list of registered
 payment handlers for a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-pmi" id="ref-for-dfn-pmi①">payment method identifier</a> <var>identifier</var>, the user
 agent MUST perform the following steps:</p>
    <ol>
@@ -2458,15 +2533,15 @@ agent MUST perform the following steps:</p>
        <p>For each <var>paymentApp</var> in <var>paymentApps</var>:</p>
        <ol>
         <li data-md>
-         <p>If <var>paymentApp</var> <a data-link-type="dfn" href="#is-allowed-to-handle-the-payment-method-identifier" id="ref-for-is-allowed-to-handle-the-payment-method-identifier①">is allowed to handle the payment method identifier</a> <var>identifier</var>, create a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler③">native-app payment handler</a>
+         <p>If <var>paymentApp</var> <a data-link-type="dfn" href="#is-allowed-to-handle-the-payment-method-identifier" id="ref-for-is-allowed-to-handle-the-payment-method-identifier①">is allowed to handle the payment method identifier</a> <var>identifier</var>, create a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler②">native-app payment handler</a>
   for <var>paymentApp</var> and append it to the list of registered payment
   handlers.</p>
        </ol>
      </ol>
    </ol>
-   <p>When a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler④">native-app payment handler</a> is selected by the user (steps 19-24 of
+   <p>When a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler③">native-app payment handler</a> is selected by the user (steps 19-24 of
 the show() algorithm), the user agent MUST <a data-link-type="dfn" href="#invoke-the-native-payment-app" id="ref-for-invoke-the-native-payment-app">invoke the native payment app</a>
-corresponding to the selected <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑤">native-app payment handler</a>, passing the
+corresponding to the selected <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler④">native-app payment handler</a>, passing the
 transaction details and any requested <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions">PaymentOptions</a></code>.</p>
    <p class="issue" id="issue-ecbfc29b"><a class="self-link" href="#issue-ecbfc29b"></a> The <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> spec is quite vague about what data is or
 should be passed to an invoked payment handler. We should be more specific. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/1">[Issue #1]</a></p>
@@ -2474,7 +2549,7 @@ should be passed to an invoked payment handler. We should be more specific. <a h
 user agent, either by <a data-link-type="dfn" href="#indicate-success" id="ref-for-indicate-success">indicating success</a>, <a data-link-type="dfn" href="#indicate-user-cancellation" id="ref-for-indicate-user-cancellation">indicating user cancellation</a>,
 or <a data-link-type="dfn" href="#indicate-internal-error" id="ref-for-indicate-internal-error">indicating internal error</a>.</p>
    <h4 class="heading settled" data-level="2.1.3" id="sctn-steps-to-check-if-a-payment-can-be-made"><span class="secno">2.1.3. </span><span class="content">Steps to check if a payment can be made</span><a class="self-link" href="#sctn-steps-to-check-if-a-payment-can-be-made"></a></h4>
-   <p>The <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-steps-to-check-if-a-payment-can-be-made" id="ref-for-dfn-steps-to-check-if-a-payment-can-be-made">steps to check if a payment can be made</a> for a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑥">native-app payment handler</a> and JSON-serialized <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethoddata-data" id="ref-for-dom-paymentmethoddata-data">PaymentMethodData.data</a></code>
+   <p>The <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-steps-to-check-if-a-payment-can-be-made" id="ref-for-dfn-steps-to-check-if-a-payment-can-be-made">steps to check if a payment can be made</a> for a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑤">native-app payment handler</a> and JSON-serialized <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethoddata-data" id="ref-for-dom-paymentmethoddata-data">PaymentMethodData.data</a></code>
 object are:</p>
    <ol>
     <li data-md>
@@ -2485,8 +2560,8 @@ handler’s claims in <a href="#sctn-show-method">§ 2.1.2 The show() method</
 identifier. No additional filtering is needed based on the serialized
 <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethoddata-data" id="ref-for-dom-paymentmethoddata-data①">data</a></code>.</p>
    <h4 class="heading settled" data-level="2.1.4" id="sctn-steps-to-respond-to-a-payment-request"><span class="secno">2.1.4. </span><span class="content">Steps to respond to a payment request</span><a class="self-link" href="#sctn-steps-to-respond-to-a-payment-request"></a></h4>
-   <p>The <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-steps-to-respond-to-a-payment-request" id="ref-for-dfn-steps-to-respond-to-a-payment-request">steps to respond to a payment request</a> for a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest③">PaymentRequest</a></code>,
-<var>request</var>, and a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑦">native-app payment handler</a>, <var>handler</var>, are:</p>
+   <p>The <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-steps-to-respond-to-a-payment-request" id="ref-for-dfn-steps-to-respond-to-a-payment-request">steps to respond to a payment request</a> for a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest④">PaymentRequest</a></code>,
+<var>request</var>, and a <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑥">native-app payment handler</a>, <var>handler</var>, are:</p>
    <ol>
     <li data-md>
      <p>Let <var>app</var> be the underlying <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②">native payment app</a> for <var>handler</var>.</p>
@@ -2549,7 +2624,7 @@ data), rather than only the <code class="idl"><a data-link-type="idl" href="http
 <code>null</code>), the user agent MUST run the following steps:</p>
    <ol>
     <li data-md>
-     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest④">PaymentRequest</a></code> for <var>app</var>.</p>
+     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑤">PaymentRequest</a></code> for <var>app</var>.</p>
     <li data-md>
      <p>If <var>methodName</var> is not one of the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-pmi" id="ref-for-dfn-pmi④">payment method identifiers</a> supported by
  <var>request</var>, or if <var>app</var> is not <a data-link-type="dfn" href="#is-allowed-to-handle-the-payment-method-identifier" id="ref-for-is-allowed-to-handle-the-payment-method-identifier③">allowed to handle the payment method identifier</a> <var>methodName</var>:</p>
@@ -2575,7 +2650,7 @@ identifiers authorized by manifests). The native payment app explicitly supplies
 user agent MUST run the following steps:</p>
    <ol>
     <li data-md>
-     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑤">PaymentRequest</a></code> for <var>app</var>.</p>
+     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑥">PaymentRequest</a></code> for <var>app</var>.</p>
     <li data-md>
      <p>Run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-shipping-option-changed-algorithm" id="ref-for-dfn-shipping-option-changed-algorithm">shipping option changed algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> on
  <var>request</var>, with <var>shippingOption</var> as the user-provided input. Let <var>event</var> be
@@ -2588,7 +2663,7 @@ user agent MUST run the following steps:</p>
 <var>shippingAddress</var>, the user agent MUST run the following steps:</p>
    <ol>
     <li data-md>
-     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑥">PaymentRequest</a></code> for <var>app</var>.</p>
+     <p>Let <var>request</var> be the active <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑦">PaymentRequest</a></code> for <var>app</var>.</p>
     <li data-md>
      <p>Run the <a data-link-type="dfn" href="https://w3c.github.io/payment-request/#dfn-shipping-address-changed-algorithm" id="ref-for-dfn-shipping-address-changed-algorithm">shipping address changed algorithm</a> from <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> on
  <var>request</var> with <var>shippingAddress</var>. Let <var>event</var> be the dispatched
@@ -2603,9 +2678,9 @@ user agent MUST run the following steps:</p>
    </ol>
    <h4 class="heading settled" data-level="2.1.8" id="sctn-propagate-payment-details-update"><span class="secno">2.1.8. </span><span class="content">Propagating payment detail updates</span><a class="self-link" href="#sctn-propagate-payment-details-update"></a></h4>
    <p>When a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent" id="ref-for-dom-paymentrequestupdateevent②">PaymentRequestUpdateEvent</a></code> or <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentmethodchangeevent" id="ref-for-dom-paymentmethodchangeevent①">PaymentMethodChangeEvent</a></code> event,
-<var>event</var>, is dispatched on a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑦">PaymentRequest</a></code> <var>request</var> for an invoked
+<var>event</var>, is dispatched on a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑧">PaymentRequest</a></code> <var>request</var> for an invoked
 <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑥">native payment app</a> <var>app</var>, the user agent MUST run the following steps to
-<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="propagate-payment-detail-updates">propagate payment detail updates</dfn>:</p>
+<dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="propagate-payment-detail-updates">propagate payment detail updates</dfn> to <var>app</var>:</p>
    <ol>
     <li data-md>
      <p>If <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith" id="ref-for-dom-paymentrequestupdateevent-updatewith">updateWith(detailsPromise)</a></code> was
@@ -2637,12 +2712,12 @@ user agent MUST run the following steps:</p>
    <p class="issue" id="issue-74eb3ad9"><a class="self-link" href="#issue-74eb3ad9"></a> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
 itself, and needs to provide extension hooks for payment handlers to receive
 the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate" id="ref-for-dom-paymentdetailsupdate②">PaymentDetailsUpdate</a></code> from
-<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith" id="ref-for-dom-paymentrequestupdateevent-updatewith①">updateWith()</a></code>.</p>
+<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith" id="ref-for-dom-paymentrequestupdateevent-updatewith①">updateWith()</a></code>. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/7">[Issue #7]</a></p>
    <h3 class="heading settled" data-level="2.2" id="sctn-delegation"><span class="secno">2.2. </span><span class="content">Delegating user information collection</span><a class="self-link" href="#sctn-delegation"></a></h3>
-   <p>When a website creates a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑧">PaymentRequest</a></code> with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions①">PaymentOptions</a></code> that
+   <p>When a website creates a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑨">PaymentRequest</a></code> with <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions①">PaymentOptions</a></code> that
 request data about the user, the user agent can either collect this information
 itself or it can delegate the collection of this information to the selected
-<a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑧">native-app payment handler</a>.</p>
+<a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑦">native-app payment handler</a>.</p>
 <pre class="def highlight idl"><c- b>enum</c-> <dfn class="dfn-paneled idl-code" data-dfn-type="enum" data-export id="enumdef-paymentdelegation"><code><c- g>PaymentDelegation</c-></code></dfn> {
   <dfn class="dfn-paneled idl-code" data-dfn-for="PaymentDelegation" data-dfn-type="enum-value" data-export id="dom-paymentdelegation-shippingaddress"><code><c- s>"shippingAddress"</c-></code></dfn>,
   <dfn class="dfn-paneled idl-code" data-dfn-for="PaymentDelegation" data-dfn-type="enum-value" data-export id="dom-paymentdelegation-payername"><code><c- s>"payerName"</c-></code></dfn>,
@@ -2650,7 +2725,7 @@ itself or it can delegate the collection of this information to the selected
   <dfn class="dfn-paneled idl-code" data-dfn-for="PaymentDelegation" data-dfn-type="enum-value" data-export id="dom-paymentdelegation-payeremail"><code><c- s>"payerEmail"</c-></code></dfn>
 };
 </pre>
-   <p>Given a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest⑨">PaymentRequest</a></code>, <var>request</var>, and a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑦">native payment app</a>, <var>app</var>:</p>
+   <p>Given a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①⓪">PaymentRequest</a></code>, <var>request</var>, and a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑦">native payment app</a>, <var>app</var>:</p>
    <ol>
     <li data-md>
      <p>The user agent <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="delegates-shipping-address-collection">delegates shipping address collection</dfn> to <var>app</var> if
@@ -2673,33 +2748,39 @@ itself or it can delegate the collection of this information to the selected
  <code>true</code> and <var>app</var>’s <a data-link-type="dfn" href="#supported-delegations" id="ref-for-supported-delegations③">supported delegations</a> contains
  <code class="idl"><a data-link-type="idl" href="#dom-paymentdelegation-payerphone" id="ref-for-dom-paymentdelegation-payerphone">"payerPhone"</a></code>.</p>
    </ol>
+   <p class="issue" id="issue-1d87dc0e"><a class="self-link" href="#issue-1d87dc0e"></a> Delegation should really be a concept defined in <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>
+and then implemented by this specification, not both defined and implemented
+here. This would then allow <a data-link-type="biblio" href="#biblio-web-based-payment-handler" title="Web-based Payment Handler API">[web-based-payment-handler]</a> to also rely on the
+central <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> definition. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a></p>
    <h3 class="heading settled" data-level="2.3" id="sctn-verifying-app-claims"><span class="secno">2.3. </span><span class="content">Verifying native-app payment handler claims</span><a class="self-link" href="#sctn-verifying-app-claims"></a></h3>
-   <p><a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑧">Native payment apps</a> have both a <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier">claimed payment method identifier</a> and a
+   <p><a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑧">Native payment apps</a> have both a <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier②">claimed payment method identifier</a> and a
 set of <a data-link-type="dfn" href="#claimed-third-party-origins" id="ref-for-claimed-third-party-origins">claimed third-party origins</a>, which the app claims it is authorized
 to act on behalf of. Verification of these claims relies upon the payment and
 application manifests specified in <a data-link-type="biblio" href="#biblio-payment-method-manifest" title="Payment Method Manifest">[payment-method-manifest]</a> and
 <a data-link-type="biblio" href="#biblio-appmanifest" title="Web Application Manifest">[appmanifest]</a>.</p>
+   <p class="note" role="note"><span class="marker">NOTE:</span> See <a href="#sctn-trust-model">§ 1.2 Payment app trust model</a> for an overview of the first-party and
+third-party verification trust models.</p>
    <p class="issue" id="issue-2af3b0e2"><a class="self-link" href="#issue-2af3b0e2"></a> Should we allow for alternate methods to verify the claims, to
 support cases like payment apps built into the browser? <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/2">[Issue #2]</a></p>
    <p>Given a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-pmi" id="ref-for-dfn-pmi⑤">payment method identifier</a>, <var>identifier</var>, and a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps⑨">native payment app</a>, <var>app</var>, the following steps determine if <var>app</var> <dfn class="dfn-paneled" data-dfn-type="dfn" data-lt="is allowed to handle the payment method identifier" data-noexport id="is-allowed-to-handle-the-payment-method-identifier">is allowed to handle
 the payment method identifier</dfn> <var>identifier</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>identifier</var> is not a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier">URL-based payment method identifier</a>, return
+     <p>If <var>identifier</var> is not a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">URL-based payment method identifier</a>, return
  <code>false</code>.</p>
     <li data-md>
      <p>Let <var>paymentMethodManifest</var> be the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#ingest-payment-method-manifests" id="ref-for-ingest-payment-method-manifests">ingested</a> and <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest" id="ref-for-parsed-payment-method-manifest">parsed</a>
- <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest">payment method manifest</a> for <var>identifier</var>. If ingestion or parsing
+ <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest④">payment method manifest</a> for <var>identifier</var>. If ingestion or parsing
  fails, return <code>false</code>.</p>
     <li data-md>
-     <p>Let <var>claimedIdentifier</var> be the <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier①">claimed payment method identifier</a>
+     <p>Let <var>claimedIdentifier</var> be the <a data-link-type="dfn" href="#claimed-payment-method-identifier" id="ref-for-claimed-payment-method-identifier③">claimed payment method identifier</a>
 for <var>app</var>.</p>
     <li data-md>
      <p>If <var>claimedIdentifier</var> is equal to <var>identifier</var>, then:</p>
      <ol>
       <li data-md>
        <p>For each <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url">URL</a> <var>webAppManifestURL</var> in <var>paymentMethodManifest</var>’s
- <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications">default applications</a>:</p>
+ <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications③">default applications</a>:</p>
        <ol>
         <li data-md>
          <p>Let <var>webAppManifestString</var> be the result of <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#fetch-the-web-app-manifest-for-a-default-payment-app" id="ref-for-fetch-the-web-app-manifest-for-a-default-payment-app">fetching the web app manifest</a>
@@ -2709,9 +2790,9 @@ for <var>app</var>.</p>
          <p>Let <var>webAppManifest</var> be the result of running the <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-processing-a-manifest" id="ref-for-dfn-processing-a-manifest">steps for processing a web app manifest</a> given <var>webAppManifestString</var>. If
  processing fails, continue to the next iteration of this loop.</p>
        </ol>
-       <p class="issue" id="issue-521e2804"><a class="self-link" href="#issue-521e2804"></a> The payment method manifest spec should really cache and attach
-       the relevant web-app manifests to the payment method manifest,
-       so we don’t have to do this.</p>
+       <p class="issue" id="issue-1d80df31"><a class="self-link" href="#issue-1d80df31"></a> The payment method manifest spec should cache and attach the
+          relevant web-app manifests to the payment method manifest, so
+          we don’t have to do this. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a></p>
        <ol>
         <li data-md>
          <p>If <var>app</var> <a data-link-type="dfn" href="#is-a-related-application" id="ref-for-is-a-related-application">is a related application</a> for <var>webAppManifest</var>, return
@@ -2730,11 +2811,11 @@ for <var>app</var>.</p>
 return <code>false</code>.</p>
       <li data-md>
        <p>Let <var>claimedPaymentMethodManifest</var> be the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#ingest-payment-method-manifests" id="ref-for-ingest-payment-method-manifests①">ingested</a> and <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest" id="ref-for-parsed-payment-method-manifest①">parsed</a>
-<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest①">payment method manifest</a> for <var>claimedIdentifier</var>. If ingestion or
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑤">payment method manifest</a> for <var>claimedIdentifier</var>. If ingestion or
 parsing fails, return <code>false</code>.</p>
       <li data-md>
        <p>For each <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url①">URL</a> <var>webAppManifestURL</var> in <var>claimedPaymentMethodManifest</var>’s
- <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications①">default applications</a>:</p>
+ <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications④">default applications</a>:</p>
        <ol>
         <li data-md>
          <p>Let <var>webAppManifestString</var> be the result of <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#fetch-the-web-app-manifest-for-a-default-payment-app" id="ref-for-fetch-the-web-app-manifest-for-a-default-payment-app①">fetching the web app manifest</a>
@@ -2744,9 +2825,9 @@ parsing fails, return <code>false</code>.</p>
          <p>Let <var>webAppManifest</var> be the result of running the <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-processing-a-manifest" id="ref-for-dfn-processing-a-manifest①">steps for processing a web app manifest</a> given <var>webAppManifestString</var>. If
  processing fails, continue to the next iteration of this loop.</p>
        </ol>
-       <p class="issue" id="issue-521e2804①"><a class="self-link" href="#issue-521e2804①"></a> The payment method manifest spec should really cache and attach
-       the relevant web-app manifests to the payment method manifest,
-       so we don’t have to do this.</p>
+       <p class="issue" id="issue-1d80df31①"><a class="self-link" href="#issue-1d80df31①"></a> The payment method manifest spec should cache and attach the
+          relevant web-app manifests to the payment method manifest, so
+          we don’t have to do this. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a></p>
        <ol>
         <li data-md>
          <p>If <var>app</var> <a data-link-type="dfn" href="#is-a-related-application" id="ref-for-is-a-related-application①">is a related application</a> for <var>webAppManifest</var>, return
@@ -2765,7 +2846,7 @@ following steps:</p>
    <ol>
     <li data-md>
      <p>Let <var>paymentMethodManifest</var> be the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#ingest-payment-method-manifests" id="ref-for-ingest-payment-method-manifests②">ingested</a> and <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest" id="ref-for-parsed-payment-method-manifest②">parsed</a>
- <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest②">payment method manifest</a> for <var>identifier</var>. If ingesting or parsing
+ <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑥">payment method manifest</a> for <var>identifier</var>. If ingesting or parsing
  fails, return <code>false</code>.</p>
     <li data-md>
      <p>For each <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin①">origin</a> <var>claimedOrigin</var> in <var>claimedOrigins</var>:</p>
@@ -2773,22 +2854,22 @@ following steps:</p>
       <li data-md>
        <p>If <var>claimedOrigin</var> is equal to <var>identifier</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin②">origin</a>, return <code>true</code>.</p>
       <li data-md>
-       <p>If <var>paymentMethodManifest</var>’s <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins">supported origins</a> is the string <code>'*'</code>,
+       <p>If <var>paymentMethodManifest</var>’s <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins②">supported origins</a> is the string <code>'*'</code>,
 return <code>true</code>.</p>
       <li data-md>
-       <p>If <var>paymentMethodManifest</var>’s <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins①">supported origins</a> contains
+       <p>If <var>paymentMethodManifest</var>’s <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins③">supported origins</a> contains
 <var>claimedOrigin</var>, return <code>true</code>.</p>
-       <p class="note" role="note"><span class="marker">NOTE:</span> The <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins②">supported origins</a> can either be the string "*",
+       <p class="note" role="note"><span class="marker">NOTE:</span> The <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins" id="ref-for-parsed-payment-method-manifest-supported-origins④">supported origins</a> can either be the string "*",
       indicating that any <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin③">origin</a> is allowed to handle this
       <var>identifier</var>, or an explicit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①">set</a> of allowed <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin④">origins</a>.</p>
      </ol>
     <li data-md>
      <p>Return <code>false</code>.</p>
    </ol>
-   <p class="note" role="note"><span class="marker">NOTE:</span> A <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier①">URL-based payment method identifier</a> retains its string identity and
+   <p class="note" role="note"><span class="marker">NOTE:</span> A <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier②">URL-based payment method identifier</a> retains its string identity and
 <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin⑤">origin</a> as originally specified by the website or payment app, regardless of
 any same-site HTTP redirects encountered during discovery or retrieval of its
-<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest③">payment method manifest</a>. Manifest discovery redirects locate the manifest
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑦">payment method manifest</a>. Manifest discovery redirects locate the manifest
 resource, but do not mutate the payment method identifier.</p>
    <h3 class="heading settled" data-level="2.5" id="sctn-nativepaymenthandlerresponse"><span class="secno">2.5. </span><span class="content">The NativePaymentHandlerResponse dictionary</span><a class="self-link" href="#sctn-nativepaymenthandlerresponse"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps①⓪">native payment app</a> provides its transaction response to the user agent using
@@ -2895,7 +2976,7 @@ PaymentRequestDetailsUpdate</dfn>:</p>
      <p>Return <var>update</var>.</p>
    </ol>
    <h2 class="heading settled" data-level="3" id="sctn-native-payment-app-model"><span class="secno">3. </span><span class="content">Native payment app provider model</span><a class="self-link" href="#sctn-native-payment-app-model"></a></h2>
-   <p>The <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑨">native-app payment handler</a> API relies on an abstract functional model
+   <p>The <a data-link-type="dfn" href="#native-app-payment-handler" id="ref-for-native-app-payment-handler⑧">native-app payment handler</a> API relies on an abstract functional model
 through which the user agent can interact with <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps①③">native payment apps</a>. This
 section describes that model.</p>
    <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="native-payment-app-provider-model">native payment app provider model</dfn> is an abstract functional
@@ -2912,8 +2993,8 @@ method returns a list of <a data-link-type="dfn" href="#native-payment-apps" id=
    <h3 class="heading settled" data-level="3.2" id="sctn-claiming-method-url"><span class="secno">3.2. </span><span class="content">Claiming a payment method identifier URL</span><a class="self-link" href="#sctn-claiming-method-url"></a></h3>
    <p>Given a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps①⑦">native payment app</a>, <var>app</var>, a <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider⑤">native payment app provider</a> MUST
 provide a method the user agent can call to get the <dfn class="dfn-paneled" data-dfn-type="dfn" data-lt="claimed payment method identifier" data-noexport id="claimed-payment-method-identifier">claimed payment method
-identifier</dfn> for <var>app</var>. This method returns a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier②">url-based payment method identifier</a> that <var>app</var> claims it is associated with - that is, a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-pmi" id="ref-for-dfn-pmi⑦">payment method identifier</a> whose <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest④">payment method manifest</a> includes at least one
-<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications②">default application</a> pointing to a <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest">web app manifest</a>
+identifier</dfn> for <var>app</var>. This method returns a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier③">url-based payment method identifier</a> that <var>app</var> claims it is associated with - that is, a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-pmi" id="ref-for-dfn-pmi⑦">payment method identifier</a> whose <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑧">payment method manifest</a> includes at least one
+<a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications" id="ref-for-parsed-payment-method-manifest-default-applications⑤">default application</a> pointing to a <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest">web app manifest</a>
 that has <var>app</var> as a <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#related_applications-member" id="ref-for-related_applications-member">related application</a>.</p>
    <p>The user agent MUST verify that the claim is valid (see
 <a href="#sctn-verifying-app-claims">§ 2.3 Verifying native-app payment handler claims</a>).</p>
@@ -2934,15 +3015,15 @@ delegations</dfn> for <var>app</var>. This method returns a <a data-link-type="d
 to determine if a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②②">native payment app</a> <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="is-a-related-application">is a related application</dfn>
 for a <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest①">web app manifest</a>. The <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider⑨">native payment app provider</a> MAY utilize the information contained in the <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#related_applications-member" id="ref-for-related_applications-member①">related applications</a> member of the manifest, such as the <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-id" id="ref-for-dfn-id">id</a>, <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-platform" id="ref-for-dfn-platform">platform</a>, or
 <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-fingerprints" id="ref-for-dfn-fingerprints">fingerprints</a> of each specified <a data-link-type="dfn" href="https://wicg.github.io/manifest-incubations/#dfn-external-application-resource" id="ref-for-dfn-external-application-resource">external application resource</a>.</p>
-   <h3 class="heading settled" data-level="3.6" id="sctn-hasenrolled-instrument"><span class="secno">3.6. </span><span class="content">Determining if a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②③">native payment app</a> can handle a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①⓪">PaymentRequest</a></code></span><a class="self-link" href="#sctn-hasenrolled-instrument"></a></h3>
+   <h3 class="heading settled" data-level="3.6" id="sctn-hasenrolled-instrument"><span class="secno">3.6. </span><span class="content">Determining if a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②③">native payment app</a> can handle a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①①">PaymentRequest</a></code></span><a class="self-link" href="#sctn-hasenrolled-instrument"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider①⓪">native payment app provider</a> MUST provide a method the user agent can call
 to determine if a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②④">native payment app</a> is <dfn class="dfn-paneled" data-dfn-type="dfn" data-export data-lt="able to handle a payment request" id="able-to-handle-a-payment-request">able to handle a
-payment request</dfn> for a given <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①①">PaymentRequest</a></code> <var>request</var>. In order to
+payment request</dfn> for a given <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①②">PaymentRequest</a></code> <var>request</var>. In order to
 support this functionality, the user agent MAY pass information about <var>request</var>
 to the <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②⑤">native payment app</a>, subject to the privacy considerations in
 <a href="#sctn-tracking-risks">§ 4.1 Tracking risks via readiness checks</a>.</p>
    <p class="note" role="note"><span class="marker">NOTE:</span> This functionality is used to answer the <code>hasEnrolledInstrument</code> method
-on <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①②">PaymentRequest</a></code>, which was removed from the <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>
+on <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①③">PaymentRequest</a></code>, which was removed from the <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>
 specification but is still shipping in multiple browser engines.</p>
    <h3 class="heading settled" data-level="3.7" id="sctn-invoking"><span class="secno">3.7. </span><span class="content">Invoking a <a data-link-type="dfn" href="#native-payment-apps" id="ref-for-native-payment-apps②⑥">native payment app</a></span><a class="self-link" href="#sctn-invoking"></a></h3>
    <p>A <a data-link-type="dfn" href="#native-payment-app-provider" id="ref-for-native-payment-app-provider①①">native payment app provider</a> MUST provide a method the user agent can call
@@ -3050,14 +3131,14 @@ interaction or consent.</p>
       <p>User agents MUST NOT perform background readiness checks with native payment
 apps when operating in private browsing modes.</p>
       <p>TODO: We should add text for this somewhere in the spec, but since
-      hasEnrolledInstrument is gone from <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①③">PaymentRequest</a></code> there isn’t
+      hasEnrolledInstrument is gone from <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequest" id="ref-for-dom-paymentrequest①④">PaymentRequest</a></code> there isn’t
       currently a place to hang it from.</p>
     </ul>
     <p>TODO: Add more requirements, and note where implementations (Chromium) don’t
 meet them today.</p>
     <h3 class="heading settled" data-level="4.2" id="sctn-spoofing"><span class="secno">4.2. </span><span class="content">Payment method verification and spoofing prevention</span><a class="self-link" href="#sctn-spoofing"></a></h3>
-    <p>User agents MUST NOT allow a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier③">URL-based payment method identifier</a> to claim a
-native app that it doesn’t own, or allow a native app to claim a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier④">URL-based payment method identifier</a> that it doesn’t own. Failure to enforce these
+    <p>User agents MUST NOT allow a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier④">URL-based payment method identifier</a> to claim a
+native app that it doesn’t own, or allow a native app to claim a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier⑤">URL-based payment method identifier</a> that it doesn’t own. Failure to enforce these
 boundaries can lead to spoofing attacks where a domain claims ownership of an
 unrelated payment app, or an application claims ownership of an unrelated
 origin. Both of these scenarios can lead to defrauding users.</p>
@@ -3068,8 +3149,8 @@ origin. Both of these scenarios can lead to defrauding users.</p>
 native apps against the information present in the <a data-link-type="dfn" href="https://w3c.github.io/manifest/#dfn-manifest" id="ref-for-dfn-manifest②">application manifest</a>, most importantly the package identifier and cryptographic
 signing certificate fingerprints.</p>
      <li data-md>
-      <p>Native apps claiming support for a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier⑤">URL-based payment method identifier</a>
-MUST be validated against the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑤">payment method manifest</a> for that
+      <p>Native apps claiming support for a <a data-link-type="dfn" href="https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier" id="ref-for-dfn-url-based-payment-method-identifier⑥">URL-based payment method identifier</a>
+MUST be validated against the <a data-link-type="dfn" href="https://w3c.github.io/payment-method-manifest/#payment-method-manifest" id="ref-for-payment-method-manifest⑨">payment method manifest</a> for that
 identifier.</p>
     </ul>
     <h3 class="heading settled" data-level="4.3" id="sctn-todo-other"><span class="secno">4.3. </span><span class="content">Other privacy considerations</span><a class="self-link" href="#sctn-todo-other"></a></h3>
@@ -3487,15 +3568,19 @@ data), rather than only the <code class="idl"><a data-link-type="idl" href="http
    <div class="issue"> <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> assumes the user agent renders the payment UI
 itself, and needs to provide extension hooks for payment handlers to receive
 the resolved <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentdetailsupdate">PaymentDetailsUpdate</a></code> from
-<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith">updateWith()</a></code>. <a class="issue-return" href="#issue-74eb3ad9" title="Jump to section">↵</a></div>
+<code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentrequestupdateevent-updatewith">updateWith()</a></code>. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/7">[Issue #7]</a> <a class="issue-return" href="#issue-74eb3ad9" title="Jump to section">↵</a></div>
+   <div class="issue"> Delegation should really be a concept defined in <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a>
+and then implemented by this specification, not both defined and implemented
+here. This would then allow <a data-link-type="biblio" href="#biblio-web-based-payment-handler" title="Web-based Payment Handler API">[web-based-payment-handler]</a> to also rely on the
+central <a data-link-type="biblio" href="#biblio-payment-request" title="Payment Request API">[payment-request]</a> definition. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a> <a class="issue-return" href="#issue-1d87dc0e" title="Jump to section">↵</a></div>
    <div class="issue"> Should we allow for alternate methods to verify the claims, to
 support cases like payment apps built into the browser? <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/2">[Issue #2]</a> <a class="issue-return" href="#issue-2af3b0e2" title="Jump to section">↵</a></div>
-   <div class="issue"> The payment method manifest spec should really cache and attach
-       the relevant web-app manifests to the payment method manifest,
-       so we don’t have to do this. <a class="issue-return" href="#issue-521e2804" title="Jump to section">↵</a></div>
-   <div class="issue"> The payment method manifest spec should really cache and attach
-       the relevant web-app manifests to the payment method manifest,
-       so we don’t have to do this. <a class="issue-return" href="#issue-521e2804①" title="Jump to section">↵</a></div>
+   <div class="issue"> The payment method manifest spec should cache and attach the
+          relevant web-app manifests to the payment method manifest, so
+          we don’t have to do this. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a> <a class="issue-return" href="#issue-1d80df31" title="Jump to section">↵</a></div>
+   <div class="issue"> The payment method manifest spec should cache and attach the
+          relevant web-app manifests to the payment method manifest, so
+          we don’t have to do this. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/8">[Issue #8]</a> <a class="issue-return" href="#issue-1d80df31①" title="Jump to section">↵</a></div>
    <div class="issue"> This algorithm should probably exist in <a data-link-type="biblio" href="#biblio-payment-method-manifest" title="Payment Method Manifest">[payment-method-manifest]</a>
           rather than here. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/3">[Issue #3]</a> <a class="issue-return" href="#issue-d4135f4c" title="Jump to section">↵</a></div>
    <div class="issue"> We should speak to the privacy issues in a privacy section. <a href="https://github.com/stephenmcgruer/native-app-payment-handler/issues/4">[Issue #4]</a> <a class="issue-return" href="#issue-c1ea8b83" title="Jump to section">↵</a></div>
@@ -3711,7 +3796,7 @@ let dfnPanelData = {
 "0dda6c5d": {"dfnID":"0dda6c5d","dfnText":"related applications","external":true,"refSections":[{"refs":[{"id":"ref-for-related_applications-member"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-related_applications-member\u2460"}],"title":"3.5. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#related_applications-member"},
 "0eaeb317": {"dfnID":"0eaeb317","dfnText":"paymentMethodErrors","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsupdate-paymentmethoderrors"},{"id":"ref-for-dom-paymentdetailsupdate-paymentmethoderrors\u2460"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsupdate-paymentmethoderrors"},
 "1243a891": {"dfnID":"1243a891","dfnText":"exist","external":true,"refSections":[{"refs":[{"id":"ref-for-map-exists"},{"id":"ref-for-map-exists\u2460"},{"id":"ref-for-map-exists\u2461"},{"id":"ref-for-map-exists\u2462"},{"id":"ref-for-map-exists\u2463"},{"id":"ref-for-map-exists\u2464"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://infra.spec.whatwg.org/#map-exists"},
-"14206c1e": {"dfnID":"14206c1e","dfnText":"default applications","external":true,"refSections":[{"refs":[{"id":"ref-for-parsed-payment-method-manifest-default-applications"},{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2460"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2461"}],"title":"3.2. Claiming a payment method identifier URL"}],"url":"https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications"},
+"14206c1e": {"dfnID":"14206c1e","dfnText":"default applications","external":true,"refSections":[{"refs":[{"id":"ref-for-parsed-payment-method-manifest-default-applications"},{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2460"},{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2461"}],"title":"1.2. Payment app trust model"},{"refs":[{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2462"},{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2463"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-parsed-payment-method-manifest-default-applications\u2464"}],"title":"3.2. Claiming a payment method identifier URL"}],"url":"https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-default-applications"},
 "1581be5a": {"dfnID":"1581be5a","dfnText":"payerName","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentresponse-payername"}],"title":"2.1.4. Steps to respond to a payment request"}],"url":"https://w3c.github.io/payment-request/#dom-paymentresponse-payername"},
 "15e48c39": {"dfnID":"15e48c39","dfnText":"set","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-set"},{"id":"ref-for-ordered-set\u2460"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-ordered-set\u2461"}],"title":"3.3. Claiming a set of origins"},{"refs":[{"id":"ref-for-ordered-set\u2462"}],"title":"3.4. Supporting delegations"}],"url":"https://infra.spec.whatwg.org/#ordered-set"},
 "166572aa": {"dfnID":"166572aa","dfnText":"object","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-object"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-dfn-object\u2460"}],"title":"3.8. Changing the payment method"}],"url":"https://w3c.github.io/rdf-concepts/spec/#dfn-object"},
@@ -3731,7 +3816,7 @@ let dfnPanelData = {
 "477b06dd": {"dfnID":"477b06dd","dfnText":"payment handler indicates an internal error algorithm","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-payment-handler-indicates-an-internal-error-algorithm"}],"title":"3.15. Indicating internal error from an invoked native payment app"}],"url":"https://w3c.github.io/payment-request/#dfn-payment-handler-indicates-an-internal-error-algorithm"},
 "559656f0": {"dfnID":"559656f0","dfnText":"steps to respond to a payment request","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-steps-to-respond-to-a-payment-request"}],"title":"2.1.4. Steps to respond to a payment request"}],"url":"https://w3c.github.io/payment-request/#dfn-steps-to-respond-to-a-payment-request"},
 "649608b9": {"dfnID":"649608b9","dfnText":"list","external":true,"refSections":[{"refs":[{"id":"ref-for-list"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://infra.spec.whatwg.org/#list"},
-"65aec8d3": {"dfnID":"65aec8d3","dfnText":"payment method manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-payment-method-manifest"},{"id":"ref-for-payment-method-manifest\u2460"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-payment-method-manifest\u2461"},{"id":"ref-for-payment-method-manifest\u2462"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-payment-method-manifest\u2463"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-payment-method-manifest\u2464"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"https://w3c.github.io/payment-method-manifest/#payment-method-manifest"},
+"65aec8d3": {"dfnID":"65aec8d3","dfnText":"payment method manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-payment-method-manifest"},{"id":"ref-for-payment-method-manifest\u2460"},{"id":"ref-for-payment-method-manifest\u2461"},{"id":"ref-for-payment-method-manifest\u2462"}],"title":"1.2. Payment app trust model"},{"refs":[{"id":"ref-for-payment-method-manifest\u2463"},{"id":"ref-for-payment-method-manifest\u2464"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-payment-method-manifest\u2465"},{"id":"ref-for-payment-method-manifest\u2466"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-payment-method-manifest\u2467"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-payment-method-manifest\u2468"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"https://w3c.github.io/payment-method-manifest/#payment-method-manifest"},
 "6af80dd1": {"dfnID":"6af80dd1","dfnText":"shippingOptions","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsbase-shippingoptions"},{"id":"ref-for-dom-paymentdetailsbase-shippingoptions\u2460"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsbase-shippingoptions"},
 "77f3d74c": {"dfnID":"77f3d74c","dfnText":"create a ContactAddress from user-provided input","external":true,"refSections":[{"refs":[{"id":"ref-for-contactsmanager-create-a-contactaddress-from-user-provided-input"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-contactsmanager-create-a-contactaddress-from-user-provided-input\u2460"}],"title":"3.10. Changing the shipping address"}],"url":"https://w3c.github.io/contact-picker/#contactsmanager-create-a-contactaddress-from-user-provided-input"},
 "798b0348": {"dfnID":"798b0348","dfnText":"payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-pmi"}],"title":"2.1.1. Can make payment algorithm"},{"refs":[{"id":"ref-for-dfn-pmi\u2460"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-dfn-pmi\u2461"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-dfn-pmi\u2462"},{"id":"ref-for-dfn-pmi\u2463"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-dfn-pmi\u2464"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-dfn-pmi\u2465"}],"title":"2.5. The NativePaymentHandlerResponse dictionary"},{"refs":[{"id":"ref-for-dfn-pmi\u2466"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-dfn-pmi\u2467"}],"title":"3.8. Changing the payment method"}],"url":"https://w3c.github.io/payment-method-id/#dfn-pmi"},
@@ -3745,7 +3830,7 @@ let dfnPanelData = {
 "94509b4e": {"dfnID":"94509b4e","dfnText":"label","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentitem-label"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://w3c.github.io/payment-request/#dom-paymentitem-label"},
 "973416ca": {"dfnID":"973416ca","dfnText":"[[options]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-options"},{"id":"ref-for-dfn-options\u2460"},{"id":"ref-for-dfn-options\u2461"},{"id":"ref-for-dfn-options\u2462"}],"title":"2.2. Delegating user information collection"}],"url":"https://w3c.github.io/payment-request/#dfn-options"},
 "9b2f71a4": {"dfnID":"9b2f71a4","dfnText":"requestShipping","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentoptions-requestshipping"}],"title":"2.2. Delegating user information collection"}],"url":"https://w3c.github.io/payment-request/#dom-paymentoptions-requestshipping"},
-"a562c4fb": {"dfnID":"a562c4fb","dfnText":"supported origins","external":true,"refSections":[{"refs":[{"id":"ref-for-parsed-payment-method-manifest-supported-origins"},{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2460"},{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2461"}],"title":"2.4. Match origins allowed for a payment method identifier"}],"url":"https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins"},
+"a562c4fb": {"dfnID":"a562c4fb","dfnText":"supported origins","external":true,"refSections":[{"refs":[{"id":"ref-for-parsed-payment-method-manifest-supported-origins"},{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2460"}],"title":"1.2. Payment app trust model"},{"refs":[{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2461"},{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2462"},{"id":"ref-for-parsed-payment-method-manifest-supported-origins\u2463"}],"title":"2.4. Match origins allowed for a payment method identifier"}],"url":"https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest-supported-origins"},
 "a850f0ee": {"dfnID":"a850f0ee","dfnText":"[[response]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-response"},{"id":"ref-for-dfn-response\u2460"},{"id":"ref-for-dfn-response\u2461"},{"id":"ref-for-dfn-response\u2462"},{"id":"ref-for-dfn-response\u2463"},{"id":"ref-for-dfn-response\u2464"}],"title":"2.1.4. Steps to respond to a payment request"}],"url":"https://w3c.github.io/payment-request/#dfn-response"},
 "ab86e0f1": {"dfnID":"ab86e0f1","dfnText":"show()","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest-show"}],"title":"2.1.2. The show() method"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest-show"},
 "able-to-handle-a-payment-request": {"dfnID":"able-to-handle-a-payment-request","dfnText":"able to handle a\npayment request","external":false,"refSections":[{"refs":[{"id":"ref-for-able-to-handle-a-payment-request"}],"title":"4.1. Tracking risks via readiness checks"}],"url":"#able-to-handle-a-payment-request"},
@@ -3757,8 +3842,8 @@ let dfnPanelData = {
 "bf205083": {"dfnID":"bf205083","dfnText":"modifiers","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequestdetailsupdate-modifiers"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://w3c.github.io/web-based-payment-handler/#dom-paymentrequestdetailsupdate-modifiers"},
 "c2345655": {"dfnID":"c2345655","dfnText":"application manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-manifest"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-dfn-manifest\u2460"}],"title":"3.5. Checking if a native payment app is a related application for a web app manifest"},{"refs":[{"id":"ref-for-dfn-manifest\u2461"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"https://w3c.github.io/manifest/#dfn-manifest"},
 "c6dad3e6": {"dfnID":"c6dad3e6","dfnText":"parsed payment method manifest","external":true,"refSections":[{"refs":[{"id":"ref-for-parsed-payment-method-manifest"},{"id":"ref-for-parsed-payment-method-manifest\u2460"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-parsed-payment-method-manifest\u2461"}],"title":"2.4. Match origins allowed for a payment method identifier"}],"url":"https://w3c.github.io/payment-method-manifest/#parsed-payment-method-manifest"},
-"cdf6e3c2": {"dfnID":"cdf6e3c2","dfnText":"URL-based payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2460"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2461"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2462"},{"id":"ref-for-dfn-url-based-payment-method-identifier\u2463"},{"id":"ref-for-dfn-url-based-payment-method-identifier\u2464"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
-"claimed-payment-method-identifier": {"dfnID":"claimed-payment-method-identifier","dfnText":"claimed payment method\nidentifier","external":false,"refSections":[{"refs":[{"id":"ref-for-claimed-payment-method-identifier"},{"id":"ref-for-claimed-payment-method-identifier\u2460"}],"title":"2.3. Verifying native-app payment handler claims"}],"url":"#claimed-payment-method-identifier"},
+"cdf6e3c2": {"dfnID":"cdf6e3c2","dfnText":"URL-based payment method identifier","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier"}],"title":"1.2. Payment app trust model"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2460"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2461"}],"title":"2.4. Match origins allowed for a payment method identifier"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2462"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-dfn-url-based-payment-method-identifier\u2463"},{"id":"ref-for-dfn-url-based-payment-method-identifier\u2464"},{"id":"ref-for-dfn-url-based-payment-method-identifier\u2465"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"https://w3c.github.io/payment-method-id/#dfn-url-based-payment-method-identifier"},
+"claimed-payment-method-identifier": {"dfnID":"claimed-payment-method-identifier","dfnText":"claimed payment method\nidentifier","external":false,"refSections":[{"refs":[{"id":"ref-for-claimed-payment-method-identifier"},{"id":"ref-for-claimed-payment-method-identifier\u2460"}],"title":"1.2. Payment app trust model"},{"refs":[{"id":"ref-for-claimed-payment-method-identifier\u2461"},{"id":"ref-for-claimed-payment-method-identifier\u2462"}],"title":"2.3. Verifying native-app payment handler claims"}],"url":"#claimed-payment-method-identifier"},
 "claimed-third-party-origins": {"dfnID":"claimed-third-party-origins","dfnText":"claimed third-party\norigins","external":false,"refSections":[{"refs":[{"id":"ref-for-claimed-third-party-origins"},{"id":"ref-for-claimed-third-party-origins\u2460"}],"title":"2.3. Verifying native-app payment handler claims"}],"url":"#claimed-third-party-origins"},
 "convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate": {"dfnID":"convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate","dfnText":"convert a PaymentDetailsUpdate to a\nPaymentRequestDetailsUpdate","external":false,"refSections":[{"refs":[{"id":"ref-for-convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate"}],"title":"2.1.8. Propagating payment detail updates"}],"url":"#convert-a-paymentdetailsupdate-to-a-paymentrequestdetailsupdate"},
 "d46767a0": {"dfnID":"d46767a0","dfnText":"shippingOption","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentresponse-shippingoption"}],"title":"2.1.4. Steps to respond to a payment request"}],"url":"https://w3c.github.io/payment-request/#dom-paymentresponse-shippingoption"},
@@ -3794,7 +3879,7 @@ let dfnPanelData = {
 "enumdef-paymentdelegation": {"dfnID":"enumdef-paymentdelegation","dfnText":"PaymentDelegation","external":false,"refSections":[{"refs":[{"id":"ref-for-enumdef-paymentdelegation"}],"title":"3.4. Supporting delegations"}],"url":"#enumdef-paymentdelegation"},
 "f2bdde67": {"dfnID":"f2bdde67","dfnText":"fingerprints","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-fingerprints"}],"title":"3.5. Checking if a native payment app is a related application for a web app manifest"}],"url":"https://wicg.github.io/manifest-incubations/#dfn-fingerprints"},
 "f5b0b6fc": {"dfnID":"f5b0b6fc","dfnText":"requestPayerName","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentoptions-requestpayername"}],"title":"2.2. Delegating user information collection"}],"url":"https://w3c.github.io/payment-request/#dom-paymentoptions-requestpayername"},
-"f679a0bc": {"dfnID":"f679a0bc","dfnText":"PaymentRequest","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest"},{"id":"ref-for-dom-paymentrequest\u2460"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2461"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2462"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2463"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2464"}],"title":"2.1.6. Shipping option changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2465"}],"title":"2.1.7. Shipping address changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2466"}],"title":"2.1.8. Propagating payment detail updates"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2467"},{"id":"ref-for-dom-paymentrequest\u2468"}],"title":"2.2. Delegating user information collection"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460\u24ea"},{"id":"ref-for-dom-paymentrequest\u2460\u2460"},{"id":"ref-for-dom-paymentrequest\u2460\u2461"}],"title":"3.6. Determining if a native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460\u2462"}],"title":"4.1. Tracking risks via readiness checks"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest"},
+"f679a0bc": {"dfnID":"f679a0bc","dfnText":"PaymentRequest","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentrequest"}],"title":"1.1. Architecture overview"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460"},{"id":"ref-for-dom-paymentrequest\u2461"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2462"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2463"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2464"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2465"}],"title":"2.1.6. Shipping option changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2466"}],"title":"2.1.7. Shipping address changed algorithm"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2467"}],"title":"2.1.8. Propagating payment detail updates"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2468"},{"id":"ref-for-dom-paymentrequest\u2460\u24ea"}],"title":"2.2. Delegating user information collection"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460\u2460"},{"id":"ref-for-dom-paymentrequest\u2460\u2461"},{"id":"ref-for-dom-paymentrequest\u2460\u2462"}],"title":"3.6. Determining if a native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-dom-paymentrequest\u2460\u2463"}],"title":"4.1. Tracking risks via readiness checks"}],"url":"https://w3c.github.io/payment-request/#dom-paymentrequest"},
 "f9680782": {"dfnID":"f9680782","dfnText":"total","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsupdate-total"},{"id":"ref-for-dom-paymentdetailsupdate-total\u2460"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsupdate-total"},
 "f9debf21": {"dfnID":"f9debf21","dfnText":"requestPayerPhone","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentoptions-requestpayerphone"}],"title":"2.2. Delegating user information collection"}],"url":"https://w3c.github.io/payment-request/#dom-paymentoptions-requestpayerphone"},
 "get-the-list-of-native-payment-apps": {"dfnID":"get-the-list-of-native-payment-apps","dfnText":"get the list of native payment apps","external":false,"refSections":[{"refs":[{"id":"ref-for-get-the-list-of-native-payment-apps"}],"title":"2.1.1. Can make payment algorithm"},{"refs":[{"id":"ref-for-get-the-list-of-native-payment-apps\u2460"}],"title":"2.1.2. The show() method"}],"url":"#get-the-list-of-native-payment-apps"},
@@ -3808,9 +3893,9 @@ let dfnPanelData = {
 "is-a-related-application": {"dfnID":"is-a-related-application","dfnText":"is a related application","external":false,"refSections":[{"refs":[{"id":"ref-for-is-a-related-application"},{"id":"ref-for-is-a-related-application\u2460"}],"title":"2.3. Verifying native-app payment handler claims"}],"url":"#is-a-related-application"},
 "is-allowed-to-handle-the-payment-method-identifier": {"dfnID":"is-allowed-to-handle-the-payment-method-identifier","dfnText":"is allowed to handle\nthe payment method identifier","external":false,"refSections":[{"refs":[{"id":"ref-for-is-allowed-to-handle-the-payment-method-identifier"}],"title":"2.1.1. Can make payment algorithm"},{"refs":[{"id":"ref-for-is-allowed-to-handle-the-payment-method-identifier\u2460"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-is-allowed-to-handle-the-payment-method-identifier\u2461"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-is-allowed-to-handle-the-payment-method-identifier\u2462"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-is-allowed-to-handle-the-payment-method-identifier\u2463"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"}],"url":"#is-allowed-to-handle-the-payment-method-identifier"},
 "match-the-origins-allowed-for-a-payment-method-identifier": {"dfnID":"match-the-origins-allowed-for-a-payment-method-identifier","dfnText":"match the\norigins allowed for a payment method identifier","external":false,"refSections":[{"refs":[{"id":"ref-for-match-the-origins-allowed-for-a-payment-method-identifier"}],"title":"2.3. Verifying native-app payment handler claims"}],"url":"#match-the-origins-allowed-for-a-payment-method-identifier"},
-"native-app-payment-handler": {"dfnID":"native-app-payment-handler","dfnText":"native-app payment handler","external":false,"refSections":[{"refs":[{"id":"ref-for-native-app-payment-handler"},{"id":"ref-for-native-app-payment-handler\u2460"}],"title":"1. Introduction"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2461"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2462"},{"id":"ref-for-native-app-payment-handler\u2463"},{"id":"ref-for-native-app-payment-handler\u2464"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2465"}],"title":"2.1.3. Steps to check if a payment can be made"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2466"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2467"}],"title":"2.2. Delegating user information collection"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2468"}],"title":"3. Native payment app provider model"}],"url":"#native-app-payment-handler"},
+"native-app-payment-handler": {"dfnID":"native-app-payment-handler","dfnText":"native-app payment handler","external":false,"refSections":[{"refs":[{"id":"ref-for-native-app-payment-handler"}],"title":"1. Introduction"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2460"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2461"},{"id":"ref-for-native-app-payment-handler\u2462"},{"id":"ref-for-native-app-payment-handler\u2463"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2464"}],"title":"2.1.3. Steps to check if a payment can be made"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2465"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2466"}],"title":"2.2. Delegating user information collection"},{"refs":[{"id":"ref-for-native-app-payment-handler\u2467"}],"title":"3. Native payment app provider model"}],"url":"#native-app-payment-handler"},
 "native-payment-app-provider": {"dfnID":"native-payment-app-provider","dfnText":"native payment app\nprovider","external":false,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider"}],"title":"2. Native-app payment handlers"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461"}],"title":"2.1.1. Can make payment algorithm"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2462"}],"title":"2.1.2. The show() method"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2463"}],"title":"3.1. Returning a list of native payment apps"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2464"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2465"}],"title":"3.3. Claiming a set of origins"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2466"}],"title":"3.4. Supporting delegations"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2467"},{"id":"ref-for-native-payment-app-provider\u2468"}],"title":"3.5. Checking if a native payment app is a related application for a web app manifest"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u24ea"}],"title":"3.6. Determining if a native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u2460"},{"id":"ref-for-native-payment-app-provider\u2460\u2461"}],"title":"3.7. Invoking a native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u2462"},{"id":"ref-for-native-payment-app-provider\u2460\u2463"}],"title":"3.8. Changing the payment method"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u2464"},{"id":"ref-for-native-payment-app-provider\u2460\u2465"}],"title":"3.9. Changing the shipping option"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u2466"},{"id":"ref-for-native-payment-app-provider\u2460\u2467"}],"title":"3.10. Changing the shipping address"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2460\u2468"}],"title":"3.11. Updating payment details in an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461\u24ea"}],"title":"3.12. Notifying payment details not updated in an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461\u2460"},{"id":"ref-for-native-payment-app-provider\u2461\u2461"}],"title":"3.13. Indicating success of an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461\u2462"}],"title":"3.14. Indicating user cancel from an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461\u2463"}],"title":"3.15. Indicating internal error from an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-app-provider\u2461\u2464"}],"title":"4.2. Payment method verification and spoofing prevention"}],"url":"#native-payment-app-provider"},
-"native-payment-app-provider-model": {"dfnID":"native-payment-app-provider-model","dfnText":"native payment app provider model","external":false,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider-model"},{"id":"ref-for-native-payment-app-provider-model\u2460"}],"title":"1. Introduction"},{"refs":[{"id":"ref-for-native-payment-app-provider-model\u2461"},{"id":"ref-for-native-payment-app-provider-model\u2462"}],"title":"5. Example implementations of the native payment app provider model"}],"url":"#native-payment-app-provider-model"},
+"native-payment-app-provider-model": {"dfnID":"native-payment-app-provider-model","dfnText":"native payment app provider model","external":false,"refSections":[{"refs":[{"id":"ref-for-native-payment-app-provider-model"},{"id":"ref-for-native-payment-app-provider-model\u2460"}],"title":"1.1. Architecture overview"},{"refs":[{"id":"ref-for-native-payment-app-provider-model\u2461"},{"id":"ref-for-native-payment-app-provider-model\u2462"}],"title":"5. Example implementations of the native payment app provider model"}],"url":"#native-payment-app-provider-model"},
 "native-payment-apps": {"dfnID":"native-payment-apps","dfnText":"Native payment\napps","external":false,"refSections":[{"refs":[{"id":"ref-for-native-payment-apps"}],"title":"2. Native-app payment handlers"},{"refs":[{"id":"ref-for-native-payment-apps\u2460"}],"title":"2.1. Integration with [payment-request]"},{"refs":[{"id":"ref-for-native-payment-apps\u2461"}],"title":"2.1.4. Steps to respond to a payment request"},{"refs":[{"id":"ref-for-native-payment-apps\u2462"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-native-payment-apps\u2463"}],"title":"2.1.6. Shipping option changed algorithm"},{"refs":[{"id":"ref-for-native-payment-apps\u2464"}],"title":"2.1.7. Shipping address changed algorithm"},{"refs":[{"id":"ref-for-native-payment-apps\u2465"}],"title":"2.1.8. Propagating payment detail updates"},{"refs":[{"id":"ref-for-native-payment-apps\u2466"}],"title":"2.2. Delegating user information collection"},{"refs":[{"id":"ref-for-native-payment-apps\u2467"},{"id":"ref-for-native-payment-apps\u2468"}],"title":"2.3. Verifying native-app payment handler claims"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u24ea"}],"title":"2.5. The NativePaymentHandlerResponse dictionary"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2460"}],"title":"2.6. The PaymentRequestDetailsUpdate dictionary"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2461"}],"title":"2.6.1. Converting a PaymentDetailsUpdate to a PaymentRequestDetailsUpdate"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2462"},{"id":"ref-for-native-payment-apps\u2460\u2463"}],"title":"3. Native payment app provider model"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2464"},{"id":"ref-for-native-payment-apps\u2460\u2465"}],"title":"3.1. Returning a list of native payment apps"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2466"}],"title":"3.2. Claiming a payment method identifier URL"},{"refs":[{"id":"ref-for-native-payment-apps\u2460\u2467"},{"id":"ref-for-native-payment-apps\u2460\u2468"}],"title":"3.3. Claiming a set of origins"},{"refs":[{"id":"ref-for-native-payment-apps\u2461\u24ea"}],"title":"3.4. Supporting delegations"},{"refs":[{"id":"ref-for-native-payment-apps\u2461\u2460"},{"id":"ref-for-native-payment-apps\u2461\u2461"}],"title":"3.5. Checking if a native payment app is a related application for a web app manifest"},{"refs":[{"id":"ref-for-native-payment-apps\u2461\u2462"},{"id":"ref-for-native-payment-apps\u2461\u2463"},{"id":"ref-for-native-payment-apps\u2461\u2464"}],"title":"3.6. Determining if a native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-native-payment-apps\u2461\u2465"},{"id":"ref-for-native-payment-apps\u2461\u2466"},{"id":"ref-for-native-payment-apps\u2461\u2467"},{"id":"ref-for-native-payment-apps\u2461\u2468"}],"title":"3.7. Invoking a native payment app"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u24ea"}],"title":"3.8. Changing the payment method"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2460"}],"title":"3.9. Changing the shipping option"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2461"}],"title":"3.10. Changing the shipping address"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2462"}],"title":"3.11. Updating payment details in an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2463"}],"title":"3.12. Notifying payment details not updated in an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2464"},{"id":"ref-for-native-payment-apps\u2462\u2465"},{"id":"ref-for-native-payment-apps\u2462\u2466"}],"title":"3.13. Indicating success of an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-apps\u2462\u2467"},{"id":"ref-for-native-payment-apps\u2462\u2468"}],"title":"3.14. Indicating user cancel from an invoked native payment app"},{"refs":[{"id":"ref-for-native-payment-apps\u2463\u24ea"},{"id":"ref-for-native-payment-apps\u2463\u2460"}],"title":"3.15. Indicating internal error from an invoked native payment app"}],"url":"#native-payment-apps"},
 "notify-payment-details-not-updated": {"dfnID":"notify-payment-details-not-updated","dfnText":"notify payment details not updated","external":false,"refSections":[{"refs":[{"id":"ref-for-notify-payment-details-not-updated"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-notify-payment-details-not-updated\u2460"}],"title":"2.1.8. Propagating payment detail updates"}],"url":"#notify-payment-details-not-updated"},
 "propagate-payment-detail-updates": {"dfnID":"propagate-payment-detail-updates","dfnText":"propagate payment detail updates","external":false,"refSections":[{"refs":[{"id":"ref-for-propagate-payment-detail-updates"}],"title":"2.1.5. Payment method changed algorithm"},{"refs":[{"id":"ref-for-propagate-payment-detail-updates\u2460"}],"title":"2.1.6. Shipping option changed algorithm"},{"refs":[{"id":"ref-for-propagate-payment-detail-updates\u2461"}],"title":"2.1.7. Shipping address changed algorithm"}],"url":"#propagate-payment-detail-updates"},
