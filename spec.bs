@@ -256,7 +256,8 @@ The [=steps to respond to a payment request=] for a {{PaymentRequest}},
 
 1. If |result|.{{NativePaymentHandlerResponse/methodName}} is not one of the
      [=payment method identifiers=] supported by |request|, or if |app| is not
-     [=allowed to handle the payment method identifier=]
+     [=is allowed to handle the payment method identifier|allowed to handle the
+     payment method identifier=]
      |result|.{{NativePaymentHandlerResponse/methodName}}, return failure.
 
 1. Set |request|.{{PaymentRequest/[[response]]}}.{{PaymentResponse/methodName}}
@@ -306,8 +307,8 @@ has changed their payment method=] with a [=payment method identifier=]
 1. Let |request| be the active {{PaymentRequest}} for |app|.
 
 1. If |methodName| is not one of the [=payment method identifiers=] supported by
-     |request|, or if |app| is not [=allowed to handle the payment method
-     identifier=] |methodName|:
+     |request|, or if |app| is not [=is allowed to handle the payment method
+     identifier|allowed to handle the payment method identifier=] |methodName|:
 
     1. [=Notify payment details not updated=] in |app|.
 
