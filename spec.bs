@@ -804,8 +804,14 @@ A [=native payment app provider=] MUST provide a method the user agent can call
 to determine if a [=native payment app=] is <dfn export>able to handle a
 payment request</dfn> for a given {{PaymentRequest}} |request|. In order to
 support this functionality, the user agent MAY pass information about |request|
-to the [=native payment app=], subject to the privacy considerations in
-[[#sctn-tracking-risks]].
+to the [=native payment app=], subject to the following requirements:
+
+1. If the user agent is operating in a private browsing mode, the user agent
+     MUST NOT pass information to or query the [=native payment app=]. The user
+     agent MAY decide that an app is [=able to handle a payment request=] based
+     on whether the app is installed and verified.
+
+See [[#sctn-tracking-risks]] for considerations here.
 
 NOTE: This functionality is used to answer the `hasEnrolledInstrument` method
 on {{PaymentRequest}}, which was removed from the [[payment-request]]
@@ -920,97 +926,146 @@ internal error algorithm=] from [[payment-request]].
 
 # Security and privacy considerations # {#sctn-security-and-privacy}
 
-TODO: Refer to
-https://www.w3.org/TR/security-privacy-questionnaire/#considerations and make
-sure we're following the guidance there.
+*This section is non-normative.*
 
-## Tracking risks via readiness checks ## {#sctn-tracking-risks}
+This specification connects web origins with native applications running on the
+underlying operating system. Such a connection introduces distinct security and
+privacy considerations that user agents and platform providers must address.
+
+## Tracking risks from readiness checks ## {#sctn-tracking-risks}
 
 Probing whether a native payment app is installed or ready to pay (via
-{{PaymentRequest/canMakePayment()}} or `hasEnrolledInstrument()`)
-presents potential tracking risks:
+{{PaymentRequest/canMakePayment()}} or `hasEnrolledInstrument()` method)
+presents significant tracking and privacy risks:
 
-- **Fingerprinting**: Websites could query multiple payment methods to silently
-    fingerprint the user based on the specific set of installed native payment
-    apps.
-- **App availability**: In addition to fingerprinting risks, a user's installed
-    payment apps can leak sensitive information about the user to a website.
-    For example, the existence of a specific payment app could reveal user
-    geography, banking relationships, or socio-economic status.
-- **Website to app communication**: When determining if an app is [=able to
-    handle a payment request=], passing transaction context (such as the top-level
-    origin or payment method data) to the app allows installed payment apps to
-    silently learn what websites the user visits, without explicit user
-    interaction or consent.
+- **Fingerprinting**: Malicious websites could query multiple payment method
+    identifiers in sequence to construct a unique fingerprint of the user based
+    on the specific set of installed native applications.
+
+- **Sensitive attribute revelation**: The presence or absence of specific
+    payment apps can reveal sensitive information about the user, such as their
+    geographic location, banking relationships, membership in particular
+    organizations, or socioeconomic status.
+
+- **Silent website-to-app tracking**: When the user agent invokes a background
+    readiness check such as in [[#sctn-hasenrolled-instrument]], transmitting
+    the merchant origin or transaction details to installed native applications
+    allows those apps to silently log the websites visited by the user without
+    explicit user interaction or consent.
 
 To mitigate these risks:
 
-- User agents MUST NOT perform background readiness checks with native payment
-    apps when operating in private browsing modes.
+- **Rate-limiting and quotas**: User agents are encouraged to enforce rate
+    limiting or per-origin query quotas on readiness checks to prevent websites
+    from probing large numbers of payment methods.
 
-    TODO: We should add text for this somewhere in the spec, but since
-          hasEnrolledInstrument is gone from {{PaymentRequest}} there isn't
-          currently a place to hang it from.
+    ISSUE: This is really an issue for `hasEnrolledInstrument()` in general,
+    but as it has been removed from [[payment-request]] there is not currently
+    a place to document it.
 
-TODO: Add more requirements, and note where implementations (Chromium) don't
-meet them today.
+- **Data minimization**: User agents should minimize or omit identifying
+    transaction context (such as the top-level merchant origin or method-specific
+    data) in background readiness checks unless the user has previously
+    consented or engaged with the payment app on that origin.
 
-## Tracking risks via invoked native apps not showing UX ## {#sctn-invokedapps-ux}
+- **Private browsing restrictions**: As specified in
+    [[#sctn-hasenrolled-instrument]], user agents do not send background
+    readiness queries to native payment apps when operating in private browsing
+    modes.
 
-As [=native payment apps=] are external to the user agent, the user agent
-cannot guarantee that an app will show UX when invoked. This leads to a
-tracking risk:
+## Tracking risks from invoked native apps not showing UX ## {#sctn-invokedapps-ux}
 
-1. A website creates a {{PaymentRequest}} pointing at such an app, and invokes
-     {{PaymentRequest/show()}}.
+Because [=native payment apps=] execute externally to the user agent, the user
+agent cannot control whether an invoked application renders user interface.
+This introduces a potential covert communication channel:
 
-2. The user agent invokes the native app, passing transaction details which
-     include the merchant origin and other data.
+1. A website calls {{PaymentRequest/show()}} for a native payment app.
 
-3. The native app does not show any UX and immediately indicates success,
-     returning control to the user agent.
+2. The user agent invokes the native application, transmitting data such as
+     the merchant origin and method parameters.
 
-4. The user agent, which cannot know that UX was not shown, passes the response
-     details back to the website.
+3. A colluding native app executes without displaying any UI to the user,
+     immediately [=indicating success=] with an arbitrary response payload.
 
-This attack allows for two-way communication of arbitrary data between an
-origin and a native app, without user knowledge.
+4. The user agent resolves the payment promise and delivers the payload back to
+     the website.
+
+This attack allows arbitrary, two-way data exchange between a web origin and a
+native application without user awareness.
 
 To mitigate this risk:
 
-- User agents SHOULD require a user activation for calls to
-    {{PaymentRequest/show()}}, as specified in [[payment-request]].
+- **User activation**: Calls to {{PaymentRequest/show()}} require transient user
+    activation (a user gesture) as defined in [[payment-request]], preventing
+    unsolicited background invocations.
 
-- TODO: Add any other potential mitigations, but acknowledge that shipping user
-    agents today do not meet them.
+- **Foreground presentation and user confirmation**: User agents should display
+    a browser-mediated confirmation sheet for user awareness and consent before
+    invoking a given native app from a given origin for the first time.
 
 ## Payment method verification and spoofing prevention ## {#sctn-spoofing}
 
-User agents MUST NOT allow a [=URL-based payment method identifier=] to claim a
-native app that it doesn't own, or allow a native app to claim a [=URL-based
-payment method identifier=] that it doesn't own. Failure to enforce these
-boundaries can lead to spoofing attacks where a domain claims ownership of an
-unrelated payment app, or an application claims ownership of an unrelated
-origin. Both of these scenarios can lead to defrauding users.
+Allowing a [=URL-based payment method identifier=] to claim an unrelated native
+app, or allowing an untrusted native app to claim a payment method it does not
+own, can lead to severe spoofing attacks where malicious actors intercept
+transactions, misrepresent payment credentials, or defraud users.
 
-To avoid such spoofing attacks:
+The specification mitigates spoofing attacks through several normative requirements:
 
-- User agents MUST only allow [=native payment app providers=] that verify
-    native apps against the information present in the [=application
-    manifest=], most importantly the package identifier and cryptographic
-    signing certificate fingerprints.
+- **Cryptographic application verification**: As specified in
+    [[#sctn-verifying-app-claims]], the user agent verifies native apps against
+    the package identifiers and signing certificate fingerprints declared in the
+    corresponding web application manifests ([[appmanifest]]).
 
-- Native apps claiming support for a [=URL-based payment method identifier=]
-    MUST be validated against the [=payment method manifest=] for that
+- **Manifest authorization**: Native apps claiming support for a payment method
+    identifier are validated against the [=payment method manifest=] for that
     identifier.
 
-## Other privacy considerations ## {#sctn-todo-other}
+- **Response method name validation**: As specified in
+    [[#sctn-steps-to-respond-to-a-payment-request]] and
+    [[#sctn-payment-method-changed-algorithm]], the user agent verifies that the
+    `methodName` returned in a {{NativePaymentHandlerResponse}} or dynamic
+    payment method change event matches an identifier that the app is verified
+    to handle and that was requested by the merchant.
 
-TODO: Are there any other sub-sections we should add here?
+## Private browsing mode considerations ## {#sctn-private-browsing}
+
+Native applications execute within the operating system environment and maintain
+persistent storage (e.g., local databases, account credentials, device
+identifiers) that exists outside the browser's private browsing sandbox.
+
+If a user launches a native payment app from a private browsing session, the
+native app can potentially correlate the private browsing transaction with the
+user's persistent account or device identity.
+
+To mitigate this privacy leak:
+
+- As specified in [[#sctn-hasenrolled-instrument]], background readiness queries
+    are disabled in private browsing modes to prevent background tracking.
+
+- User agents are encouraged to warn the user or display an explicit
+    confirmation dialog indicating that they are leaving the private browsing
+    context before transferring execution to an external native payment
+    application.
+
+## Operating system security and inter-process communication ## {#sctn-ipc-security}
+
+Communication between the user agent and native payment applications occurs over
+operating system inter-process communication (IPC) channels (such as Android
+Intents and Binder services).
+
+Platform providers implementing the [=native payment app provider model=] are
+expected to ensure that:
+
+- **Caller authorization**: Dynamic update services verify the identity, package
+    name, and signing certificates of the calling process before acting on
+    method or address change events.
+
+- **Component isolation**: IPC endpoints are properly exported and protected
+    against unauthorized invocation or spoofed intents from other third-party
+    applications on the device.
 
 # Example implementations of the [=native payment app provider model=] # {#sctn-examples}
-
-*This section is non-normative.*
 
 The following are known implementations of the [=native payment app provider
 model=]. The list may be incomplete and is not any form of registry or official
