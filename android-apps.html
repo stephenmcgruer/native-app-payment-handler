@@ -1489,7 +1489,7 @@ Possible extra rowspan handling
 	}
 </style>
   <meta content="Bikeshed version d113b2e81, updated Tue Jun 9 14:57:55 2026 -0700" name="generator">
-  <meta content="eaea9e02bf3f1051ba110c577d6b016cb58d19c4" name="revision">
+  <meta content="887539b8946f0359666b32b3630ed0be7c603979" name="revision">
   <meta content="dark light" name="color-scheme">
 <style>/* Boilerplate: style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -3021,25 +3021,14 @@ connection</dfn> for an invoked <a data-link-type="dfn" href="https://stephenmcg
  <var>app</var> and <var>shippingAddress</var>.</p>
     </ol>
     <h4 class="heading settled" data-level="2.10.6" id="sctn-dynamic-updates-update-details"><span class="secno">2.10.6. </span><span class="content">Updating payment details</span><a class="self-link" href="#sctn-dynamic-updates-update-details"></a></h4>
-    <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#update-payment-details" id="ref-for-update-payment-details">update payment details</a> for <var>app</var> with <var>detailsPromise</var>:</p>
+    <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#update-payment-details" id="ref-for-update-payment-details">update payment details</a> in an invoked <a data-link-type="dfn" href="#android-payment-app" id="ref-for-android-payment-app②">Android payment app</a>,
+<var>app</var>, given a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/web-based-payment-handler/#dom-paymentrequestdetailsupdate" id="ref-for-dom-paymentrequestdetailsupdate">PaymentRequestDetailsUpdate</a></code> dictionary, <var>update</var>:</p>
     <ol>
      <li data-md>
-      <p>Upon fulfillment of <var>detailsPromise</var> with a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/web-based-payment-handler/#dom-paymentrequestdetailsupdate" id="ref-for-dom-paymentrequestdetailsupdate">PaymentRequestDetailsUpdate</a></code>
- <var>update</var>:</p>
-      <ol>
-       <li data-md>
-        <p>Let <var>bundle</var> be the result of <a data-link-type="dfn" href="#create-an-android-bundle-from-a-paymentrequestdetailsupdate" id="ref-for-create-an-android-bundle-from-a-paymentrequestdetailsupdate">creating an Android bundle from a PaymentRequestDetailsUpdate</a> for <var>update</var>.</p>
-       <li data-md>
-        <p>Call <code>callback.updateWith(bundle)</code> on the active
- <code>IPaymentDetailsUpdateServiceCallback</code>.</p>
-      </ol>
+      <p>Let <var>bundle</var> be the result of <a data-link-type="dfn" href="#create-an-android-bundle-from-a-paymentrequestdetailsupdate" id="ref-for-create-an-android-bundle-from-a-paymentrequestdetailsupdate">creating an Android bundle from a PaymentRequestDetailsUpdate</a> for <var>update</var>.</p>
      <li data-md>
-      <p>Upon rejection of <var>detailsPromise</var>:</p>
-      <ol>
-       <li data-md>
-        <p>Call <code>callback.paymentDetailsNotUpdated()</code> on the active
+      <p>Call <code>callback.updateWith(bundle)</code> on the active
  <code>IPaymentDetailsUpdateServiceCallback</code>.</p>
-      </ol>
     </ol>
     <h4 class="heading settled" data-level="2.10.7" id="sctn-dynamic-updates-not-updated"><span class="secno">2.10.7. </span><span class="content">Notifying payment details not updated</span><a class="self-link" href="#sctn-dynamic-updates-not-updated"></a></h4>
     <p>In order to <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#notify-payment-details-not-updated" id="ref-for-notify-payment-details-not-updated">notify payment details not updated</a> for <var>app</var>:</p>
@@ -3104,9 +3093,9 @@ a <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/web-base
         <p>Let <var>totalBundle</var> be a new Android Bundle object containing:</p>
         <ul>
          <li data-md>
-          <p><code>"currency"</code> set to <var>update</var>["total"]["amount"]["currency"]</p>
+          <p><code>"currency"</code> set to <var>update</var>["total"]["currency"]</p>
          <li data-md>
-          <p><code>"value"</code> set to <var>update</var>["total"]["amount"]["value"]</p>
+          <p><code>"value"</code> set to <var>update</var>["total"]["value"]</p>
         </ul>
        <li data-md>
         <p>Insert <var>totalBundle</var> into <var>bundle</var> with key <code>"total"</code>.</p>
@@ -3210,10 +3199,13 @@ back to the user agent, <var>app</var> performs the following steps:</p>
      <li data-md>
       <p>Terminate <var>app</var>’s activity, e.g. via <a href="https://developer.android.com/reference/android/app/Activity#finish()">Activity.finish()</a>.</p>
     </ol>
-    <p>To <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details" id="ref-for-retrieve-the-converted-result-details">retrieve the converted result details</a> from the payment activity’s result
-Intent, <var>resultIntent</var>, with the requested <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions">PaymentOptions</a></code> <var>paymentOptions</var>,
-the user agent performs the following steps:</p>
+    <p>To <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details" id="ref-for-retrieve-the-converted-result-details">retrieve the converted result details</a> for an invoked <a data-link-type="dfn" href="#android-payment-app" id="ref-for-android-payment-app③">Android payment app</a>, <var>app</var>:</p>
     <ol>
+     <li data-md>
+      <p>Let <var>resultIntent</var> be the result Intent returned when <var>app</var> <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success" id="ref-for-indicate-success①">indicated success</a>.</p>
+     <li data-md>
+      <p>Let <var>paymentOptions</var> be the requested <code class="idl"><a data-link-type="idl" href="https://w3c.github.io/payment-request/#dom-paymentoptions" id="ref-for-dom-paymentoptions">PaymentOptions</a></code> passed when <var>app</var>
+ was <a data-link-type="dfn" href="https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app" id="ref-for-invoke-the-native-payment-app④">invoked</a>.</p>
      <li data-md>
       <p>If <var>resultIntent</var> is null or does not contain extras, return failure.</p>
      <li data-md>
@@ -4004,7 +3996,7 @@ let dfnPanelData = {
 "1e745811": {"dfnID":"1e745811","dfnText":"retrieve the converted result details","external":true,"refSections":[{"refs":[{"id":"ref-for-retrieve-the-converted-result-details"}],"title":"2.11. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#retrieve-the-converted-result-details"},
 "1ea15fbe": {"dfnID":"1ea15fbe","dfnText":"id (for PaymentShippingOption)","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentshippingoption-id"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentshippingoption-id"},
 "2192411a": {"dfnID":"2192411a","dfnText":"\"shippingAddress\"","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdelegation-shippingaddress"}],"title":"2.6. Supported delegations"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#dom-paymentdelegation-shippingaddress"},
-"25c8db95": {"dfnID":"25c8db95","dfnText":"indicate success","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-success"}],"title":"2.11. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success"},
+"25c8db95": {"dfnID":"25c8db95","dfnText":"indicate success","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-success"},{"id":"ref-for-indicate-success\u2460"}],"title":"2.11. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-success"},
 "2637dd97": {"dfnID":"2637dd97","dfnText":"\"payerName\"","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdelegation-payername"}],"title":"2.6. Supported delegations"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#dom-paymentdelegation-payername"},
 "28fd742d": {"dfnID":"28fd742d","dfnText":"able to handle a payment request","external":true,"refSections":[{"refs":[{"id":"ref-for-able-to-handle-a-payment-request"}],"title":"2.1. Payment app AndroidManifest.xml"},{"refs":[{"id":"ref-for-able-to-handle-a-payment-request\u2460"},{"id":"ref-for-able-to-handle-a-payment-request\u2461"}],"title":"2.1.2. The IS_READY_TO_PAY service"},{"refs":[{"id":"ref-for-able-to-handle-a-payment-request\u2462"}],"title":"2.8. Determining if an Android native payment app can handle a PaymentRequest"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#able-to-handle-a-payment-request"},
 "2cdb0b5c": {"dfnID":"2cdb0b5c","dfnText":"requestPayerEmail","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentoptions-requestpayeremail"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentoptions-requestpayeremail"},
@@ -4033,13 +4025,13 @@ let dfnPanelData = {
 "8f2edd58": {"dfnID":"8f2edd58","dfnText":"\"payerPhone\"","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdelegation-payerphone"}],"title":"2.6. Supported delegations"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#dom-paymentdelegation-payerphone"},
 "927693cc": {"dfnID":"927693cc","dfnText":"supportedMethods","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentdetailsmodifier-supportedmethods"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentdetailsmodifier-supportedmethods"},
 "973416ca": {"dfnID":"973416ca","dfnText":"[[options]]","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-options"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dfn-options"},
-"9a5b353f": {"dfnID":"9a5b353f","dfnText":"invoke the native payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-invoke-the-native-payment-app"}],"title":"2.1. Payment app AndroidManifest.xml"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2460"}],"title":"2.1.1. The PAY activity"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2461"}],"title":"2.1.3. The UPDATE_PAYMENT_DETAILS service"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2462"}],"title":"2.9. Invoking an Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app"},
+"9a5b353f": {"dfnID":"9a5b353f","dfnText":"invoke the native payment app","external":true,"refSections":[{"refs":[{"id":"ref-for-invoke-the-native-payment-app"}],"title":"2.1. Payment app AndroidManifest.xml"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2460"}],"title":"2.1.1. The PAY activity"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2461"}],"title":"2.1.3. The UPDATE_PAYMENT_DETAILS service"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2462"}],"title":"2.9. Invoking an Android native payment app"},{"refs":[{"id":"ref-for-invoke-the-native-payment-app\u2463"}],"title":"2.11. Indicating success of an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#invoke-the-native-payment-app"},
 "9b2f71a4": {"dfnID":"9b2f71a4","dfnText":"requestShipping","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentoptions-requestshipping"},{"id":"ref-for-dom-paymentoptions-requestshipping\u2460"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentoptions-requestshipping"},
 "9c4c1e66": {"dfnID":"9c4c1e66","dfnText":"relevant settings object","external":true,"refSections":[{"refs":[{"id":"ref-for-relevant-settings-object"}],"title":"2.8. Determining if an Android native payment app can handle a PaymentRequest"},{"refs":[{"id":"ref-for-relevant-settings-object\u2460"}],"title":"2.14. Creating an Android bundle"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object"},
 "a0c639bf": {"dfnID":"a0c639bf","dfnText":"indicate internal error","external":true,"refSections":[{"refs":[{"id":"ref-for-indicate-internal-error"}],"title":"2.13. Indicating internal error from an invoked Android native payment app"}],"url":"https://stephenmcgruer.github.io/native-app-payment-handler/spec.html#indicate-internal-error"},
 "ac045cb2": {"dfnID":"ac045cb2","dfnText":"selected","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentshippingoption-selected"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentshippingoption-selected"},
 "aef01fc7": {"dfnID":"aef01fc7","dfnText":"amount (for PaymentShippingOption)","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-paymentshippingoption-amount"}],"title":"2.14. Creating an Android bundle"}],"url":"https://w3c.github.io/payment-request/#dom-paymentshippingoption-amount"},
-"android-payment-app": {"dfnID":"android-payment-app","dfnText":"Android payment app","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app"}],"title":"2. Android Payment App Provider"},{"refs":[{"id":"ref-for-android-payment-app\u2460"}],"title":"2.3. Returning a list of native payment apps"}],"url":"#android-payment-app"},
+"android-payment-app": {"dfnID":"android-payment-app","dfnText":"Android payment app","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app"}],"title":"2. Android Payment App Provider"},{"refs":[{"id":"ref-for-android-payment-app\u2460"}],"title":"2.3. Returning a list of native payment apps"},{"refs":[{"id":"ref-for-android-payment-app\u2461"}],"title":"2.10.6. Updating payment details"},{"refs":[{"id":"ref-for-android-payment-app\u2462"}],"title":"2.11. Indicating success of an invoked Android native payment app"}],"url":"#android-payment-app"},
 "android-payment-app-icon": {"dfnID":"android-payment-app-icon","dfnText":"icon","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-icon"}],"title":"2.3. Returning a list of native payment apps"}],"url":"#android-payment-app-icon"},
 "android-payment-app-is-ready-to-pay-service-name": {"dfnID":"android-payment-app-is-ready-to-pay-service-name","dfnText":"is-ready-to-pay service name","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-is-ready-to-pay-service-name"}],"title":"2.3. Returning a list of native payment apps"},{"refs":[{"id":"ref-for-android-payment-app-is-ready-to-pay-service-name\u2460"},{"id":"ref-for-android-payment-app-is-ready-to-pay-service-name\u2461"}],"title":"2.8. Determining if an Android native payment app can handle a PaymentRequest"}],"url":"#android-payment-app-is-ready-to-pay-service-name"},
 "android-payment-app-label": {"dfnID":"android-payment-app-label","dfnText":"label","external":false,"refSections":[{"refs":[{"id":"ref-for-android-payment-app-label"}],"title":"2.3. Returning a list of native payment apps"}],"url":"#android-payment-app-label"},
