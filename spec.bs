@@ -246,7 +246,7 @@ To verify BobPay:
 
 *Payment method authorization*: The user agent fetches the [=payment method
 manifest=] for `https://alicepay.example/pay` and verifies that its [=supported
-origins=] include `https://bobpay.example` (or is `'*'`).
+origins=] include `https://bobpay.example`.
 
 *Native app authenticity*: To ensure an imposter application is not falsely
 claiming the `https://bobpay.example` origin, the user agent fetches the
@@ -345,15 +345,8 @@ method identifier</dfn> |identifier|, run the following steps:
 
 1. If |origin| is equal to |identifier|'s [=origin=], return `true`.
 
-1. If |paymentMethodManifest|'s [=supported origins=] is the string `'*'`,
-     return `true`.
-
 1. If |paymentMethodManifest|'s [=supported origins=] contains |origin|,
      return `true`.
-
-    NOTE: The [=supported origins=] can either be the string "*",
-          indicating that any [=origin=] is allowed to handle this
-          |identifier|, or an explicit [=set=] of allowed [=origins=].
 
 1. Return `false`.
 
